@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package history;
+
+service HistoryService {
+	rpc FindHistories(HistoriesRequest) returns (HistoriesResponse) {}
+	rpc DownloadHistories(DownloadRequest) returns (DownloadResponse) {}
+}
+
+// 任务数据
+message Download {
+	string job_id =1; // 任务ID
+	string job_name =2; // 任务名称
+	string origin =3; // 任务所属
+	string user_id =4; // 创建用户
+	int64  progress =5; // 进度
+	string start_time =6; // 开始时间
+	string end_time =11; // 结束时间
+	string message =7; // 消息
+	string error_file_path =8; // 错误文件路径
+	string file_path =12; // 文件路径
+	string current_step =9; // 已当前进行的步骤
+	string schedule_id =10; // 任务计划ID
+	repeated string steps =14; // 任务步骤
+	string task_type =13; // 任务类型
+	string app_id = 15; // 当前app
+}
+
+
+// 查找多条记录
+message DownloadRequest{
+	string user_id =1; // 创建用户
+	string job_id =2; // 任务ID
+	int64  page_index = 3; // 当前页
+	int64  page_size = 4; // 每页的大小
+	string database = 5; // 数据库
+	string schedule_id =6; // 任务计划ID
+	string app_id = 7; // 当前app
+}
+
+message DownloadResponse{
+	repeated Download histories = 1;
+	int64 total = 2;
+}
+
+message Message {
+	string start_time =1; // 开始时间 
+	string message =2; // 消息 
+}
+
+// 任务数据
+message History {
+	string job_id =1; // 任务ID
+	string job_name =2; // 任务名称
+	string origin =3; // 任务所属
+	string user_id =4; // 创建用户
+	int64  progress =5; // 进度
+	string start_time =6; // 开始时间
+	string end_time =11; // 结束时间
+	repeated Message message =7; // 消息
+	string error_file_path =8; // 错误文件路径
+	string file_path =12; // 文件路径
+	string current_step =9; // 已当前进行的步骤
+	repeated string steps =14; // 任务步骤
+	string schedule_id =10; // 任务计划ID
+	string task_type =13; // 任务类型
+	string app_id = 15; // 当前app
+}
+
+// 查找多条记录
+message HistoriesRequest{
+	string user_id =1; // 创建用户
+	string job_id =2; // 任务ID
+	int64  page_index = 3; // 当前页
+	int64  page_size = 4; // 每页的大小
+	string database = 5; // 数据库
+	string schedule_id =6; // 任务计划ID
+	string app_id = 7; // 当前app
+
+}
+
+message HistoriesResponse{
+	repeated History histories = 1;
+	int64 total = 2;
+}

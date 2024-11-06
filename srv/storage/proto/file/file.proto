@@ -1,0 +1,144 @@
+syntax = "proto3";
+
+package file;
+
+service FileService {
+	// 查找多个文件
+	rpc FindFiles(FindFilesRequest) returns (FindFilesResponse) {}
+	// 查找单个文件
+	rpc FindFile(FindFileRequest) returns (FindFileResponse) {}
+	// 添加单个文件
+	rpc AddFile(AddRequest) returns (AddResponse) {}
+	// 删除单个文件
+	rpc DeleteFile(DeleteRequest) returns (DeleteResponse) {}
+	// 删除多个文件
+	rpc DeleteSelectFiles(DeleteSelectFilesRequest) returns (DeleteResponse) {}
+	// 物理删除单个文件
+	rpc HardDeleteFile(HardDeleteRequest) returns (DeleteResponse) {}
+	// 物理删除多个文件
+	rpc HardDeleteFiles(HardDeleteFilesRequest) returns (DeleteResponse) {}
+	// 删除文件夹文件
+	rpc DeleteFolderFile(DeleteFolderRequest) returns (DeleteResponse) {}
+	// 恢复选中文件
+	rpc RecoverSelectFiles(RecoverSelectFilesRequest) returns (RecoverSelectFilesResponse) {}
+	// 恢复文件夹文件
+	rpc RecoverFolderFiles(RecoverFolderFilesRequest) returns (RecoverFolderFilesResponse) {}
+}
+
+// 文件
+message File {
+	string file_id = 1; // 文件ID
+	string folder_id = 2; // 所属文件夹
+	string file_name = 3; // 文件名
+	string object_name = 4;// 文件对象名
+	string file_path = 5; // 文件保存路径
+	int64  file_size = 6; // 文件大小
+    string content_type = 7; // 文件类型
+	string domain = 8; // 所属公司域名
+	repeated string owners = 9; // 文件所有者
+	string created_at = 10; // 创建时间
+	string created_by = 11; // 创建者
+	string updated_at = 12; // 更新时间
+	string updated_by = 13; // 更新者
+	string deleted_at = 14; // 删除时间
+	string deleted_by = 15; // 删除者
+}
+
+// 查找多个记录
+message FindFilesRequest{
+	int32 type = 1; // 查询类型
+	string user_id = 2; // 文件所属用户ID
+	string folder_id = 3; // 文件所在文件夹
+	string file_name = 4; // 文件名
+	string content_type = 5; // 文件类型
+	string domain = 6; // 所属公司域名
+	string database = 7; // 数据库
+}
+
+message FindFilesResponse{
+	repeated File file_list = 1; // 文件数组
+}
+
+// 通过ID查找单个记录
+message FindFileRequest{
+	string file_id = 1; // 文件ID
+	string database = 2; // 数据库
+}
+
+message FindFileResponse{
+	File file = 1; // 文件记录信息
+}
+
+// 添加一条记录
+message AddRequest{
+	string folder_id = 1; // 所属文件夹ID
+	string file_name = 2; // 文件名
+	string object_name = 3; // 文件对象名
+	string file_path = 4; // 文件路径
+	int64  file_size = 5; // 文件大小
+    string content_type = 6; // 文件类型
+	string domain = 7; // 所属公司域名
+	repeated string owners = 8; // 所有者（当前用户所在的组）
+	string writer = 9; // 创建者
+	string database = 10; // 数据库
+}
+
+message AddResponse{
+	string file_id = 1;
+}
+
+// 逻辑删除-单个文件
+message DeleteRequest{
+	string file_id = 1;
+	string writer = 2;
+	string database = 3; // 数据库
+}
+
+// 逻辑删除-多个文件
+message DeleteSelectFilesRequest{
+ 	repeated string file_id_list = 1; // 多个文件ID
+	string writer = 2;
+	string database = 3; // 数据库
+}
+
+// 物理删除-单个文件
+message HardDeleteRequest{
+	string file_id = 1;
+	string database = 2; // 数据库
+}
+
+// 物理删除-多个文件
+message HardDeleteFilesRequest{
+	 repeated string file_id_list = 1; // 多个文件ID
+	 string database = 2; // 数据库
+}
+
+message DeleteResponse{
+}
+
+// 逻辑删除-整个文件夹文件
+message DeleteFolderRequest{
+	string folder_id = 1; // 文件夹ID
+	string writer = 2;
+	string database = 3; // 数据库
+}
+
+// 恢复选中文件
+message RecoverSelectFilesRequest{
+	repeated string file_id_list = 1; // 文件ID
+   string writer = 2;
+   string database = 3; // 数据库
+}
+
+message RecoverSelectFilesResponse{
+}
+
+// 恢复文件夹文件
+message RecoverFolderFilesRequest{
+	string folder_id = 1; // 文件夹ID
+	string writer = 2;
+	string database = 3; // 数据库
+}
+
+message RecoverFolderFilesResponse{
+}

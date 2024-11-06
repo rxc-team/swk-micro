@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package question;
+
+service QuestionService {
+	// 查找单个問題
+	rpc FindQuestion(FindQuestionRequest) returns (FindQuestionResponse) {}
+	// 查找多个問題
+	rpc FindQuestions(FindQuestionsRequest) returns (FindQuestionsResponse) {}
+	// 添加問題
+	rpc AddQuestion(AddQuestionRequest) returns (AddQuestionResponse) {}
+	// 编辑問題
+	rpc ModifyQuestion(ModifyQuestionRequest) returns (ModifyQuestionResponse) {}
+	// 硬删除单个問題
+	rpc DeleteQuestion(DeleteQuestionRequest) returns (DeleteQuestionResponse) {}
+	// 硬删除多个問題
+	rpc DeleteQuestions(DeleteQuestionsRequest) returns (DeleteQuestionsResponse) {}
+}
+
+// 問題
+message Question {
+ 	string question_id = 1; // 問題ID
+ 	string title = 2; // 标题
+  	string type = 3; // 种类
+	string function = 4; // 机能
+	repeated string images = 5; // 画像
+	string content = 6; // 内容
+	string domain = 7; // 提问者所属顾客公司域名
+	string questioner_name = 8; // 回答
+	string responder_id = 9; // 回答
+	string responder_name = 10; // 回答者
+	repeated Postscript postscripts = 11; // 追记
+	string status = 12; // 問題处理状态
+	string locations = 17; // 问题定位情报
+	string created_at = 13;
+	string created_by = 14;
+	string updated_at = 15;
+	string updated_by = 16;
+}
+
+// 追记
+message Postscript {
+	string postscripter = 1; // 追记者ID
+	string postscripter_name = 2; // 追记者名
+	string avatar = 3; // 追记者像
+	string content = 4; // 追记文本
+	string link = 5; // 追记连接
+	repeated string images = 6; // 追记画像
+	string postscripted_at = 7; // 追记时间
+}
+
+message FindQuestionRequest{
+	string question_id = 1; // 問題ID
+}
+
+message FindQuestionResponse{
+	Question question = 1;
+}
+
+message FindQuestionsRequest{
+	string title = 1; // 标题
+  	string type = 2; // 种类
+	string function = 3; // 机能
+	string status = 4; // 問題处理状态
+	string domain = 5; // 提问者所属顾客公司域名
+}
+
+message FindQuestionsResponse{
+	repeated Question questions = 1;
+}
+
+message AddQuestionRequest{
+	string question_id = 1; // 問題ID
+ 	string title = 2; // 标题
+  	string type = 3; // 种类
+	string function = 4; // 机能
+	repeated string images =5; // 画像
+	string content = 6; // 内容
+	string domain = 7; // 提问者所属顾客公司域名
+	string questioner_name = 8; // 回答
+	string responder_id = 9; // 回答
+	string responder_name = 10; // 回答者
+	string locations = 12; // 问题定位情报
+	string writer = 11;
+}
+
+message AddQuestionResponse{
+	string question_id = 1; // 問題ID
+}
+
+message ModifyQuestionRequest{
+	string question_id = 1; // 問題ID
+	Postscript postscript = 2; // 追记
+	string status = 3; // 問題处理状态
+	string writer = 4;
+}
+
+message ModifyQuestionResponse{
+}
+
+message DeleteQuestionRequest{
+	string question_id = 1; // 問題ID
+}
+
+message DeleteQuestionResponse{
+}
+
+message DeleteQuestionsRequest{
+	repeated string question_id_list = 1; // 問題ID集合
+}
+
+message DeleteQuestionsResponse{
+}

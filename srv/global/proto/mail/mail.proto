@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package mail;
+
+service MailService {
+	// 获取邮件
+	rpc FindMails(FindMailsRequest) returns (MailsResponse) {}
+	// 添加邮件
+	rpc AddMail(AddMailRequest) returns (AddMailResponse) {}
+}
+
+
+// 邮件
+message Mail {
+	string sender = 1; // 送件人
+	repeated string recipients = 2; // 收件人
+	repeated string ccs = 3; // 抄送人
+	string subject = 4; // 主题
+	string content = 5; // 内容
+	string annex = 6; // 附件
+	string send_time = 7; // 发送时间
+}
+
+message FindMailsRequest{
+	string recipient = 1; // 收件人
+	string cc = 2; // 抄送人
+	string subject = 3; // 主题
+	string content = 4; // 内容
+	string annex = 5; // 附件
+	string send_time = 6; // 发送时间
+	string database = 7; // 数据库
+}
+
+message MailsResponse{
+	repeated Mail mails = 1;
+}
+
+message AddMailRequest{
+	string sender = 1; // 送件人
+	repeated string recipients = 2; // 收件人
+	repeated string ccs = 3; // 抄送人
+	string subject = 4; // 主题
+	string content = 5; // 内容
+	string annex = 6; // 附件
+	string send_time = 7; // 发送时间
+	string database = 8; // 数据库
+}
+
+message AddMailResponse{
+}

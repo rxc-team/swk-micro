@@ -1,0 +1,497 @@
+[
+  {
+    "journal_id": "01",
+    "journal_name": "增减分录",
+    "patterns": [
+      {
+        "pattern_id": "01001",
+        "pattern_name": "契约追加",
+        "subjects": [
+          {
+            "subject_key": "100001",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "使用権資産",
+            "amount_name": "リース料総額の現在価値",
+            "amount_field": "[presentTotal]+[incentivesAtOrPrior]+[initialDirectCosts]+[restorationCosts]",
+            "subject_name": "使用権資産"
+          },
+          {
+            "subject_key": "100002",
+            "lending_division": "2",
+            "change_flag": "old",
+            "default_name": "リース負債-リース料支払額",
+            "amount_name": "リース料総額の現在価値",
+            "amount_field": "[leaseTotal]",
+            "subject_name": "リース負債-リース料支払額"
+          },
+          {
+            "subject_key": "100003",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "リース負債-未確認融資費用",
+            "amount_name": "支払利息合計額",
+            "amount_field": "[leaseTotal]-[presentTotal]",
+            "subject_name": "リース負債-未確認融資費用"
+          },
+          {
+            "subject_key": "100004",
+            "lending_division": "2",
+            "change_flag": "old",
+            "default_name": "銀行預金",
+            "amount_name": "リースインセンティブ控除済の前払いリース料+当初直接費用",
+            "amount_field": "[incentivesAtOrPrior]+[initialDirectCosts]",
+            "subject_name": "銀行預金"
+          },
+          {
+            "subject_key": "100005",
+            "lending_division": "2",
+            "change_flag": "old",
+            "default_name": "除去債務",
+            "amount_name": "回復費用の現在価値",
+            "amount_field": "[restorationCosts]",
+            "subject_name": "除去債務"
+          },
+          {
+            "subject_key": "100006",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "償却費累計",
+            "amount_name": "[使用権資産取得価額－処理月度の先月末簿価]または[処理月度の先月までの償却費の累計額]",
+            "amount_field": "[preDepreciationTotal]",
+            "subject_name": "償却費累計"
+          },
+          {
+            "subject_key": "100006",
+            "lending_division": "2",
+            "change_flag": "old",
+            "default_name": "償却費累計",
+            "amount_name": "[使用権資産取得価額－処理月度の先月末簿価]または[処理月度の先月までの償却費の累計額]",
+            "amount_field": "[preDepreciationTotal]",
+            "subject_name": "償却費累計"
+          }
+        ]
+      },
+      {
+        "pattern_id": "01002",
+        "pattern_name": "情報変更",
+        "subjects": [
+          {
+            "subject_key": "100001",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "使用権資産",
+            "amount_name": "使用権資産の原始計上額（債務見積変更を考慮した取得金額）",
+            "amount_field": "[kisyuboka]",
+            "subject_name": "使用権資産"
+          },
+          {
+            "subject_key": "100001",
+            "lending_division": "2",
+            "change_flag": "old",
+            "default_name": "使用権資産",
+            "amount_name": "使用権資産の原始計上額（債務見積変更を考慮した取得金額）",
+            "amount_field": "[kisyuboka]",
+            "subject_name": "使用権資産"
+          },
+          {
+            "subject_key": "100006",
+            "lending_division": "1",
+            "change_flag": "old",
+            "default_name": "償却費累計",
+            "amount_name": "リース開始日から変更年月日までの償却費の累計額",
+            "amount_field": "[oldDepreciationTotal]",
+            "subject_name": "償却費累計"
+          },
+          {
+            "subject_key": "100006",
+            "lending_division": "2",
+            "change_flag": "new",
+            "default_name": "償却費累計",
+            "amount_name": "リース開始日から変更年月日までの償却費の累計額",
+            "amount_field": "[oldDepreciationTotal]",
+            "subject_name": "償却費累計"
+          },
+          {
+            "subject_key": "100002",
+            "lending_division": "1",
+            "change_flag": "old",
+            "default_name": "リース負債-リース料支払額",
+            "amount_name": "翌月から最終回までの支払リース料合計額",
+            "amount_field": "[payTotalRemain]",
+            "subject_name": "リース負債-リース料支払額"
+          },
+          {
+            "subject_key": "100002",
+            "lending_division": "2",
+            "change_flag": "new",
+            "default_name": "リース負債-リース料支払額",
+            "amount_name": "翌月から最終回までの支払リース料合計額",
+            "amount_field": "[payTotalRemain]",
+            "subject_name": "リース負債-リース料支払額"
+          },
+          {
+            "subject_key": "100003",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "リース負債-未確認融資費用",
+            "amount_name": "翌月から最終回までの利息合計額",
+            "amount_field": "[interestTotalRemain]",
+            "subject_name": "リース負債-未確認融資費用"
+          },
+          {
+            "subject_key": "100003",
+            "lending_division": "2",
+            "change_flag": "old",
+            "default_name": "リース負債-未確認融資費用",
+            "amount_name": "翌月から最終回までの利息合計額",
+            "amount_field": "[interestTotalRemain]",
+            "subject_name": "リース負債-未確認融資費用"
+          }
+        ]
+      },
+      {
+        "pattern_id": "01003",
+        "pattern_name": "債務見積変更（同額調整）",
+        "subjects": [
+          {
+            "subject_key": "100001",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "使用権資産",
+            "amount_name": "再見積後現在価値-再見積前現在価値",
+            "amount_field": "[shisannsagaku]",
+            "subject_name": "使用権資産"
+          },
+          {
+            "subject_key": "100002",
+            "lending_division": "2",
+            "change_flag": "old",
+            "default_name": "リース負債-リース料支払額",
+            "amount_name": "再見積後リース料総額-再見積前リース料総額",
+            "amount_field": "[payTotalChange]",
+            "subject_name": "リース負債-リース料支払額"
+          },
+          {
+            "subject_key": "100003",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "リース負債-未確認融資費用",
+            "amount_name": "損益額",
+            "amount_field": "[payTotalChange]-[shisannsagaku]",
+            "subject_name": "リース負債-未確認融資費用"
+          }
+        ]
+      },
+      {
+        "pattern_id": "01005",
+        "pattern_name": "債務見積変更（比率減少）",
+        "subjects": [
+          {
+            "subject_key": "100002",
+            "lending_division": "2",
+            "change_flag": "old",
+            "default_name": "リース負債-リース料支払額",
+            "amount_name": "支払残額",
+            "amount_field": "[gensyoPayTotal]",
+            "subject_name": "リース負債-リース料支払額"
+          },
+          {
+            "subject_key": "100003",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "リース負債-未確認融資費用",
+            "amount_name": "元本残高減少した金額",
+            "amount_field": "[gensyoPayTotal]-[gensyoBalance]",
+            "subject_name": "リース負債-未確認融資費用"
+          },
+          {
+            "subject_key": "100001",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "使用権資産",
+            "amount_name": "帳簿価額減少した金額",
+            "amount_field": "[gensyoBoka]",
+            "subject_name": "使用権資産"
+          },
+          {
+            "subject_key": "100007",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "資産処置損益",
+            "amount_name": "損益額",
+            "amount_field": "[gensyoBalance]-[gensyoBoka]",
+            "subject_name": "資産処置損益"
+          },
+          {
+            "subject_key": "100001",
+            "lending_division": "2",
+            "change_flag": "old",
+            "default_name": "使用権資産",
+            "amount_name": "再見積変更後現在価値‐変更時点の元本残高に対して、比例残の金額",
+            "amount_field": "[leaseTotalAfter]-[leaseTotalRemain]",
+            "subject_name": "使用権資産"
+          },
+          {
+            "subject_key": "100002",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "リース負債-リース料支払額",
+            "amount_name": "再見積変更後の支払総額‐変更時点の支払残額に対して、比例残の金額",
+            "amount_field": "[payTotalAfter]-[payTotalRemain]",
+            "subject_name": "リース負債-リース料支払額"
+          },
+          {
+            "subject_key": "100003",
+            "lending_division": "2",
+            "change_flag": "old",
+            "default_name": "リース負債-未確認融資費用",
+            "amount_name": "支払利息減少した金額",
+            "amount_field": "[payTotalAfter]-[payTotalRemain]-[leaseTotalAfter]+[leaseTotalRemain]",
+            "subject_name": "リース負債-未確認融資費用"
+          }
+        ]
+      },
+      {
+        "pattern_id": "01006",
+        "pattern_name": "中途解約（解約オプションの行使権ありの場合）",
+        "subjects": [
+          {
+            "subject_key": "100002",
+            "lending_division": "2",
+            "change_flag": "old",
+            "default_name": "リース負債-リース料支払額",
+            "amount_name": "支払残額",
+            "amount_field": "[gensyoPayTotal]",
+            "subject_name": "リース負債-リース料支払額"
+          },
+          {
+            "subject_key": "100003",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "リース負債-未確認融資費用",
+            "amount_name": "元本残高減少した金額",
+            "amount_field": "[gensyoPayTotal]-[gensyoBalance]",
+            "subject_name": "リース負債-未確認融資費用"
+          },
+          {
+            "subject_key": "100001",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "使用権資産",
+            "amount_name": "帳簿価額減少した金額",
+            "amount_field": "[gensyoBoka]",
+            "subject_name": "使用権資産"
+          },
+          {
+            "subject_key": "100007",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "資産処置損益",
+            "amount_name": "損益額",
+            "amount_field": "[gensyoBalance]-[gensyoBoka]",
+            "subject_name": "資産処置損益"
+          },
+          {
+            "subject_key": "100001",
+            "lending_division": "2",
+            "change_flag": "old",
+            "default_name": "使用権資産",
+            "amount_name": "再見積変更後現在価値‐変更時点の元本残高に対して、比例残の金額",
+            "amount_field": "[leaseTotalAfter]-[leaseTotalRemain]",
+            "subject_name": "使用権資産"
+          },
+          {
+            "subject_key": "100002",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "リース負債-リース料支払額",
+            "amount_name": "再見積変更後の支払総額‐変更時点の支払残額に対して、比例残の金額",
+            "amount_field": "[payTotalAfter]-[payTotalRemain]",
+            "subject_name": "リース負債-リース料支払額"
+          },
+          {
+            "subject_key": "100003",
+            "lending_division": "2",
+            "change_flag": "old",
+            "default_name": "リース負債-未確認融資費用",
+            "amount_name": "支払利息減少した金額",
+            "amount_field": "[payTotalAfter]-[payTotalRemain]-[leaseTotalAfter]+[leaseTotalRemain]",
+            "subject_name": "リース負債-未確認融資費用"
+          }
+        ]
+      },
+      {
+        "pattern_id": "01007",
+        "pattern_name": "中途解約(解約オプションの行使権なしの場合)",
+        "subjects": [
+          {
+            "subject_key": "100001",
+            "lending_division": "2",
+            "change_flag": "old",
+            "default_name": "使用権資産",
+            "amount_name": "再見積後現在価値-再見積前現在価値",
+            "amount_field": "[shisannsagaku]",
+            "subject_name": "使用権資産"
+          },
+          {
+            "subject_key": "100002",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "リース負債-リース料支払額",
+            "amount_name": "再見積後リース料総額-再見積前リース料総額",
+            "amount_field": "[payTotalChange]",
+            "subject_name": "リース負債-リース料支払額"
+          },
+          {
+            "subject_key": "100003",
+            "lending_division": "2",
+            "change_flag": "old",
+            "default_name": "リース負債-未確認融資費用",
+            "amount_name": "損益額",
+            "amount_field": "[payTotalChange]-[shisannsagaku]",
+            "subject_name": "リース負債-未確認融資費用"
+          }
+        ]
+      },
+      {
+        "pattern_id": "01008",
+        "pattern_name": "中途解約(即解約の場合)",
+        "subjects": [
+          {
+            "subject_key": "100008",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "使用権資産償却費累計",
+            "amount_name": "中途解約時点の償却費の累計額",
+            "amount_field": "[syokyakuTotal]",
+            "subject_name": "使用権資産償却費累計"
+          },
+          {
+            "subject_key": "100001",
+            "lending_division": "2",
+            "change_flag": "old",
+            "default_name": "使用権資産",
+            "amount_name": "使用権資産の原始計上額",
+            "amount_field": "[kisyuboka]",
+            "subject_name": "使用権資産"
+          },
+          {
+            "subject_key": "100009",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "除却損",
+            "amount_name": "使用権資産の原始計上額-中途解約時点の償却費の累計額",
+            "amount_field": "[kisyuboka]-[syokyakuTotal]",
+            "subject_name": "リース負債-リース料支払額"
+          },
+          {
+            "subject_key": "100002",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "リース負債-リース料支払額",
+            "amount_name": "中途解約時点の支払リース料残額",
+            "amount_field": "[payTotalRemain]",
+            "subject_name": "リース負債-リース料支払額"
+          },
+          {
+            "subject_key": "100003",
+            "lending_division": "2",
+            "change_flag": "old",
+            "default_name": "リース負債-未確認融資費用",
+            "amount_name": "中途解約時点の利息残",
+            "amount_field": "[interestTotalRemain]",
+            "subject_name": "リース負債-未確認融資費用"
+          },
+          {
+            "subject_key": "100012",
+            "lending_division": "2",
+            "change_flag": "old",
+            "default_name": "リース負債-解約損",
+            "amount_name": "中途解約時点の支払リース料残額-中途解約時点の利息残",
+            "amount_field": "[payTotalRemain]-[interestTotalRemain]",
+            "subject_name": "リース負債-解約損"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "journal_id": "02",
+    "journal_name": "偿还分录",
+    "patterns": [
+      {
+        "pattern_id": "02001",
+        "pattern_name": "每月偿还",
+        "subjects": [
+          {
+            "subject_key": "100010",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "使用権資産償却費",
+            "amount_name": "当月の償却費（通常償却費と調整償却費をそれぞれ明細で出力する）",
+            "amount_field": "[syokyaku]",
+            "subject_name": "使用権資産償却費"
+          },
+          {
+            "subject_key": "100008",
+            "lending_division": "2",
+            "change_flag": "old",
+            "default_name": "使用権資産償却費累計",
+            "amount_name": "当月の償却費（通常償却費と調整償却費をそれぞれ明細で出力する）",
+            "amount_field": "[syokyaku]",
+            "subject_name": "使用権資産償却費累計"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "journal_id": "03",
+    "journal_name": "支付分录",
+    "patterns": [
+      {
+        "pattern_id": "03001",
+        "pattern_name": "每月支付",
+        "subjects": [
+          {
+            "subject_key": "100002",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "リース負債-リース料支払額",
+            "amount_name": "処理月度内の1回当たりのリース料",
+            "amount_field": "[interest]+[repayment]",
+            "subject_name": "リース負債-リース料支払額"
+          },
+          {
+            "subject_key": "100004",
+            "lending_division": "2",
+            "change_flag": "old",
+            "default_name": "銀行預金",
+            "amount_name": "処理月度内の1回当たりのリース料",
+            "amount_field": "[interest]+[repayment]",
+            "subject_name": "銀行預金"
+          },
+          {
+            "subject_key": "100011",
+            "lending_division": "1",
+            "change_flag": "new",
+            "default_name": "利息費用",
+            "amount_name": "処理月度内の1回当たりの利息",
+            "amount_field": "[interest]",
+            "subject_name": "利息費用"
+          },
+          {
+            "subject_key": "100003",
+            "lending_division": "2",
+            "change_flag": "old",
+            "default_name": "リース負債-未確認融資費用",
+            "amount_name": "処理月度内の1回当たりの利息",
+            "amount_field": "[interest]",
+            "subject_name": "リース負債-未確認融資費用"
+          }
+        ]
+      }
+    ]
+  }
+]

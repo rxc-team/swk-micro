@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package process;
+
+service ProcessService {
+	rpc FindProcesses(ProcessesRequest) returns (ProcessesResponse) {}
+	rpc FindsProcesses(FindsProcessesRequest) returns (FindsProcessesResponse) {}
+	rpc AddProcess(AddRequest) returns (AddResponse) {}
+	rpc ModifyProcess(ModifyRequest) returns (ModifyResponse) {}
+	rpc DeleteProcess(DeleteRequest) returns (DeleteResponse) {}
+}
+
+// 流程实例定义
+message Process {
+	string pro_id =1; // 进程ID
+	string ex_id =2; // 实例ID
+	string current_node =3; // 当前运行到的任务节点
+	string user_id =4; // 操作者
+	string expire_date =5; // 过期时间
+	int64  status =6; // 进程状态（0表示未审批，1表示承认，2表示却下）
+	string comment =7; // 审批备注
+	string created_at =8; // 创建时间
+	string created_by =9; // 创建者
+	string updated_at =10; // 更新时间
+	string updated_by =11; // 更新者
+}
+
+// 查找多条记录
+message ProcessesRequest{
+	string ex_id =1; // 实例ID
+	string database = 2; // 数据库
+}
+
+// 查找所有记录
+message FindsProcessesRequest{
+	string user_id =1; // 操作者
+	string database = 2; // 数据库
+}
+
+message ProcessesResponse{
+	repeated Process processes = 1;
+}
+
+message FindsProcessesResponse{
+	repeated Process processes = 1;
+}
+
+// 添加数据
+message AddRequest{
+	string ex_id =1; // 实例ID
+	string current_node =2; // 当前运行到的任务节点
+	string user_id =3; // 操作者
+	string expire_date =4; // 过期时间
+	int64  status =5; // 进程状态（0表示未审批，1表示承认，2表示却下）
+	string database = 6; // 数据库
+	string writer = 7; // 创建者
+}
+
+message AddResponse{
+	string pro_id =1;
+}
+
+// 更新记录
+message ModifyRequest{
+	string pro_id = 1; // 实例ID
+	string status = 2; // 进程状态（0表示未审批，1表示承认，2表示却下）
+	string comment = 3; // 审批备注
+	string database = 4; // 数据库
+	string writer = 5; // 更新者
+}
+
+message ModifyResponse{
+}
+
+// 删除数据记录
+message DeleteRequest{
+	string ex_id =1; // 流程ID
+	string database = 2; // 数据库
+}
+
+message DeleteResponse{
+}

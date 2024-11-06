@@ -1,0 +1,105 @@
+syntax = "proto3";
+
+package script;
+
+service ScriptService {
+	rpc FindScriptJobs(FindScriptJobsRequest) returns (FindScriptJobsResponse) {}
+	rpc FindScriptJob(FindScriptJobRequest) returns (FindScriptJobResponse) {}
+	rpc AddScriptJob(AddRequest) returns (AddResponse) {}
+	rpc ModifyScriptJob(ModifyRequest) returns (ModifyResponse) {}
+	rpc StartScriptJob(StartRequest) returns (StartResponse) {}
+	rpc AddScriptLog(AddScriptLogRequest) returns (AddScriptLogResponse) {}
+	rpc DeleteDuplicateAndAddIndex(DeleteScriptsRequest) returns (DeleteScriptsResponse) {}
+}
+
+// 用户
+message ScriptJob {
+	string script_id = 1; // 脚本id
+	string script_name = 2; // 脚本名
+	string script_desc = 3; // 描述
+	string script_type = 4; // 分为两种类型，一种是执行固定方法，一种是执行javascript脚本
+	string script_data = 5; // 脚本传入参数
+	string script_func = 6; // 脚本执行函数
+	string script_version = 7; // 脚本对应的系统版本，无法匹配的情况下，不能执行。
+	repeated string run_logs = 8; // 执行日志
+	string created_at = 9; // 创建日期
+	string created_by = 10; // 创建者
+	string ran_at = 11; // 执行时间
+	string ran_by = 12; // 执行者
+}
+
+message FindScriptJobsRequest{
+	string script_type = 1;
+	string script_version = 2;
+	string ran_by = 3;
+	string database = 4;
+}
+
+message FindScriptJobsResponse{
+	repeated ScriptJob script_jobs = 1;
+}
+message DeleteScriptsRequest{
+	string database = 1;
+	repeated string script_ids = 2;
+}
+message DeleteScriptsResponse{
+
+}
+
+message FindScriptJobRequest{
+	string script_id = 1;
+	string database = 2;
+}
+
+message FindScriptJobResponse{
+	ScriptJob script_job = 1;
+}
+
+message AddRequest{
+	string script_id = 1; // 脚本id
+	string script_name = 2; // 脚本名
+	string script_desc = 3; // 描述
+	string script_type = 4; // 分为两种类型，一种是执行固定方法，一种是执行javascript脚本
+	string script_data = 5; // 脚本传入参数
+	string script_func = 6; // 脚本执行函数
+	string script_version = 7; // 脚本对应的系统版本，无法匹配的情况下，不能执行。
+	string created_at = 8; // 创建日期
+	string writer = 9;
+	string database = 10;
+}
+
+message AddResponse{
+}
+
+message ModifyRequest{
+	string script_id = 1; // 脚本id
+	string script_name = 2; // 脚本名
+	string script_desc = 3; // 描述
+	string script_data = 4; // 脚本传入参数
+	string script_func = 5; // 脚本执行函数
+	string script_version = 6; // 脚本对应的系统版本，无法匹配的情况下，不能执行。
+	string writer = 7;
+	string database = 8;
+}
+
+message ModifyResponse{
+}
+
+message StartRequest{
+	string script_id = 1; // 脚本id
+	string writer = 2;
+	string database = 3;
+}
+
+message StartResponse{
+}
+
+message AddScriptLogRequest{
+	string script_id = 1; // 脚本id
+	string run_log = 2;
+	string writer = 3;
+	string database = 4;
+}
+
+message AddScriptLogResponse{
+}

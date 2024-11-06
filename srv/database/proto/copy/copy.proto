@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package copy;
+
+service CopyService {
+	rpc CopyItems(CopyItemsRequest) returns ( CopyItemsResponse) {}
+	rpc BulkAddItems(BulkAddRequest) returns (BulkAddResponse) {}
+}
+
+message Value {
+	string data_type = 1; // 字段类型
+    string value = 2; // 字段值
+}
+
+// 恢复台账数据
+message BulkItem {
+	map<string, Value> items =3; // 字段对应的值
+}
+
+// 复制数据
+message CopyItemsRequest{
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	string copy_app_id = 3; // 所属APP
+	string copy_datastore_id = 4; // 所属台账
+	string database = 5; // 数据库
+	bool with_file = 6; // 是否复制文件
+}
+
+message CopyItemsResponse{
+
+}
+
+// 恢复数据
+message BulkAddRequest{
+	string app_id =1; // 所属APP
+	string datastore_id =2; // 所属台账
+	repeated BulkItem items = 3; // 数据
+	string writer = 4; // 创建者
+	repeated string owners =5; // 所有者
+	string database = 6; // 数据库
+}
+
+message BulkAddResponse{
+}

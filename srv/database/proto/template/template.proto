@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package template;
+option go_package = ".;template";
+
+// package temporary;
+service TemplateService {
+	rpc FindTemplateItems(ItemsRequest) returns (ItemsResponse) {}
+	rpc MutilAddTemplateItem(MutilAddRequest) returns (MutilAddResponse) {}
+	rpc DeleteTemplateItems(DeleteRequest) returns (DeleteResponse) {}
+}
+
+message Value {
+	string data_type = 1; // 字段类型
+    string value = 2; // 字段值
+}
+
+// 台账数据
+message TemplateItem {
+	string item_id =1; // 台账数据ID
+	string app_id =2; // 所属APP
+	string datastore_id =3; // 所属台账
+	map<string, Value> items =4; // 字段对应的值
+	string template_id =6; // 临时数据ID
+	string datastore_key =7; // 台账标识
+	string created_at =8; // 创建时间
+	string created_by =9; // 创建者
+}
+
+// 查找多条记录
+message ItemsRequest{
+	string template_id = 1; // 临时数据ID
+	string datastore_key = 2; // 台账key
+	int64 page_index = 3; // 当前页
+	int64 page_size = 4; // 每页的大小 
+	string collection = 5; // 临时数据的集合 
+	string database = 6; // 数据库
+}
+
+message ItemsResponse{
+	repeated TemplateItem items = 1;
+	int64 total = 2;
+}
+
+// MutilAddItem 批量添加数据(契约台账数据新规审批时，把支付，试算，偿却信息添加进来)
+message MutilAddRequest{
+	string app_id = 1; // 所属APP
+	repeated ListItems data =2; // 添加的数据
+	string writer = 3; // 创建者
+	string collection = 4; // 临时数据的集合 
+	string database = 5; // 数据库
+}
+
+message MutilAddResponse{
+}
+
+message ListItems {
+	map<string, Value> items =1; // 字段对应的值
+	string datastore_id = 2; // 所属台账
+	string template_id = 3; //  临时数据ID
+	string datastore_key = 4; // 台账key
+}
+
+// 删除数据记录
+message DeleteRequest{
+    string template_id = 1; //  临时数据ID
+	string collection = 2; // 临时数据的集合 
+	string database = 3; // 数据库
+}
+
+message DeleteResponse{
+}

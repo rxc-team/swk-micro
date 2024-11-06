@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package folder;
+
+service FolderService {
+	rpc FindFolders(FindFoldersRequest) returns (FindFoldersResponse) {}
+	rpc FindFolder(FindFolderRequest) returns (FindFolderResponse) {}
+	rpc AddFolder(AddRequest) returns (AddResponse) {}
+	rpc ModifyFolder(ModifyRequest) returns (ModifyResponse) {}
+	rpc DeleteFolder(DeleteRequest) returns (DeleteResponse) {}
+	rpc DeleteSelectFolders(DeleteSelectFoldersRequest) returns (DeleteResponse) {}
+	rpc HardDeleteFolders(HardDeleteFoldersRequest) returns (DeleteResponse) {}
+	rpc RecoverSelectFolders(RecoverSelectFoldersRequest) returns (RecoverSelectFoldersResponse) {}
+}
+
+// 文件夹
+message Folder {
+	string folder_id = 1; // 文件夹ID
+	string folder_name = 2; // 文件夹名
+	string folder_dir = 3; // 文件夹路径
+	string domain = 4; // 所属公司域名
+	string created_at = 5; // 创建时间
+	string created_by = 6; // 创建者
+	string updated_at = 7; // 更新时间
+	string updated_by = 8; // 更新者
+	string deleted_at = 9; // 删除时间
+	string deleted_by = 10; // 删除者
+}
+
+// 查找多个文件夹
+message FindFoldersRequest{
+	string domain = 1; // 所属公司域名
+	string folder_name = 2; // 文件夹名
+	string database = 3; // 数据库
+}
+
+message FindFoldersResponse{
+	repeated Folder folder_list = 1; // 文件夹一览
+}
+
+// 查找单个文件
+message FindFolderRequest{
+	string folder_id = 1; // 文件夹ID
+	string database = 2; // 数据库
+}
+
+message FindFolderResponse{
+	Folder folder = 1; // 文件夹记录
+}
+
+// 添加文件夹记录
+message AddRequest{
+	string folder_name = 1; // 文件夹名
+	string folder_dir = 2; // 文件夹路径
+	string domain = 3; // 所属公司域名
+	string writer = 4; // 创建者
+	string database = 5; // 数据库
+}
+
+message AddResponse{
+	string folder_id = 1; // 新创建的文件夹ID
+}
+
+// 修改文件夹信息
+message ModifyRequest{
+	string folder_id = 1; // 文件夹ID
+	string folder_name = 2;  // 文件夹名
+	string writer = 3; // 更新者
+	string database = 4; // 数据库
+}
+
+message ModifyResponse{
+}
+
+// 删除单个文件夹
+message DeleteRequest{
+	string folder_id = 1;
+	string writer = 2;
+	string database = 3; // 数据库
+}
+
+// 删除多个文件夹
+message DeleteSelectFoldersRequest{
+	repeated string folder_id_list = 1;
+	string writer = 2;
+	string database = 3; // 数据库
+}
+
+// 物理删除多个文件夹
+message HardDeleteFoldersRequest{
+	repeated string folder_id_list = 1;
+	string database = 2; // 数据库
+}
+
+message DeleteResponse{
+}
+
+// 恢复选中文件夹
+message RecoverSelectFoldersRequest{
+	repeated string folder_id_list = 1;
+	string writer = 2;
+	string database = 3; // 数据库
+}
+
+message RecoverSelectFoldersResponse{
+}

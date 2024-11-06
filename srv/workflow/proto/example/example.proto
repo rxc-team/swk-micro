@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package example;
+
+service ExampleService {
+	rpc FindExamples(ExamplesRequest) returns (ExamplesResponse) {}
+	rpc FindExample(ExampleRequest) returns (ExampleResponse) {}
+	rpc AddExample(AddRequest) returns (AddResponse) {}
+	rpc ModifyExample(ModifyRequest) returns (ModifyResponse) {}
+	rpc DeleteExample(DeleteRequest) returns (DeleteResponse) {}
+}
+
+// 流程实例定义
+message Example {
+	string ex_id =1; // 实例ID
+	string wf_id =2; // 流程ID
+	string ex_name =3; // 实例名称（发起者+流程名）
+	string user_id =5; // 发起者
+	int64  status =6; // 流程状态（1表示正在审批，2表示承认，3表示却下）
+	string created_at =7; // 创建时间
+	string created_by =8; // 创建者
+	string updated_at =9; // 更新时间
+	string updated_by =10; // 更新者
+}
+
+// 查找多条记录
+message ExamplesRequest{
+	string wf_id = 2; // 每页的大小
+	string database = 3; // 数据库
+}
+
+message ExamplesResponse{
+	repeated Example examples = 1;
+}
+
+// 查询单条记录
+message ExampleRequest{
+	string ex_id = 1; // 实例ID
+	string database = 2; // 数据库
+}
+
+message ExampleResponse{
+	Example example = 1;
+}
+
+// 添加数据
+message AddRequest{
+	string wf_id =1; // 流程ID
+	string ex_name =2; // 实例名称（发起者+流程名）
+	string user_id =3; // 发起者
+	int64  status =4; // 流程状态（1表示正在审批，2表示承认，3表示却下）
+	string database = 5; // 数据库
+	string writer = 6; // 创建者
+}
+
+message AddResponse{
+	string ex_id =1;
+}
+
+// 更新记录
+message ModifyRequest{
+	string ex_id =1; // 实例ID
+	string status =2; // 流程状态（1表示正在审批，2表示承认，3表示却下）
+	string database = 3; // 数据库
+	string writer = 4; // 更新者
+}
+
+message ModifyResponse{
+}
+
+// 删除数据记录
+message DeleteRequest{
+	string ex_id =1; // 流程ID
+	string database = 2; // 数据库
+}
+
+message DeleteResponse{
+}

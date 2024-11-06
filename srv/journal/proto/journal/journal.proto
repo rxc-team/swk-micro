@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package journal;
+
+service JournalService {
+	rpc FindJournals(JournalsRequest) returns (JournalsResponse) {}
+	rpc FindJournal(JournalRequest) returns (JournalResponse) {}
+	rpc ImportJournal(ImportRequest) returns (ImportResponse) {}
+	rpc ModifyJournal(ModifyRequest) returns (ModifyResponse) {}
+}
+
+// 分录
+message Journal {
+	string journal_id =1; // 仕訳ID
+	string journal_name =2; // 仕訳名称
+	repeated Pattern patterns =3; // 会计处理pattern
+	string app_id =4; // 所属APP
+	string created_at =5; // 创建时间
+	string created_by =6; // 创建者
+	string updated_at =7; // 更新时间
+	string updated_by =8; // 更新者
+}
+// 分录pattern
+message Pattern {
+	string pattern_id =1; // 会计处理分类ID
+	string pattern_name =2; // 会计处理名称
+	repeated Subject subjects =3; // 出力科目
+}
+
+// 分录subject	
+message Subject	 {
+	string subject_key =1; // 科目key
+	string lending_division =2; // 借贷区分
+	string default_name =3; // 默认科目名称
+	string subject_name =4; // 科目名称
+	string amount_name =5; // 金额名
+	string amount_field =6; // 金额的字段
+	string change_flag =7; // 变更前后值的区分
+}
+
+// 查找多条记录
+message JournalsRequest{
+	string app_id =1; // 所属APP
+	string database =2; // 数据库
+}
+
+message JournalsResponse{
+	repeated Journal journals = 1;
+}
+
+// 查询单条记录
+message JournalRequest{
+	string journal_id =1; // 仕訳ID
+	string app_id =2; // 所属APP
+	string database =3; // 数据库
+}
+
+message JournalResponse{
+	Journal journal = 1;
+}
+
+// 导入数据
+message ImportRequest{
+	repeated Journal journals =1; // 导入的数据
+	string database =2; // 数据库
+	string writer =3; // 创建者
+}
+
+message ImportResponse{
+}
+
+// 更新记录
+message ModifyRequest{
+	string journal_id =1; // 仕訳ID-条件
+	string app_id =2; // 所属APP-条件
+	string pattern_id =3; // 会计处理分类ID-条件
+	string subject_key =4; // 科目key-条件
+	string lending_division =5; // 借贷区分-变更项目
+	string change_flag =11; // 变更前后值的区分-变更项目
+	string subject_name =6; // 默认科目名称-变更项目
+	string amount_name =7; // 金额名-变更项目
+	string amount_field =8; // 金额的字段-变更项目
+	string database = 9; // 数据库
+	string writer = 10; // 更新者
+}
+
+message ModifyResponse{
+}

@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+package print;
+
+service PrintService {
+	rpc FindPrint(FindPrintRequest) returns (FindPrintResponse) {}
+	rpc FindPrints(FindPrintsRequest) returns (FindPrintsResponse) {}
+	rpc AddPrint(AddPrintRequest) returns (AddPrintResponse) {}
+	rpc ModifyPrint(ModifyPrintRequest) returns (ModifyPrintResponse) {}
+	rpc HardDeletePrints(HardDeletePrintsRequest) returns (HardDeletePrintsResponse) {}
+}
+
+// 台账打印设置
+message Print {
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	string page = 3; // 打印纸张类型，A4，A3等
+	string orientation = 4; // 打印方向，L 横屏 P 竖屏
+	string check_field = 5; // 盘点图片字段
+	int64 title_width = 15; // 标题宽度
+	repeated PrintField fields = 6; // 打印字段
+	bool show_sign = 7; // 是否显示签名
+	string sign_name1 = 8; // 签名1
+	string sign_name2 = 9; // 签名2
+	bool show_system = 10; // 是否显示系统情报
+	string created_at = 11; // 创建时间
+	string created_by = 12; // 创建者
+	string updated_at = 13; // 更新时间
+	string updated_by = 14; // 更新者
+}
+
+// 打印用字段情报
+message PrintField {
+	string field_id = 1; // 字段ID
+	string field_name = 2; // 字段名称
+	string field_type = 3; // 字段类型
+	bool is_image = 4; // 是否是图片
+	bool as_title = 6; // 是否作为标题
+	int64 cols = 7; // grid中占用的行数
+	int64 rows = 8; // grid中占用的列数
+	int64 x = 9; // 行
+	int64 y = 10; // 列
+	int64 width = 11; // 一览显示的字段宽度
+	int64 precision = 12; // 小数精度
+}
+
+// 查询台账打印设置
+message FindPrintRequest{
+	string app_id = 1; // APPID
+	string datastore_id = 2; // 台账ID
+	string database = 3; // 数据库
+}
+
+message FindPrintResponse{
+	Print print = 1;
+}
+
+// 查询台账打印设置
+message FindPrintsRequest{
+	string app_id = 1; // APPID
+	string datastore_id = 2; // 台账ID
+	string database = 3; // 数据库
+}
+
+message FindPrintsResponse{
+	repeated Print prints = 1;
+}
+
+// 添加台账打印设置
+message AddPrintRequest{
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	string page = 3; // 打印纸张类型，A4，A3等
+	string orientation = 4; // 打印方向，L 横屏 P 竖屏
+	string check_field = 5; // 盘点图片字段
+	int64 title_width = 13; // 标题宽度
+	repeated PrintField fields = 6; // 打印字段
+	bool show_sign = 7; // 是否显示签名
+	string sign_name1 = 8; // 签名1
+	string sign_name2 = 9; // 签名2
+	bool show_system = 10; // 是否显示系统情报
+	string writer = 11; // 创建者
+	string database = 12; // 数据库
+}
+
+message AddPrintResponse{
+}
+
+// 修改台账打印设置
+message ModifyPrintRequest{
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	string page = 3; // 打印纸张类型，A4，A3等
+	string orientation = 4; // 打印方向，L 横屏 P 竖屏
+	string check_field = 5; // 盘点图片字段
+	int64 title_width = 13; // 标题宽度
+	repeated PrintField fields = 6; // 打印字段
+	string show_sign = 7; // 是否显示签名
+	string sign_name1 = 8; // 签名1
+	string sign_name2 = 9; // 签名2
+	string show_system = 10; // 是否显示系统情报
+	string writer = 11; // 更新者
+	string database = 12; // 数据库
+}
+
+message ModifyPrintResponse{
+}
+
+// 物理删除台账打印设置
+message HardDeletePrintsRequest{
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	string database = 3; // 数据库
+}
+
+message HardDeletePrintsResponse{
+}

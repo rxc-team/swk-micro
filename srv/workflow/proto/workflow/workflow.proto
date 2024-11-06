@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+package workflow;
+
+service WfService {
+	rpc FindWorkflows(WorkflowsRequest) returns (WorkflowsResponse) {}
+	rpc FindUserWorkflows(UserWorkflowsRequest) returns (UserWorkflowsResponse) {}
+	rpc FindWorkflow(WorkflowRequest) returns (WorkflowResponse) {}
+	rpc AddWorkflow(AddRequest) returns (AddResponse) {}
+	rpc ModifyWorkflow(ModifyRequest) returns (ModifyResponse) {}
+	rpc DeleteWorkflow(DeleteRequest) returns (DeleteResponse) {}
+}
+
+// 流程定义
+message Workflow {
+	string wf_id =1; // 流程ID
+	string wf_name =2; // 流程名称
+	string menu_name =3; // 流程名称
+	bool   is_valid =4; // 流程是否有效
+	string group_id =5; // 所属用户组
+	string app_id =6; // 所属app
+	bool   accept_or_dismiss =7; //  无人审批时，是直接承认还是却下
+	string workflow_type =8; // 流程类型（目前只有台账）
+	map<string,string> params =9; // 流程参数
+	string created_at =10; // 创建时间
+	string created_by =11; // 创建者
+	string updated_at =12; // 更新时间
+	string updated_by =13; // 更新者
+}
+
+// 查找多条记录
+message WorkflowsRequest{
+	string is_valid =1; // 流程是否有效
+	string app_id =2; // 所属app
+	string object_id =4; // 流程对象ID
+	string group_id =5; // 所属组织
+	string action =6; // 流程对象所走的操作
+	string database = 7; // 数据库
+}
+
+message WorkflowsResponse{
+	repeated Workflow workflows = 1;
+}
+
+// 查找用户的流程记录
+message UserWorkflowsRequest{
+	string app_id =1; // 所属app
+	string object_id =2; // 流程对象ID
+	string group_id =3; // 所属组织
+	string action =4; // 流程对象所走的操作
+	string database = 5; // 数据库
+}
+
+message UserWorkflowsResponse{
+	repeated Workflow workflows = 1;
+}
+
+// 查询单条记录
+message WorkflowRequest{
+	string wf_id = 1; // 流程ID
+	string database = 2; // 数据库
+}
+
+message WorkflowResponse{
+	Workflow workflow = 1;
+}
+
+// 添加数据
+message AddRequest{
+	string wf_name =1; // 流程名称
+	string menu_name =2; // 流程名称
+	bool   is_valid =3; // 流程是否有效
+	string group_id =4; // 所属用户组
+	string app_id =5; // 所属app
+	bool   accept_or_dismiss =6; //  无人审批时，是直接承认还是却下
+	string workflow_type =7; // 流程类型（目前只有台账）
+	map<string,string> params =8; // 流程参数
+	string database = 9; // 数据库
+	string writer = 10; // 创建者
+}
+
+message AddResponse{
+	string wf_id =1;
+}
+
+// 更新记录
+message ModifyRequest{
+	string wf_id =1; // 流程ID
+	string wf_name =2; // 流程名称
+	string menu_name =3; // 流程名称
+	string is_valid = 4; // 流程是否有效
+	string accept_or_dismiss =5; //  无人审批时，是直接承认还是却下
+	map<string,string> params =6; // 流程参数
+	string database = 7; // 数据库
+	string writer = 8; // 更新者
+}
+
+message ModifyResponse{
+}
+
+// 删除数据记录
+message DeleteRequest{
+	repeated string workflows =1; // 需要删除的流程ID
+	string database = 2; // 数据库
+}
+
+message DeleteResponse{
+}

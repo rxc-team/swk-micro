@@ -1,0 +1,137 @@
+syntax = "proto3";
+
+package approve;
+
+service ApproveService {
+	rpc FindItems(ItemsRequest) returns (ItemsResponse) {}
+	rpc FindCount(CountRequest) returns (CountResponse) {}
+	rpc FindItem(ItemRequest) returns (ItemResponse) {}
+	rpc AddItem(AddRequest) returns (AddResponse) {}
+	rpc DeleteItems(DeleteRequest) returns (DeleteResponse) {}
+}
+
+// 条件
+message Condition {
+	string field_id = 1; // 检索字段ID
+    string field_type = 2; // 检索字段类型
+    string search_value = 3; // 检索值
+	string operator = 4; // 检索连接操作符
+	bool is_dynamic = 5; // 是否动态
+    string condition_type = 6; // 检索连接类型
+}
+
+message Value {
+	string data_type = 1; // 字段类型
+    string value = 2; // 字段值
+}
+
+// 台账数据
+message ApproveItem {
+	string item_id =1; // 台账数据ID
+	string app_id =2; // 所属APP
+	string datastore_id =3; // 所属台账
+	map<string, Value> items =4; // 字段对应的值
+	map<string, Value> history =5; // 变更前的值
+	map<string, Value> current =15; // 变更后的值
+	string example_id =6; // 流程实例的ID
+	string applicant =7; // 申请者
+	string approver =14; // 最终审批者
+	int64 approve_status =8; // 流程状态
+	Node node =9; // 当前流程的节点
+	string created_at =10; // 创建时间
+	string created_by =11; // 创建者
+	string deleted_at =12; // 删除时间
+	string deleted_by =13; // 删除者
+}
+
+// 流程定义
+message Node {
+	string node_id =1; // 节点ID
+	string node_name =4; // 节点名称
+	string node_type =3; // 节点类型（1表示普通节点，2表示分支节点）
+	string prev_node =5; // 上级节点（0表示开始节点）
+	string next_node =6; // 下级节点（0表示结束节点，x-x表示分支节点）
+	repeated string assignees =7; // 操作者（u_xxx表示指定某个用户，r_xxx表示指定某个角色，g_xxx表示指定某个组）
+	string act_type =8; // 当前节点处理类型（and表示需要所有操作者都同意，or表示一个同意就行）
+	string node_group_id =11; // 承认用户组
+}
+
+// 查找多条记录
+message ItemsRequest{
+	string wf_id = 1; // 流程ID
+	string datastore_id = 2; // 所属台账
+	repeated Condition condition_list = 3; // 字段条件
+	string condition_type = 4; // 字段条件(or或者and)
+	string search_type = 5; // 检索变更前还是变更后的数据
+	int64 page_index = 6; // 当前页
+	int64 page_size = 7; // 每页的大小
+	string user_id = 8; // 操作者
+	int64  status = 9; // 进程状态（0表示未审批，1表示承认，2表示却下）
+	string database = 10; // 数据库
+}
+
+message ItemsResponse{
+	repeated ApproveItem items = 1;
+	int64 total = 2;
+}
+
+// 查找多条记录
+message CountRequest{
+	string wf_id = 1; // 流程ID
+	int64  status = 2; // 进程状态（0表示未审批，1表示承认，2表示却下）
+	string database = 3; // 数据库
+}
+
+message CountResponse{
+	int64 total = 1;
+}
+
+
+// 查询单条记录
+message ItemRequest{
+	string example_id = 1; // 流程实例的ID
+	string datastore_id = 2; // 所属台账
+	string database = 3; // 数据库
+}
+
+message ItemResponse{
+	ApproveItem item = 1;
+}
+
+// 添加数据
+message AddRequest{
+	string item_id = 1; // 台账数据ID
+	string app_id = 2; // 所属APP
+	string datastore_id = 3; // 所属台账
+	map<string, Value> items = 4; // 字段对应的值
+	map<string, Value> history = 5; // 变更前的值
+	map<string, Value> current =15; // 变更后的值
+	string lang_cd = 16; // 语言
+	string domain = 17; // domain
+	string example_id = 6; // 流程实例的ID
+	string writer = 7; // 创建者
+	string database = 8; // 数据库
+	string payment_status_id=9; //支付信息台账ID
+    repeated ListItems payment_status_data=10;//支付信息台账数据
+	string payment_interest_id=11;//试算
+	repeated ListItems payment_interest_data=12;//试算数据
+	string repayment_id=13;//偿却
+    repeated ListItems repayment_data=14;//偿却数据
+}
+
+message AddResponse{
+	string item_id =1;
+}
+
+message ListItems {
+	map<string, Value> items =1; // 字段对应的值
+}
+
+// 删除数据记录
+message DeleteRequest{
+    repeated string items = 1; // 数据ID
+	string database = 2; // 数据库
+}
+
+message DeleteResponse{
+}

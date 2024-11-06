@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>パスワードが正常にリセットされました</title>
+    <style type="text/css">
+        .container {
+            width: 600px;
+            margin: 0 auto;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .warning {
+            color: orangered;
+        }
+
+        .btn {
+            display: inline-block;
+            text-align: center;
+            width: 300px;
+            height: 40px;
+            line-height: 40px;
+            background-color: rgb(25, 136, 228);
+            text-decoration: none;
+            border-radius: 10px;
+            color: #ffffff;
+        }
+
+        .block {
+            border: 1px dashed #eeeeee;
+            padding: 10px 30px;
+            border-radius: 10px;
+            background-color: rgba(212, 212, 212, 0.575);
+        }
+
+        .line {
+            height: 1px;
+            border: none;
+            border-top: 3px dotted #eeeeee;
+        }
+
+        .footer {
+            color: grey;
+            font-size: 0.5em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div>
+            <img src="https://www.proship.co.jp/wp-content/themes/pro-ship/images/logo.gif" />
+        </div>
+        <p>
+            企業アカウントのパスワードがリセットされました。次のアカウント情報を使用して、プラットフォームにログインしてください。
+            <br /> <a href="https://propluspit.com/login">https://propluspit.com/login</a>
+        </p>
+        <div class="block">
+            <p>
+                <strong>ログインID:</strong> {{.email}}
+            </p>
+            <p>
+                <strong>パスワード:</strong> {{.password}}
+            </p>
+        </div>
+        <p class="center warning">
+            * アカウントのセキュリティのため、ログインしてからすぐパスワードを更新してください。
+        </p>
+
+        <div class="center">
+            <a href="https://propluspit.com/login" class="btn">ログイン</a>
+        </div>
+        <hr class="line" /><br>
+        <div class="footer">
+            <p>
+                このメールはシステムによって自動的に送信されます。直接返信しないでください。ヘルプが必要な場合は、
+                <a href="mailto:m.furuya@proship.co.jp">m.furuya@proship.co.jp</a>に連絡してください
+            </p>
+            <p>
+                Copyright © 2020 Pro-Ship Incorporated. All Rights Reserved.
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>

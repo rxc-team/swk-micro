@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package allow;
+
+service AllowService {
+	rpc FindAllows(FindAllowsRequest) returns (FindAllowsResponse) {}
+	rpc FindLevelAllows(FindLevelAllowsRequest) returns (FindLevelAllowsResponse) {}
+	rpc FindAllow(FindAllowRequest) returns (FindAllowResponse) {}
+	rpc AddAllow(AddAllowRequest) returns (AddAllowResponse) {}
+	rpc ModifyAllow(ModifyAllowRequest) returns (ModifyAllowResponse) {}
+	rpc DeleteAllow(DeleteAllowRequest) returns (DeleteAllowResponse) {}
+	rpc DeleteAllows(DeleteAllowsRequest) returns (DeleteAllowsResponse) {}
+}
+
+// 许可类型
+message Allow {
+ 	string allow_id = 2; 		// 许可ID
+ 	string allow_name = 3; 		// 许可名称
+	string allow_type = 4; 		// 许可控制类型，datastore-台账操作，folder-文件夹操作，report-报表操作
+	string object_type = 5; 		// 许可的小分类
+	repeated Action actions = 6; 	// 许可的API-KEY
+	string created_at = 7;			// 创建时间
+	string created_by = 8;			// 创建者
+	string updated_at = 9;			// 更新时间
+	string updated_by = 10;			// 更新者
+}
+
+message Action {
+	string api_key = 1; 	// 操作的API-KEY
+	string group_key = 2; 	// 操作分组的KEY
+	string action_name = 3; // 操作名称
+}
+
+message FindAllowsRequest{
+	string allow_type = 2; 		// 许可控制类型，datastore-台账操作，folder-文件夹操作，report-报表操作
+	string object_type = 3; 		// 许可的小分类
+}
+
+message FindAllowsResponse{
+	repeated Allow allows = 1;
+}
+
+message FindLevelAllowsRequest{
+	repeated string allow_list = 2; 		// 许可控制类型，datastore-台账操作，folder-文件夹操作，report-报表操作
+}
+
+message FindLevelAllowsResponse{
+	repeated Allow allows = 1;
+}
+
+message FindAllowRequest{
+	string allow_id = 1;
+}
+
+message FindAllowResponse{
+	Allow allow = 1;
+}
+
+message AddAllowRequest{
+ 	string allow_name = 2; 		// 许可名称
+	string allow_type = 3; 		// 许可控制类型，datastore-台账操作，folder-文件夹操作，report-报表操作
+	string object_type = 4; 		// 许可的小分类
+	repeated Action actions = 5; 	// 许可的API-KEY
+	string writer = 6;				// 作成者
+}
+
+message AddAllowResponse{
+	string allow_id = 1;
+}
+
+message ModifyAllowRequest{
+	string allow_id = 2; 		// 许可ID
+	string allow_name = 3; 		// 许可名称
+	string allow_type = 4; 		// 许可控制类型，datastore-台账操作，folder-文件夹操作，report-报表操作
+	string object_type = 5; 		// 许可的小分类
+	repeated Action actions = 6; 	// 许可的API-KEY
+	string writer = 7;
+}
+
+message ModifyAllowResponse{
+}
+
+message DeleteAllowRequest{
+	string allow_id = 1;
+}
+
+message DeleteAllowResponse{
+}
+
+message DeleteAllowsRequest{
+	repeated string allow_ids = 1;
+}
+
+message DeleteAllowsResponse{
+}

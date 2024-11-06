@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package action;
+
+service ActionService {
+	rpc FindActions(FindActionsRequest) returns (FindActionsResponse) {}
+	rpc FindAction(FindActionRequest) returns (FindActionResponse) {}
+	rpc AddAction(AddActionRequest) returns (AddActionResponse) {}
+	rpc ModifyAction(ModifyActionRequest) returns (ModifyActionResponse) {}
+	rpc DeleteAction(DeleteActionRequest) returns (DeleteActionResponse) {}
+	rpc DeleteActions(DeleteActionsRequest) returns (DeleteActionsResponse) {}
+}
+
+// 许可操作类型
+message Action {
+ 	string action_key = 1; 						// 许可操作key
+ 	map<string,string> action_name = 2; 		// 许可操作名称
+	string action_object = 10; 					// 许可操作对象
+	string action_group = 5; 					// 许可操作组织类型
+	string created_at = 6;						// 创建时间
+	string created_by = 7;						// 创建者
+	string updated_at = 8;						// 更新时间
+	string updated_by = 9;						// 更新者
+}
+
+// 许可操作删除参数
+message ActionDelParam {
+ 	string action_key = 1; 			// 许可操作key
+	string action_object = 2; 		// 许可操作对象
+}
+
+message FindActionsRequest{
+	string action_group = 1; 		// 许可操作组织类型
+}
+
+message FindActionsResponse{
+	repeated Action actions = 1;
+}
+
+message FindActionRequest{
+	string action_key = 1;
+	string action_object = 2;
+}
+
+message FindActionResponse{
+	Action action = 1;
+}
+
+message AddActionRequest{
+	string action_key = 1; 					// 许可操作key
+	map<string,string> action_name = 2; 	// 许可操作名称
+   	string action_group = 5; 				// 许可操作组织类型
+	string action_object = 7; 				// 许可操作对象
+	string writer = 6;						// 作成者
+}
+
+message AddActionResponse{
+}
+
+message ModifyActionRequest{
+	string action_key = 1; 					// 许可操作key
+	map<string,string> action_name = 2; 	// 许可操作名称
+   	string action_group = 6; 				// 许可操作组织类型
+	string action_object = 8; 				// 许可操作对象
+	string writer = 7;
+}
+
+message ModifyActionResponse{
+}
+
+message DeleteActionRequest{
+	string action_key = 1; 			// 许可操作key
+	string action_object = 2;       // 许可操作对象
+}
+
+message DeleteActionResponse{
+}
+
+message DeleteActionsRequest{
+	repeated ActionDelParam dels = 1;   // 删除参数
+}
+
+message DeleteActionsResponse{
+}

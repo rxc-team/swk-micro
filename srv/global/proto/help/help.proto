@@ -1,0 +1,112 @@
+syntax = "proto3";
+
+package help;
+
+service HelpService {
+	// 获取单个帮助文档
+	rpc FindHelp(FindHelpRequest) returns (FindHelpResponse) {}
+	// 获取多个帮助文档
+	rpc FindHelps(FindHelpsRequest) returns (FindHelpsResponse) {}
+	// 获取所有不重复帮助文档标签
+	rpc FindTags(FindTagsRequest) returns (FindTagsResponse) {}
+	// 添加帮助文档
+	rpc AddHelp(AddHelpRequest) returns (AddHelpResponse) {}
+	// 更新帮助文档
+	rpc ModifyHelp(ModifyHelpRequest) returns (ModifyHelpResponse) {}
+	// 硬删除帮助文档
+	rpc DeleteHelp(DeleteHelpRequest) returns (DeleteHelpResponse) {}
+	// 硬删除多个帮助文档
+	rpc DeleteHelps(DeleteHelpsRequest) returns (DeleteHelpsResponse) {}
+}
+
+// 帮助文档
+message Help {
+	string help_id = 1; // 帮助文档ID
+	string title = 2; // 帮助文档标题
+	string type = 3; // 帮助文档类型
+	string content = 4; // 帮助文档内容
+	repeated string images = 5; // 帮助文档图片
+	repeated string tags = 6; // 帮助文档标签
+	string lang_cd = 7; // 登录语言代号
+	string created_at = 8; // 创建时间
+	string created_by = 9; // 创建者
+	string updated_at = 10; // 更新时间
+	string updated_by = 11; // 更新者
+}
+
+message FindHelpRequest{
+	string help_id = 1; // 类型ID
+	string database = 2; // 数据库
+}
+
+message FindHelpResponse{
+	Help help = 1;
+}
+
+message FindHelpsRequest{
+	string title = 1; // 帮助文档标题
+	string type = 2; // 帮助文档类型
+	string tag = 3; // 帮助文档标签
+	string lang_cd = 4; // 登录语言代号
+	string is_dev = 5; // dev区分
+	string database = 6; // 数据库
+}
+
+message FindHelpsResponse{
+	repeated Help helps = 1;
+}
+
+message FindTagsRequest{
+	string database = 1; // 数据库
+}
+
+message FindTagsResponse{
+	repeated string tags = 1;
+}
+
+message AddHelpRequest{
+	string help_id = 1; // 帮助文档ID
+	string title = 2; // 帮助文档标题
+	string type = 3; // 帮助文档类型
+	string content = 4; // 帮助文档内容
+	repeated string images = 5; // 帮助文档图片
+	repeated string tags = 6; // 帮助文档标签
+	string lang_cd = 7; // 登录语言代号
+	string writer = 8; // 登录者
+	string database = 9; // 数据库
+}
+
+message AddHelpResponse{
+	string help_id = 1; // 类型ID
+}
+
+message ModifyHelpRequest{
+	string help_id = 1; // 帮助文档ID
+	string title = 2; // 帮助文档标题
+	string type = 3; // 帮助文档类型
+	string content = 4; // 帮助文档内容
+	repeated string images = 5; // 帮助文档图片
+	repeated string tags = 6; // 帮助文档标签
+	string lang_cd = 7; // 登录语言代号
+	string writer = 8; // 更新者
+	string database = 9; // 数据库
+}
+
+message ModifyHelpResponse{
+}
+
+message DeleteHelpRequest{
+	string help_id = 1; // 帮助文档ID
+	string database = 2; // 数据库
+}
+
+message DeleteHelpResponse{
+}
+
+message DeleteHelpsRequest{
+	repeated string help_id_list = 1; // 帮助文档ID集合
+	string database = 2; // 数据库
+}
+
+message DeleteHelpsResponse{
+}

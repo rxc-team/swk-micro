@@ -1,0 +1,265 @@
+syntax = "proto3";
+
+package field;
+
+service FieldService {
+	rpc FindAppFields(AppFieldsRequest) returns (AppFieldsResponse) {}
+	rpc FindFields(FieldsRequest) returns (FieldsResponse) {}
+	rpc FindField(FieldRequest) returns (FieldResponse) {}
+	rpc VerifyFunc(VerifyFuncRequest) returns (VerifyFuncResponse) {}
+	rpc AddField(AddRequest) returns (AddResponse) {}
+	rpc BlukAddField(BlukAddRequest) returns (BlukAddResponse) {}
+	rpc ModifyField(ModifyRequest) returns (ModifyResponse) {}
+	rpc DeleteField(DeleteRequest) returns (DeleteResponse) {}
+	rpc DeleteDatastoreFields(DeleteDatastoreFieldsRequest) returns (DeleteResponse) {}
+	rpc DeleteSelectFields(DeleteSelectFieldsRequest) returns (DeleteResponse) {}
+	rpc HardDeleteFields(HardDeleteFieldsRequest) returns (DeleteResponse) {}
+	rpc RecoverSelectFields(RecoverSelectFieldsRequest) returns (RecoverSelectFieldsResponse) {}
+	rpc SetSequenceValue(SetSequenceValueRequest) returns (SetSequenceValueResponse) {}
+}
+
+// 字段
+message Field {
+	string field_id = 1; // 字段ID
+	string app_id = 2; // 所属APP
+	string datastore_id = 3; // 所属台账
+	string field_name = 4; // 字段名称
+	string field_type = 5; // 字段类型
+	bool is_fixed = 36; // 是否固定字段
+	bool is_required = 6; // 是否必须入力
+	bool is_image = 7; // 是否是图片
+	bool is_check_image = 35; // 是否盘点图片
+	bool as_title = 8; // 是否作为标题
+	bool unique = 26; // 是否为唯一字段
+	string lookup_app_id = 9; // 关联字段的所属APP
+	string lookup_datastore_id = 10; // 关联字段的所属台账
+	string lookup_field_id = 11; // 关联字段的ID
+	string user_group_id = 12; // 用户组
+	string option_id = 13; // 选项组
+	int64 cols = 14; // grid中占用的行数
+	int64 rows = 15; // grid中占用的列数
+	int64 x = 16; // 行
+	int64 y = 17; // 列
+	int64 width = 18; // 一览显示的字段宽度
+	int64 min_length = 27;// 最小长度
+	int64 max_length = 28;// 最大长度
+	int64 min_value = 29;// 最小值
+	int64 max_value = 30;// 最大值
+	int64 display_order = 25; // 表示顺
+	int64 display_digits = 31; // 表示位數
+	int64 precision = 37; // 小数精度
+	string prefix = 32; // 序列前綴
+	string return_type = 33; // 返回类型
+	string formula = 34; // 公式
+	string self_calculate = 38; // 数字类型，自算方案
+	string created_at = 19; // 创建时间
+	string created_by = 20; // 创建者
+	string updated_at = 21; // 更新时间
+	string updated_by = 22; // 更新者
+	string deleted_at = 23; // 删除时间
+	string deleted_by = 24; // 删除者
+}
+
+// 设置序列值
+message SetSequenceValueRequest{
+	string sequence_name = 1; // 序列名称
+	int64 sequence_value = 2; // 序列值
+	string database = 3; // 数据库
+}
+
+message SetSequenceValueResponse{
+}
+
+// 验证台账的函数字段公式是否正确
+message VerifyFuncRequest{
+	string return_type = 1; // 返回类型
+	string formula = 2; // 公式
+	string app_id = 3; // 所属APP
+	string datastore_id = 5; // 所属台账
+	string database = 4; // 数据库
+}
+
+message VerifyFuncResponse{
+	bool result = 1;
+	string error = 2;
+	map<string,string> params = 3;
+}
+
+// 查找APP中多个字段
+message AppFieldsRequest{
+	string app_id = 1; // 所属APP
+	string field_type = 2; // 字段类型
+	string lookup_datastore_id = 3; // 关联字段的所属台账
+	string invalidated_in = 4; // 是否包含无效数据
+	string database = 5; // 数据库
+}
+
+message AppFieldsResponse{
+	repeated Field fields = 1;
+}
+
+// 查找多个字段
+message FieldsRequest{
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	string field_name = 3; // 字段名称
+	string field_type = 4; // 字段类型
+	string is_required = 5; // 必须入力
+	string is_fixed = 9; // 是否固定字段
+	string as_title = 6; // 作为标题
+	string invalidated_in = 7; // 是否包含无效数据
+	string database = 8; // 数据库
+}
+
+message FieldsResponse{
+	repeated Field fields = 1;
+}
+
+// 查询单个字段
+message FieldRequest{
+	string field_id = 1; // 字段ID
+	string datastore_id = 3; // 台账ID
+	string database = 2; // 数据库
+}
+
+message FieldResponse{
+	Field field = 1;
+}
+
+// 添加单个字段
+message AddRequest{
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	string field_name = 3; // 字段名称
+	string field_type = 4; // 字段类型
+	string field_id = 26; // 字段ID
+	bool is_fixed = 27; // 是否固定字段
+	bool is_required = 5; // 是否必须入力
+	bool is_image = 6; // 是否是图片
+	bool is_check_image = 25; // 是否盘点图片
+	bool as_title = 7; // 是否作为标题
+	bool unique = 15; // 是否为唯一字段
+	string lookup_app_id = 8; // 关联字段的所属APP
+	string lookup_datastore_id = 9; // 关联字段的所属台账
+	string lookup_field_id = 10; // 关联字段的ID
+	string user_group_id = 11; // 用户组
+	string option_id = 12; // 选项组
+	int64 min_length = 19;// 最小长度
+	int64 max_length = 16;// 最大长度
+	int64 min_value = 17;// 最小值
+	int64 max_value = 18;// 最大值
+	int64 display_order = 14; // 表示顺
+	int64 cols = 29; // grid中占用的行数
+	int64 rows = 30; // grid中占用的列数
+	int64 x = 31; // 行
+	int64 y = 32; // 列
+	int64 width = 33; // 一览显示的字段宽度
+	int64 display_digits = 20; // 表示位數
+	int64 precision = 28; // 小数精度
+	string prefix = 21; // 序列前綴
+	string return_type = 23; // 返回类型
+	string formula = 24; // 公式
+	string self_calculate = 35; // 数字类型，自算方案
+	string writer = 13; // 创建者
+	string database = 22; // 数据库
+}
+
+message AddResponse{
+	string field_id = 1;
+}
+
+// 添加多个字段
+message BlukAddRequest{
+	repeated AddRequest fields = 1; // 字段集（不包含ID）
+	string writer = 2; // 创建者
+	string database = 3; // 数据库
+}
+
+message BlukAddResponse{
+}
+
+// 修改字段
+message ModifyRequest{
+	string field_id = 1; // 字段ID
+	string app_id = 2; // 所属APP
+	string datastore_id = 3; // 所属台账
+	string field_name = 4; // 字段名称
+	string field_type = 5; // 字段类型
+	string is_fixed = 32; // 是否固定字段
+	string is_required = 6; // 是否必须入力
+	string is_image = 7; // 是否是图片
+	string is_check_image = 31; // 是否盘点图片
+	string as_title = 8; // 是否作为标题
+	string unique = 9; // 是否为唯一字段
+	string lookup_app_id = 10; // 关联字段的所属APP
+	string lookup_datastore_id = 11; // 关联字段的所属台账
+	string lookup_field_id = 12; // 关联字段的ID
+	string user_group_id = 13; // 用户组
+	string option_id = 14; // 选项组
+	string cols = 15; // grid中占用的行数
+	string rows = 16; // grid中占用的列数
+	string x = 17; // 行
+	string y = 18; // 列
+	string width = 19; // 一览显示的字段宽度
+	string min_length = 23;// 最小长度
+	string max_length = 22;// 最大长度
+	string min_value = 25;// 最小值
+	string max_value = 24;// 最大值
+	string display_order = 20; // 表示顺
+	string display_digits = 26; // 表示位數
+	string precision = 33; // 小数精度
+	string prefix = 27; // 序列前綴
+	string return_type = 29; // 返回类型
+	string formula = 30; // 公式
+	string self_calculate = 35; // 数字类型，自算方案
+	string is_display_setting = 34; // 是否是布局或宽度的修改
+	string writer = 21; // 更新者
+	string database = 28; // 数据库
+}
+
+message ModifyResponse{
+}
+
+// 删除单个字段
+message DeleteRequest{
+	string field_id = 1; // 字段ID
+	string writer = 2; // 删除者
+	string datastore_id = 4; // 台账ID
+	string database = 3; // 数据库
+}
+
+// 删除整个台账的字段
+message DeleteDatastoreFieldsRequest{
+	string datastore_id = 1; // 所属台账
+	string writer = 2; // 删除者
+	string database = 3; // 数据库
+}
+
+// 删除选中的字段
+message DeleteSelectFieldsRequest{
+	repeated string field_id_list = 1; // 选中字段集
+	string writer = 2; // 删除者
+	string datastore_id = 4; // 台账ID
+	string database = 3; // 数据库
+}
+
+// 物理删除选中字段
+message HardDeleteFieldsRequest{
+	repeated string field_id_list = 1; // 选中字段集
+	string datastore_id = 2; // 台账ID
+	string database = 3; // 数据库
+}
+
+message DeleteResponse{
+}
+
+// 恢复选中的字段
+message RecoverSelectFieldsRequest{
+	repeated string field_id_list = 1; // 选中字段集
+	string writer = 2; // 删除者
+	string datastore_id = 4; // 台账ID
+	string database = 3; // 数据库
+}
+
+message RecoverSelectFieldsResponse{
+}

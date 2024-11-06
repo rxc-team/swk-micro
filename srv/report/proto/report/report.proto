@@ -1,0 +1,270 @@
+syntax = "proto3";
+
+package report;
+
+service ReportService {
+	rpc FindReports(FindReportsRequest) returns (FindReportsResponse) {}
+	rpc FindReport(FindReportRequest) returns (FindReportResponse) {}
+	rpc FindReportData(FindReportDataRequest) returns (FindReportDataResponse) {}
+	rpc GenerateReportData(GenerateReportDataRequest) returns (GenerateReportDataResponse) {}
+	rpc FindCount(CountRequest) returns (CountResponse) {}
+	rpc AddReport(AddReportRequest) returns (AddReportResponse) {}
+	rpc ModifyReport(ModifyReportRequest) returns (ModifyReportResponse) {}
+	rpc DeleteReport(DeleteReportRequest) returns (DeleteResponse) {}
+	rpc DeleteSelectReports(DeleteSelectReportsRequest) returns (DeleteResponse) {}
+	rpc HardDeleteReports(HardDeleteReportsRequest) returns (DeleteResponse) {}
+	rpc RecoverSelectReports(RecoverSelectReportsRequest) returns (RecoverSelectReportsResponse) {}
+	// 下载报表数据
+	rpc Download(DownloadRequest) returns (stream DownloadResponse) {}
+}
+
+// 条件
+message Condition {
+	string field_id = 1; // 检索字段ID
+    string field_type = 2; // 检索字段类型
+    string search_value = 3; // 检索值
+	string operator = 4; // 检索连接操作符
+	bool is_dynamic = 5; // 是否动态
+    string condition_type = 6; // 检索连接类型
+}
+
+message Report {
+	string domain = 1; // 所属公司域名
+	string app_id = 2; // 所属APP
+	string datastore_id = 3; // 台账ID
+	string report_id = 4; // 报表ID
+	string report_name = 5; // 报表名称
+	int64 display_order = 6; // 报表显示顺序
+	bool is_use_group = 7; // 是否使用Group
+	repeated ReportCondition report_conditions = 8; // 报表检索条件情报
+	string condition_type = 19; // 字段条件(or或者and)
+	GroupInfo group_info = 10; // Group情报
+	repeated KeyInfo select_key_infos = 11; // 出力字段情报
+	string created_at = 13; // 创建时间
+	string created_by = 14; // 创建者
+	string updated_at = 15; // 更新时间
+	string updated_by = 16; // 更新者
+	string deleted_at = 17; // 删除时间
+	string deleted_by = 18; // 删除者
+}
+
+message Value {
+	string data_type = 1; // 字段类型
+    string value = 2; // 字段值
+}
+
+message ReportCondition {
+	string field_id = 1; // 检索字段ID
+    string field_type = 2; // 检索字段类型
+    string search_value = 3; // 检索条件值
+	string operator = 4; // 检索连接操作符
+	bool is_dynamic = 5; // 是否动态
+	string condition_type = 6; // 检索连接类型
+}
+
+message GroupInfo {
+	repeated KeyInfo group_keys = 1; // Group字段
+	repeated AggreKey aggre_keys = 2; // 聚合字段
+	bool show_count = 3; // 是否显示件数集计
+}
+
+message KeyInfo {
+	bool is_lookup = 1; // 是否关联是字段
+	string field_id = 2; // 字段ID
+	string datastore_id = 3; // 台账ID
+	string data_type = 4; // 数据类型
+	string alias_name = 5; // 别名
+	string sort = 6; // 排序
+	bool is_dynamic = 7; // 是否动态
+	bool unique = 9; // 是否唯一
+	int64 order = 8; // 字段顺序
+	string option_id = 10; // 选项ID
+}
+message FieldInfo {
+	string data_type = 1; // 数据类型
+	string alias_name = 2; // 别名
+	string datastore_id = 3; // 台账ID
+	bool is_dynamic = 4; // 是否动态
+	bool unique = 6; // 是否唯一
+	int64 order = 5; // 字段顺序
+	string option_id = 7; // 选项ID
+}
+
+message AggreKey {
+	bool is_lookup = 9; // 是否关联是字段
+	string field_id = 1; // 字段ID
+	string aggre_type = 2; // 聚合类型
+	string data_type = 3; // 数据类型
+	string alias_name = 4; // 别名
+	string sort = 5; // 排序
+	int64 order = 6; // 字段顺序
+	string datastore_id = 7; // 台账ID
+	string option_id = 8; // 选项ID
+}
+
+// 查找多个报表情报
+message FindReportsRequest{
+	string domain = 1; // 所属公司域名
+	string app_id = 2; // 所属APP
+	string database = 3; // 数据库
+	string datastore_id = 4; // 台账ID
+}
+
+message FindReportsResponse{
+	repeated Report reports = 1;
+}
+
+// 查找单个报表情报
+message FindReportRequest{
+	string report_id = 1; // 报表ID
+	string database = 2; // 数据库
+}
+
+message FindReportResponse{
+	Report report = 1;
+}
+
+// 查找报表数据情报
+message FindReportDataRequest{
+	string report_id = 1; // 报表ID
+	int64 page_index = 2; // 当前页
+	int64 page_size = 3; // 每页的大小
+	repeated string owners = 4; // 数据所有者
+	string database = 5; // 数据库
+	repeated Condition condition_list = 6; // 字段条件
+	string condition_type = 7; // 字段条件(or或者and)
+}
+
+message FindReportDataResponse{
+	repeated ReportData item_data = 1; // 数据
+	int64 total = 2; // 总件数
+	map<string, FieldInfo> fields = 3; // 字段信息
+	string report_name = 4; // 报表名称
+}
+// 下载报表数据
+message DownloadRequest{
+	string report_id = 1; // 报表ID
+	int64 page_index = 2; // 当前页
+	int64 page_size = 3; // 每页的大小
+	repeated string owners = 4; // 数据所有者
+	string database = 5; // 数据库
+	repeated Condition condition_list = 6; // 字段条件
+	string condition_type = 7; // 字段条件(or或者and)
+}
+message DownloadResponse{
+	ReportData item_data = 1; // 数据
+}
+
+// 生成报表数据
+message GenerateReportDataRequest{
+	string report_id = 1; // 报表ID
+	string database = 2; // 数据库
+}
+
+message GenerateReportDataResponse{
+}
+
+// 查找报表数据情报
+message CountRequest{
+	string report_id = 1; // 报表ID
+	repeated string owners = 2; // 数据所有者
+	string database = 3; // 数据库
+}
+
+message CountResponse{
+	int64 total = 1; // 总件数
+	map<string, FieldInfo> fields = 2; // 字段信息
+}
+
+message ReportData {
+	map<string, Value> items =1; // 字段对应的值
+	int64 count =2; // 件数
+	string item_id =13; // 数据来源
+	string check_type =3; // 盘点种类
+	string check_status =11; // 检查状态
+	string created_at =4; // 创建时间
+	string created_by =5; // 创建者
+	string updated_at =6; // 更新时间
+	string updated_by =7; // 更新者
+	string checked_at =8; // 盘点时间
+	string checked_by =9; // 盘点者
+	string update_time =10; //  更新时间
+	string label_time =12; //  标签出力时间
+}
+
+// 添加报表
+message AddReportRequest{
+	string domain = 1; // 所属公司域名
+	string app_id = 2; // 所属APP
+	string datastore_id = 3; // 台账ID
+	string report_id = 4; // 报表ID
+	string report_name = 5; // 报表名称
+	int64 display_order = 6; // 报表显示顺序
+	bool is_use_group = 7; // 是否使用Group
+	repeated ReportCondition report_conditions = 8; // 报表检索条件情报
+	string condition_type = 14; // 字段条件(or或者and)
+	GroupInfo group_info = 10; // Group情报
+	repeated KeyInfo select_key_infos = 11; // 出力字段情报
+	string writer = 12; // 创建者
+	string database = 13; // 数据库
+}
+
+message AddReportResponse{
+	string report_id = 1;
+}
+
+// 修改报表情报
+message ModifyReportRequest{
+	string domain = 1; // 所属公司域名
+	string app_id = 2; // 所属APP
+	string datastore_id = 3; // 台账ID
+	string report_id = 4; // 报表ID
+	string report_name = 5; // 报表名称
+	string display_order = 6; // 报表显示顺序
+	string is_use_group = 7; // 是否使用Group
+	repeated ReportCondition report_conditions = 8; // 报表检索条件情报
+	string condition_type = 14; // 字段条件(or或者and)
+	GroupInfo group_info = 10; // Group情报
+	repeated KeyInfo select_key_infos = 11; // 出力字段情报
+	string writer = 12; // 更新者
+	string database = 13; // 数据库
+}
+
+message ModifyReportResponse{
+}
+
+// 删除单个报表情报
+message DeleteReportRequest{
+	string report_id = 1;
+	string writer = 2;
+	string database = 3; // 数据库
+}
+
+// 删除多个报表情报
+message DeleteSelectReportsRequest{
+	repeated string report_id_list = 1;
+	string writer = 2;
+	string database = 3; // 数据库
+}
+
+// 物理删除多个报表情报
+message HardDeleteReportsRequest{
+	repeated string report_id_list = 1;
+	string database = 2; // 数据库
+	string domain = 3; 
+	string app_id = 4; 
+	string writer = 5; 
+}
+
+message DeleteResponse{
+}
+
+// 恢复选中报表情报
+message RecoverSelectReportsRequest{
+	repeated string report_id_list = 1;
+	string writer = 2;
+	string database = 3; // 数据库
+}
+
+message RecoverSelectReportsResponse{
+}

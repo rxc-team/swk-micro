@@ -1,0 +1,109 @@
+syntax = "proto3";
+
+package schedule;
+
+service ScheduleService {
+	rpc FindSchedules(SchedulesRequest) returns (SchedulesResponse) {}
+	rpc FindSchedule(ScheduleRequest) returns (ScheduleResponse) {}
+	rpc AddSchedule(AddRequest) returns (AddResponse) {}
+	rpc ModifySchedule(ModifyRequest) returns (ModifyResponse) {}
+	rpc DeleteSchedule(DeleteRequest) returns (DeleteResponse) {}
+	rpc AddScheduleNameUniqueIndex(ScheduleNameIndexRequest) returns (ScheduleNameIndexResponse) {}
+}
+
+// 任务计划数据
+message Schedule {
+	string schedule_id =1; // 任务计划ID
+	string schedule_name =2; // 任务名称
+	int64  entry_id =3; // 最近一次任务执行ID
+	string spec =4; // 任务执行时间设置
+	int64  multi =5; // 同时执行的数量
+	int64  retry_times =6; // 重试次数
+	int64  retry_interval =7; // 重试间隔时间
+	string start_time =8; // 开始时间
+	string end_time =9; // 结束时间
+	string schedule_type =10; // 任务类型
+	bool   run_now =11; // 是否立即执行
+	string status =17; // 执行状态（1表示启用，0表示未启用）
+	map<string,string> params =12; // 任务执行参数
+	string created_at = 13; // 创建时间
+	string created_by = 14; // 创建者
+	string updated_at = 15; // 更新时间
+	string updated_by = 16; // 更新者
+}
+
+// 查找多条记录
+message SchedulesRequest{
+	string user_id =1; // 创建用户
+	int64  page_index = 2; // 当前页
+	int64  page_size = 3; // 每页的大小
+	string database = 4; // 数据库
+	string schedule_type = 6; // 任务类型
+	bool   run_now =5; // 是否立即执行
+}
+
+message SchedulesResponse{
+	repeated Schedule schedules = 1;
+	int64 total = 2;
+}
+
+// 查询单条记录
+message ScheduleRequest{
+	string schedule_id = 1; // 任务ID
+	string database = 2; // 数据库
+}
+
+message ScheduleResponse{
+	Schedule schedule = 1;
+}
+// 添加schedule_name唯一索引
+message ScheduleNameIndexRequest{
+	string schedule_type = 1;
+	string user_id = 2;
+	string db = 3;
+}
+message ScheduleNameIndexResponse{}
+
+
+// 添加数据
+message AddRequest{
+	string database = 1; // 数据库
+	string schedule_name =2; // 任务名称
+	int64  entry_id =3; // 最近一次任务执行ID
+	string spec =4; // 任务执行时间设置
+	int64  multi =5; // 同时执行的数量
+	int64  retry_times =6; // 重试次数
+	int64  retry_interval =7; // 重试间隔时间
+	string start_time =8; // 开始时间
+	string end_time =9; // 结束时间
+	string schedule_type =10; // 任务类型
+	bool   run_now =11; // 是否立即执行
+	string status =14; // 执行状态（1表示启用，0表示未启用）
+	map<string,string> params =12; // 任务执行参数
+	string writer = 13; // 创建者
+}
+
+message AddResponse{
+	string schedule_id =1;
+}
+
+// 更新记录
+message ModifyRequest{
+	string schedule_id = 1; // 任务计划ID
+	string entry_id = 2; // 最近一次任务执行ID
+	string status = 3; // 执行状态（1表示启用，0表示未启用）
+	string database = 4; // 数据库
+	string writer = 5; // 更新者
+}
+
+message ModifyResponse{
+}
+
+// 删除数据记录
+message DeleteRequest{
+	repeated string schedule_ids =1; // 任务计划ID
+	string database = 2; // 数据库
+}
+
+message DeleteResponse{
+}

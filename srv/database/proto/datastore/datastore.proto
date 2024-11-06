@@ -1,0 +1,311 @@
+syntax = "proto3";
+
+package datastore;
+
+service DataStoreService {
+	rpc FindDatastores(DatastoresRequest) returns (DatastoresResponse) {}
+	rpc FindDatastore(DatastoreRequest) returns (DatastoreResponse) {}
+	rpc FindDatastoreByKey(DatastoreKeyRequest) returns (DatastoreResponse) {}
+	rpc FindDatastoreMapping(MappingRequest) returns (MappingResponse) {}
+	rpc AddDatastore(AddRequest) returns (AddResponse) {}
+	rpc AddDatastoreMapping(AddMappingRequest) returns (AddMappingResponse) {}
+	rpc ModifyDatastore(ModifyRequest) returns (ModifyResponse) {}
+	rpc ModifyDatastoreMapping(ModifyMappingRequest) returns (ModifyMappingResponse) {}
+	rpc DeleteDatastore(DeleteRequest) returns (DeleteResponse) {}
+	rpc DeleteDatastoreMapping(DeleteMappingRequest) returns (DeleteResponse) {}
+	rpc DeleteSelectDatastores(DeleteSelectRequest) returns (DeleteResponse) {}
+	rpc HardDeleteDatastores(HardDeleteDatastoresRequest) returns (DeleteResponse) {}
+	rpc AddUniqueKey(AddUniqueRequest) returns (AddUniqueResponse) {}
+	rpc DeleteUniqueKey(DeleteUniqueRequest) returns (DeleteUniqueResponse) {}
+	rpc AddRelation(AddRelationRequest) returns (AddRelationResponse) {}
+	rpc DeleteRelation(DeleteRelationRequest) returns (DeleteRelationResponse) {}
+	rpc ModifyDatastoreMenuSort(MenuSortRequest) returns (MenuSortResponse) {}
+}
+
+// 菜单排序
+message MenuSortRequest{
+	repeated Datastore datastores_sort = 1; //排序的台账
+	string db = 2; // 数据库
+}
+
+message MenuSortResponse{}
+
+// 默认排序配置
+message SortItem{
+	string sort_key = 1;
+	string sort_value = 2;
+}
+
+// 关联关系
+message RelationItem{
+	string relation_id = 1;
+	string datastore_id = 2;
+	map<string,string> fields = 3;
+}
+
+// 映射配置
+message MappingConf{
+	string mapping_id = 1;
+	string mapping_name = 2;
+	string mapping_type = 3;
+	string update_type = 4;
+	string separator_char = 5;
+	string break_char = 6;
+	string line_break_code = 7;
+	string char_encoding = 8;
+	string apply_type = 10; // mapping类型
+	repeated MappingRule mapping_rule = 9;
+}
+
+// 映射规则
+message MappingRule {
+	string from_key = 1;
+	string to_key = 2;
+	bool is_required = 3;
+	bool exist = 4;
+	bool special= 5;
+	string default_value = 6;
+	string format = 7;
+	string replace = 8;
+	string data_type = 9;
+	bool primary_key = 10;
+	int64 precision = 11;
+	int64 show_order = 12;
+	bool check_change = 13; // 检查变更
+}
+
+message Datastore {
+	string datastore_id =1; // 台账ID
+	string app_id =2; // 所属APP
+	string datastore_name =3;   // 台账名称
+	string api_key =15;   // apiKey
+	bool can_check =4;  // 是否能够盘点
+	bool show_in_menu =5;  // 是否显示在菜单中
+	bool no_status =6;  // 是否有数据流
+	string encoding =7; // 字符编码（csv或excel上传下载使用）
+	repeated MappingConf mappings = 14;// 映射规则
+	repeated SortItem sorts = 16;// 排序
+	repeated string scan_fields = 17; // 扫描字段
+	string scan_fields_connector = 18; // 扫描字段连接符
+	string print_field1 = 19; // 标签打印字段1
+	string print_field2 = 20; // 标签打印字段2
+	string print_field3 = 21; // 标签打印字段3
+	repeated string unique_fields = 22; // 唯一字段组合，可以有多个唯一字段
+	repeated RelationItem relations = 23; // 关系
+	string created_at = 8; // 创建时间
+	string created_by = 9; // 创建者
+	string updated_at = 10; // 更新时间
+	string updated_by = 11; // 更新者
+	string deleted_at = 12; // 删除时间
+	string deleted_by = 13; // 删除者
+	int64 display_order = 24; //台账菜单排序
+}
+
+// 查找多个台账
+message DatastoresRequest{
+	string app_id = 1; // 所属APP
+	string datastore_name = 2; // 台账名称
+	string api_key =6;   // apiKey
+	string can_check = 3; // 是否能够盘点
+	string show_in_menu = 4; // 是否显示在菜单中
+	string database = 5; // 数据库
+}
+
+message DatastoresResponse{
+	repeated Datastore datastores = 1;
+}
+
+// 查找单个台账
+message DatastoreRequest{
+	string datastore_id = 1; // 台账ID
+	string database = 2; // 数据库
+}
+
+// 查找单个台账
+message DatastoreKeyRequest{
+	string api_key = 1; // 台账API-KEY
+	string app_id =2; // 所属APP
+	string database = 3; // 数据库
+}
+
+message DatastoreResponse{
+	Datastore datastore = 1;
+}
+// 查找台账的映射Mapping
+message MappingRequest{
+	string datastore_id = 1; // 台账ID
+	string mapping_id = 2; // 映射ID
+	string database = 3; // 数据库
+}
+
+message MappingResponse{
+	MappingConf mapping = 1;
+}
+
+// 添加单个台账
+message AddRequest{
+	string app_id =1; // 所属APP
+	string datastore_name =2;   // 台账名称
+    string api_key =9;   // apiKey
+	bool can_check =3;  // 是否能够盘点
+	bool show_in_menu =4;  // 是否显示在菜单中
+	bool no_status =5;  // 是否有数据流
+	string encoding =6; // 字符编码（csv或excel上传下载使用）
+	repeated string scan_fields = 10; // 扫描字段
+	string scan_fields_connector = 11; // 扫描字段连接符
+	string print_field1 = 12; // 标签打印字段1
+	string print_field2 = 13; // 标签打印字段2
+	string print_field3 = 14; // 标签打印字段3
+	repeated SortItem sorts = 15;// 排序
+	repeated string unique_fields = 16; // 唯一字段组合，可以有多个唯一字段
+	repeated RelationItem relations = 17; // 关系
+	string writer =7; // 创建者
+	string database = 8; // 数据库
+	int64 display_order = 18; // 排序
+}
+
+message AddResponse{
+	string datastore_id = 1;
+}
+// 添加单个台账Mapping
+message AddMappingRequest{
+	string app_id = 1;
+	string datastore_id = 2;
+	string mapping_name = 3;
+	string mapping_type = 4;
+	string update_type = 5;
+	string separator_char = 6;
+	string break_char = 7;
+	string line_break_code = 8;
+	string char_encoding = 9;
+	string apply_type = 12; // mapping类型
+	 repeated MappingRule mapping_rule = 10;
+	 string database = 11; // 数据库
+}
+
+message AddMappingResponse{
+	string mapping_id = 1;
+}
+
+// AddUniqueRequest
+message AddUniqueRequest {
+	string app_id = 1;
+	string datastore_id = 2;
+	string unique_fields = 3; // mapping类型
+	string writer = 4; // 更新者
+	string database = 5; // 数据库
+}
+
+message AddUniqueResponse{
+}
+
+// DeleteUniqueRequest
+message DeleteUniqueRequest {
+	string app_id = 1;
+	string datastore_id = 2;
+	string unique_fields = 3; // mapping类型
+	string writer = 4; // 更新者
+	string database = 5; // 数据库
+}
+
+message DeleteUniqueResponse{
+}
+
+// AddUniqueRequest
+message AddRelationRequest {
+	string app_id = 1;
+	string datastore_id = 2;
+	RelationItem relation = 3; // mapping类型
+	string writer = 4; // 更新者
+	string database = 5; // 数据库
+}
+
+message AddRelationResponse{
+}
+
+// DeleteRelationRequest
+message DeleteRelationRequest {
+	string app_id = 1;
+	string datastore_id = 2;
+	string relation_id = 3; // mapping类型
+	string writer = 4; // 更新者
+	string database = 5; // 数据库
+}
+
+message DeleteRelationResponse{
+}
+
+// 修改台账记录
+message ModifyRequest{
+	string datastore_id = 1; // 台账ID
+	string datastore_name =2;   // 台账名称
+	string api_key =9;   // apiKey
+	string can_check =3;  // 是否能够盘点
+	string show_in_menu =4;  // 是否显示在菜单中
+	string no_status =5;  // 是否有数据流
+	string encoding =6; // 字符编码（csv或excel上传下载使用）
+	repeated SortItem sorts = 10;// 排序
+	repeated string scan_fields = 11; // 扫描字段
+	string scan_fields_connector = 12; // 扫描字段连接符
+	string print_field1 = 13; // 标签打印字段1
+	string print_field2 = 14; // 标签打印字段2
+	string print_field3 = 15; // 标签打印字段3
+	string writer = 7; // 更新者
+	string database = 8; // 数据库
+}
+
+message ModifyResponse{
+}
+
+// 修改台账Mapping
+message ModifyMappingRequest{
+	string app_id = 1;
+	string datastore_id = 2;
+	string mapping_id = 3;
+	string mapping_name = 4;
+	string mapping_type = 5;
+	string update_type = 6;
+	string separator_char = 7;
+	string break_char = 8;
+	string line_break_code = 9;
+	string char_encoding = 10;
+	string apply_type = 13; // mapping类型
+	repeated MappingRule mapping_rule = 11;
+	string database = 12; // 数据库
+}
+
+message ModifyMappingResponse{
+}
+
+// 删除单个台账
+message DeleteRequest{
+	string datastore_id = 1;
+	string writer = 2;
+	string database = 3; // 数据库
+}
+// 删除台账Mapping
+message DeleteMappingRequest{
+	string datastore_id = 1;
+	string mapping_id = 2;
+	string app_id = 3;
+	string database = 4; // 数据库
+}
+
+// 删除多个台账
+message DeleteSelectRequest{
+	repeated string datastore_id_list = 1;
+	string writer = 2;
+	string database = 3; // 数据库
+}
+
+// 物理删除多个台账
+message HardDeleteDatastoresRequest{
+	repeated string datastore_id_list = 1;
+	string database = 2; // 数据库
+}
+
+message DeleteResponse{
+}
+
+
+

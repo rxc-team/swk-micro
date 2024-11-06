@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package upload;
+
+service UploadService {
+	rpc CSVUpload(CSVRequest) returns (CSVResponse) {}
+	rpc InventoryUpload(InventoryRequest) returns (InventoryResponse) {}
+	rpc MappingUpload(MappingRequest) returns (MappingResponse) {}
+}
+
+// 基础参数
+message Params {
+	string job_id =1; // 任务ID
+	string action =2; // 操作名称
+	string encoding =3; // 编码格式
+	string zip_charset =16; // 压缩文件编码格式
+	string user_id =4; // 上传用户
+	string app_id =5; // 所属app
+	string lang =6; // 当前语言
+	string domain =7; // 所属公司domain
+	string datastore_id =8; // 上传台账
+	string group_id =11; // 用户所属组织
+	bool   empty_change =17; // 空白是否更新
+	repeated string access_keys=12; // 权限
+	repeated string owners=13; // 所有者
+	repeated string roles=14; // 当前用户拥有的角色
+	string wf_id =15; // 选择的流程
+	string database =10; // 数据库
+	string firstMonth =18; // 比较开始期首月
+}
+// 文件参数
+message FileParams {
+	string file_path =1; // 台账数据
+	string zip_file_path =2; // 图片或者文件压缩包
+	string pay_file_path =3; // 支付数据
+}
+
+message CSVRequest{
+	Params base_params = 1;
+	FileParams file_params = 2;
+}
+
+message CSVResponse{}
+
+// 批量盘点基础参数
+message CheckParams {
+	string job_id =1; // 任务ID
+	string encoding =2; // 编码格式
+	string user_id =3; // 上传用户
+	string app_id =4; // 所属app
+	string lang =5; // 当前语言
+	string domain =6; // 所属公司domain
+	string datastore_id =7; // 上传台账
+	string group_id =8; // 用户所属组织
+	repeated string access_keys=9; // 权限
+	repeated string owners=10; // 所有者
+	repeated string roles=11; // 当前用户拥有的角色
+	string database =12; // 数据库
+	repeated string main_keys  =13; // 上传主键
+	string check_type =14; // 数据库
+	string checked_at =15; // 数据库
+	string checked_by =16; // 数据库
+}
+
+message InventoryRequest{
+	CheckParams base_params = 1;
+	string file_path =2; // 文件路径
+}
+
+message InventoryResponse{}
+
+// 基础参数
+message MappingParams {
+	string job_id =1; // 任务ID
+	string mapping_id =2; // 编码格式
+	string user_id =3; // 上传用户
+	string app_id =4; // 所属app
+	string lang =5; // 当前语言
+	string domain =6; // 所属公司domain
+	string datastore_id =7; // 上传台账
+	bool   empty_change =12; // 空白是否更新
+	repeated string access_keys=8; // 权限
+	repeated string owners=9; // 所有者
+	repeated string roles=10; // 当前用户拥有的角色
+	string database =11; // 数据库
+}
+
+message MappingRequest{
+	MappingParams base_params = 1;
+	string file_path =2; // 文件路径
+}
+
+message MappingResponse{}

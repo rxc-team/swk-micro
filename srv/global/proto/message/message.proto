@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package message;
+
+service MessageService {
+	// 查找单个通知
+	rpc FindMessage(FindMessageRequest) returns (FindMessageResponse) {}
+	// 查找多个通知
+	rpc FindMessages(FindMessagesRequest) returns (FindMessagesResponse) {}
+	// 查找系统更新通知
+	rpc FindUpdateMessage(FindUpdateMessageRequest) returns (FindUpdateMessageResponse) {}
+	// 添加通知
+	rpc AddMessage(AddMessageRequest) returns (AddMessageResponse) {}
+	// 变更通知状态
+	rpc ChangeStatus(ChangeStatusRequest) returns (ChangeStatusResponse) {}
+	// 硬删除单个通知
+	rpc DeleteMessage(DeleteMessageRequest) returns (DeleteMessageResponse) {}
+	// 硬删除多个通知
+	rpc DeleteMessages(DeleteMessagesRequest) returns (DeleteMessagesResponse) {}
+}
+// 通知
+message Message {
+	string message_id = 1; // 通知ID
+	string send_time = 2;// 发送时间
+  	string sender = 3; // 发送者
+  	string recipient = 4; // 接受者
+	string domain = 5; // 公司域名
+	string msg_type = 6; // 通知类型（normal-普通通知、job-任务通知【不会保存到数据库，只做画面处理用】、approve-审批通知、qa-提问通知、expire-满了通知、update-系统更新、system-系统通知、lang-刷新多语言）
+	string code = 7; // 通知code
+	string link = 8; // 通知链接
+	string content = 9; // 通知内容
+	string status = 10; // 通知状态（unread-未读、read-已读）
+	string object = 11; // 通知对象
+	string end_time = 12; // 结束时间
+}
+
+
+message FindMessageRequest{
+	string message_id = 1; // 通知ID
+	string database = 2; // 数据库
+}
+
+message FindUpdateMessageRequest{
+	string recipient = 1; // 接收者
+	string domain = 2; // 公司域名
+	string now_time = 3; // 当前时间
+	string database = 4; // 数据库
+}
+
+message FindUpdateMessageResponse{
+	Message message = 1;
+}
+
+message FindMessageResponse{
+	Message message = 1;
+}
+
+message FindMessagesRequest{
+	string recipient = 1; // 接收者
+	string domain = 2; // 公司域名
+	string status = 3; // 通知状态
+	int64  limit = 4; // 限制条数
+	string database = 5; // 数据库
+	string msg_type = 6; // 消息类型
+	int64 skip = 7; // 跳过页码
+}
+
+message FindMessagesResponse{
+	repeated Message messages = 1;
+	int64 page_count = 2; // 总页数
+}
+
+message AddMessageRequest{
+	string database = 1; // 数据库
+  	string sender = 2; // 发送者
+  	string recipient = 3; // 接受者
+	string domain = 4; // 公司域名
+	string msg_type = 5; // 通知类型（normal-普通通知、job-任务通知【不会保存到数据库，只做画面处理用】、approve-审批通知、qa-提问通知、expire-满了通知）
+	string code = 6; // 通知code
+	string link = 7; // 通知链接
+	string content = 8; // 通知内容
+	string status = 9; // 通知状态（unread-未读、read-已读）
+	string object = 10; // 通知对象
+	string end_time = 11; // 结束时间
+}
+
+message AddMessageResponse{
+	string message_id = 1; // 通知ID
+}
+
+message ChangeStatusRequest{
+	string message_id = 1; // 通知ID
+	string database = 2; // 数据库
+}
+
+message ChangeStatusResponse{
+}
+
+message DeleteMessageRequest{
+	string message_id = 1; // 通知ID
+	string database = 2; // 数据库
+}
+
+message DeleteMessageResponse{
+}
+
+message DeleteMessagesRequest{
+	string user_id = 1; // 用户ID
+	string database = 2; // 数据库
+}
+
+message DeleteMessagesResponse{
+}

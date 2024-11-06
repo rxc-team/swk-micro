@@ -1,0 +1,40 @@
+#FROM golang:latest as builder 
+# goバージョン
+FROM golang:1.19.1-alpine as builder
+# アップデートとgitのインストール
+RUN apk add --update &&  apk add git
+
+
+COPY . /rxcsoft.cn/pit3
+
+WORKDIR /rxcsoft.cn
+#RUN git clone git@github.com:hikaruimasaka/utils.git
+RUN git clone https://github.com/hikaruimasaka/utils
+
+WORKDIR /rxcsoft.cn/pit3/srv/database
+
+#RUN go mod download
+
+RUN go mod tidy
+
+RUN CGO_ENABLED=0 go build -a -installsuffix cgo --ldflags "-s -w" -o /rxcsoft.cn/pit3/srv/database/main/database-srv -v ./main.go ./plugins.go
+
+FROM alpine:edge
+
+WORKDIR /app
+#タイムゾーンを日本時間にする（devでリリース通知送るとき、globalサービスのタイムゾーンで時差が計算されて有効期限になる。pitチームは日本で送るためアジア指定）
+RUN apk --update-cache add tzdata
+RUN cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+#RUN adduser -S -D -H -h /app appuser
+
+#RUN adduser -S -D -H -h /app appuser
+
+#USER appuser
+
+COPY --from=builder /rxcsoft.cn/pit3/srv/database/main /app/
+COPY --from=builder /rxcsoft.cn/pit3/build/config/config.env /app/config.env
+COPY --from=builder /rxcsoft.cn/pit3/build/config/db-config.json /app/db-config.json
+#COPY --from=builder /rxcsoft.cn/pit3/srv/database/locales /app/locales
+
+WORKDIR /app
+ENTRYPOINT [ "/app/database-srv" ]

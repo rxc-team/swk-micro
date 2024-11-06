@@ -1,0 +1,35 @@
+#FROM golang:latest as builder
+# goバージョン
+FROM golang:1.19.1-alpine as builder
+# アップデートとgitのインストール
+RUN apk add --update &&  apk add git
+
+
+COPY . /rxcsoft.cn/pit3
+
+WORKDIR /rxcsoft.cn
+#RUN git clone git@github.com:hikaruimasaka/utils.git
+RUN git clone https://github.com/hikaruimasaka/utils
+
+WORKDIR /rxcsoft.cn/pit3/srv/workflow
+
+#RUN go mod download
+
+RUN go mod tidy
+
+RUN CGO_ENABLED=0 go build -a -installsuffix cgo --ldflags "-s -w" -o /rxcsoft.cn/pit3/srv/workflow/main/workflow-srv -v ./main.go ./plugins.go
+
+FROM alpine:edge
+
+WORKDIR /app
+
+#RUN adduser -S -D -H -h /app appuser
+
+#USER appuser
+
+COPY --from=builder /rxcsoft.cn/pit3/srv/workflow/main /app/
+COPY --from=builder /rxcsoft.cn/pit3/build/config/config.env /app/config.env
+COPY --from=builder /rxcsoft.cn/pit3/build/config/db-config.json /app/db-config.json
+
+WORKDIR /app
+ENTRYPOINT [ "/app/workflow-srv" ]

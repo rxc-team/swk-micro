@@ -1,0 +1,76 @@
+#FROM golang:latest as builder 
+# goバージョン
+FROM golang:1.19.1-alpine as builder
+# アップデートとgitのインストール
+RUN apk add --update &&  apk add git
+
+
+COPY . /rxcsoft.cn/pit3
+
+WORKDIR /rxcsoft.cn
+#RUN git clone git@github.com:hikaruimasaka/utils.git
+RUN git clone https://github.com/hikaruimasaka/utils
+
+WORKDIR /rxcsoft.cn/pit3/api/internal
+
+#RUN go mod download
+
+RUN go mod tidy
+
+RUN CGO_ENABLED=0 go build -a -installsuffix cgo --ldflags "-s -w" -o /rxcsoft.cn/pit3/api/internal/main/internal-api -v ./main.go ./plugins.go
+
+#ここからがdockerbuild
+FROM alpine:edge
+
+WORKDIR /app
+
+
+#ここからローカルのdockerfileに書いてあること
+ENV TZ=Asia/Tokyo
+# 设置程序源
+###RUN echo 'https://mirror.tuna.tsinghua.edu.cn/alpine/edge/main' >> /etc/apk/repositories
+###RUN echo 'https://mirror.tuna.tsinghua.edu.cn/alpine/edge/community' >> /etc/apk/repositories
+RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/main' >> /etc/apk/repositories
+RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
+# 安装程序
+RUN apk add -U tzdata
+###RUN apk add \
+###  --no-cache \
+###  --allow-untrusted \
+###  --repository http://dl-cdn.alpinelinux.org/alpine/v3.15/main \
+###  tzdata  
+RUN cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+
+# RUN apk add --no-cache mongodb mongodb-tools
+RUN apk add --no-cache mongodb-tools
+
+RUN apk add -U unzip
+
+#RUN curl https://rclone.org/install.sh | bash
+RUN apk add -U rclone
+
+#いつものやつ勝手に追加
+COPY --from=builder /rxcsoft.cn/pit3/api/internal/main /app/
+
+
+
+# 复制rcolne配置文件  cloudbuildフォルダにrclone.confを追加した
+COPY --from=builder /rxcsoft.cn/pit3/build/docker/rclone.conf /root/.config/rclone/rclone.conf
+
+# 复制其他文件
+RUN mkdir -p ./backups
+COPY --from=builder /rxcsoft.cn/pit3/api/internal/assets /app/assets
+COPY --from=builder /rxcsoft.cn/pit3/api/internal/locales /app/locales
+COPY --from=builder /rxcsoft.cn/pit3/build/config/config.env /app/config.env
+COPY --from=builder /rxcsoft.cn/pit3/build/config/db-config.json /app/db-config.json
+COPY --from=builder /rxcsoft.cn/pit3/api/internal/message-zh.json /app/message-zh.json
+COPY --from=builder /rxcsoft.cn/pit3/api/internal/message-en.json /app/message-en.json
+COPY --from=builder /rxcsoft.cn/pit3/api/internal/message-ja.json /app/message-ja.json
+#ADD  ./rxcsoft.cn/pit3/api/internal/docker/internal-api /app
+WORKDIR /app
+ENTRYPOINT [ "/app/internal-api" ]
+
+
+
+
+

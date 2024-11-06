@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package config;
+
+service ConfigService {
+	// 获取邮件配置集合
+	rpc FindConfigs(FindConfigsRequest) returns (FindConfigsResponse) {}
+	// 获取邮件配置
+	rpc FindConfig(FindConfigRequest) returns (FindConfigResponse) {}
+	// 添加邮件配置
+	rpc AddConfig(AddConfigRequest) returns (AddConfigResponse) {}
+	// 更新邮件配置
+	rpc ModifyConfig(ModifyConfigRequest) returns (ModifyConfigResponse) {}
+}
+
+// 邮件配置
+message Config {
+	string config_id = 1; // 邮件配置ID
+	string mail = 2; // 送件人
+	string password = 3; // 密码/授权码
+	string host = 4; // 服务器地址
+	string port = 5; // 端口
+	string ssl = 6; // 加密协议
+	string created_at = 7; // 创建时间
+	string created_by = 8; // 创建者
+	string updated_at = 9; // 更新时间
+	string updated_by = 10; // 更新者
+}
+
+message FindConfigsRequest{
+	string database = 1; // 数据库
+}
+
+message FindConfigsResponse{
+	repeated Config configs = 1;
+}
+
+message FindConfigRequest{
+	string database = 1; // 数据库
+}
+
+message FindConfigResponse{
+	Config config = 1;
+}
+
+message AddConfigRequest{
+	string mail = 1; // 送件人
+	string password = 2; // 密码/授权码
+	string host = 3; // 服务器地址
+	string port = 4; // 端口
+	string ssl = 5; // 加密协议
+	string writer = 6; // 新规者
+	string database = 7; // 数据库
+}
+
+message AddConfigResponse{
+	string config_id = 1; // 邮件配置ID
+}
+
+message ModifyConfigRequest{
+	string config_id = 1; // 邮件配置ID
+	string mail = 2; // 送件人
+	string password = 3; // 密码/授权码
+	string host = 4; // 服务器地址
+	string port = 5; // 端口
+	string ssl = 6; // 加密协议
+	string writer = 7; // 更新者
+	string database = 8; // 数据库
+}
+
+message ModifyConfigResponse{
+}

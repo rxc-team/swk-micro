@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+package task;
+
+service TaskService {
+	rpc FindTasks(TasksRequest) returns (TasksResponse) {}
+	rpc FindTask(TaskRequest) returns (TaskResponse) {}
+	rpc AddTask(AddRequest) returns (AddResponse) {}
+	rpc ModifyTask(ModifyRequest) returns (ModifyResponse) {}
+	rpc DeleteTask(DeleteRequest) returns (DeleteResponse) {}
+}
+
+message File {
+	string url = 1;
+	string name = 2;
+}
+
+// 任务数据
+message Task {
+	string job_id =1; // 任务ID
+	string job_name =2; // 任务名称
+	string origin =3; // 任务所属
+	string user_id =4; // 创建用户
+	bool   show_progress =5; // 是否显示进度条
+	int64  progress =6; // 进度
+	string start_time =7; // 开始时间
+	string end_time =8; // 结束时间
+	string message =9; // 消息
+	File   file =10; // 文件路径
+	File   error_file =11; // 错误文件路径
+	string task_type =12; // 任务类型
+	repeated string steps =13; // 已当前进行的步骤
+	string current_step =14; // 已当前进行的步骤
+	string schedule_id =15; // 任务计划ID
+	string app_id = 17; // 当前app
+	int64  insert = 18; // 插入条数
+	int64  update = 19; // 更新条数
+	int64  total = 20; // 总的条数
+}
+
+// 查找多条记录
+message TasksRequest{
+	string user_id =1; // 创建用户
+	int64  page_index = 2; // 当前页
+	int64  page_size = 3; // 每页的大小
+	string database = 4; // 数据库
+	string schedule_id =5; // 任务计划ID
+	string app_id = 6; // 当前app
+}
+
+message TasksResponse{
+	repeated Task tasks = 1;
+	int64 total = 2;
+}
+
+// 查询单条记录
+message TaskRequest{
+	string job_id = 1; // 任务ID
+	string database = 2; // 数据库
+}
+
+message TaskResponse{
+	Task task = 1;
+}
+
+// 添加数据
+message AddRequest{
+	string job_id =1; // 任务ID
+	string job_name =2; // 任务名称
+	string origin =3; // 任务所属
+	string user_id =4; // 创建用户
+	bool   show_progress =5; // 是否显示进度条
+	int64  progress =6; // 进度
+	string start_time =7; // 开始时间
+	string message =9; // 消息
+	string task_type =12; // 任务类型
+	repeated string steps =13; // 已当前进行的步骤
+	string current_step =14; // 已当前进行的步骤
+	string database = 15; // 数据库
+	string schedule_id =16; // 任务计划ID
+	string app_id = 17; // 当前app
+}
+
+message AddResponse{
+	string job_id =1;
+}
+
+// 更新记录
+message ModifyRequest{
+	string job_id =1; // 任务ID
+	int64  progress =2; // 进度
+	string end_time =3; // 结束时间
+	string message =4; // 消息
+	File   file =5; // 文件路径
+	File   error_file =6; // 错误文件路径
+	string current_step =7; // 已当前进行的步骤
+	int64  insert = 9; // 插入条数
+	int64  update = 10; // 更新条数
+	int64  total = 11; // 总的条数
+	string database = 8; // 数据库
+}
+
+message ModifyResponse{
+}
+
+// 删除数据记录
+message DeleteRequest{
+	string job_id =1; // 任务ID
+	string app_id = 2; // appID
+    string user_id =3; // 创建用户ID
+}
+
+message DeleteResponse{
+}

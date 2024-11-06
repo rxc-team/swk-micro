@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package node;
+
+service NodeService {
+	rpc FindNodes(NodesRequest) returns (NodesResponse) {}
+	rpc FindNode(NodeRequest) returns (NodeResponse) {}
+	rpc AddNode(AddRequest) returns (AddResponse) {}
+	rpc DeleteNode(DeleteRequest) returns (DeleteResponse) {}
+}
+
+// 流程分支条件
+// message Condition{
+// 	string field =1; // 字段
+// 	string field_type =2; // 字段类型
+// 	string operator =3; // 运算符
+// 	string value =4; // 比较值
+// 	string next_node =5; // 下一节点
+// }
+
+// 流程定义
+message Node {
+	string node_id =1; // 节点ID
+	string node_name =4; // 节点名称
+	string wf_id =2; // 流程ID
+	string node_type =3; // 节点类型（1表示普通节点，2表示分支节点）
+	// repeated Condition condition =4; // 分支条件
+	string prev_node =5; // 上级节点（0表示开始节点）
+	string next_node =6; // 下级节点（0表示结束节点，x-x表示分支节点）
+	repeated string assignees =7; // 操作者（u_xxx表示指定某个用户，r_xxx表示指定某个角色，g_xxx表示指定某个组）
+	string act_type =8; // 当前节点处理类型（and表示需要所有操作者都同意，or表示一个同意就行）
+	string node_group_id =11; // 承认用户组
+	string created_at =9; // 创建时间
+	string created_by =10; // 创建者
+}
+
+// 查找多条记录
+message NodesRequest{
+	string wf_id =1; // 流程ID
+	string database = 2; // 数据库
+}
+
+message NodesResponse{
+	repeated Node nodes = 1;
+}
+
+// 查询单条记录
+message NodeRequest{
+	string node_id = 1; // 节点ID
+	string wf_id =2; // 流程ID
+	string database = 3; // 数据库
+}
+
+message NodeResponse{
+	Node node = 1;
+}
+
+// 添加数据
+message AddRequest{
+	string node_id =1; // 节点ID
+	string node_name =4; // 节点名称
+	string wf_id =2; // 流程ID
+	string node_type =3; // 节点类型（1表示普通节点，2表示分支节点）
+	// repeated Condition condition =4; // 分支条件
+	string prev_node =5; // 上级节点（0表示开始节点）
+	string next_node =6; // 下级节点（0表示结束节点，x-x表示分支节点）
+	repeated string assignees =7; // 操作者（u_xxx表示指定某个用户，r_xxx表示指定某个角色，g_xxx表示指定某个组）,目前只有u，所以没区分
+	string act_type =8; // 当前节点处理类型（and表示需要所有操作者都同意，or表示一个同意就行）
+	string node_group_id =11; // 承认用户组
+	string database = 9; // 数据库
+	string writer = 10; // 创建者
+}
+
+message AddResponse{
+	string node_id =1;
+}
+
+// 删除数据记录
+message DeleteRequest{
+	string wf_id =1; // 流程ID
+	string database = 2; // 数据库
+}
+
+message DeleteResponse{
+}

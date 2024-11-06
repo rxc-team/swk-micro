@@ -1,0 +1,217 @@
+syntax = "proto3";
+
+package dashboard;
+
+service DashboardService {
+	rpc FindDashboards(FindDashboardsRequest) returns (FindDashboardsResponse) {}
+	rpc FindDashboard(FindDashboardRequest) returns (FindDashboardResponse) {}
+	rpc FindDashboardData(FindDashboardDataRequest) returns (FindDashboardDataResponse) {}
+	rpc AddDashboard(AddDashboardRequest) returns (AddDashboardResponse) {}
+	rpc ModifyDashboard(ModifyDashboardRequest) returns (ModifyDashboardResponse) {}
+	rpc DeleteDashboard(DeleteDashboardRequest) returns (DeleteResponse) {}
+	rpc DeleteSelectDashboards(DeleteSelectDashboardsRequest) returns (DeleteResponse) {}
+	rpc HardDeleteDashboards(HardDeleteDashboardsRequest) returns (DeleteResponse) {}
+	rpc RecoverSelectDashboards(RecoverSelectDashboardsRequest) returns (RecoverSelectDashboardsResponse) {}
+}
+
+message Dashboard {
+	string dashboard_id = 1; // 仪表盘ID
+	string dashboard_name = 2; // 仪表盘名称
+	string domain = 3; // 所属公司域名
+	string app_id = 4; // 所属APP
+	string report_id = 5; // 报表ID
+	string dashboard_type = 6; // 仪表盘类型(line，pie，bar)
+	repeated float x_range = 8; // x轴渲染范围
+	repeated float y_range = 9; // y轴渲染范围
+	string tick_type = 10; // y轴分割类型
+	repeated int64 ticks = 11; // y轴自定义分割
+	int64 tick_count = 12; // y轴分割条数
+	string g_field_id = 13; // 分组项目
+	string x_field_id = 14; // 水平轴表示项目
+	string y_field_id = 15; // 垂直轴表示项目
+	bool limit_in_plot = 16; // 是否对超出坐标系范围进行剪切。
+	string step_type = 17; // 阶梯折线图类型，配置后 smooth 无效。 这里的 h 和 v 是 horizontal 和 vertical 的首字母。所以 vh 的意思就是起始点先竖直方向，然后水平方向。
+	bool is_stack = 18; // 对于存在 seriesField 分组字段的情况，我们可以设置 isStack = true，让折线堆叠累加起来
+	bool is_percent = 19; // 是否百分比面积图，百分比时默认开启 isStack。
+	bool is_group = 20; // 是否分组柱状图
+	bool smooth = 21; // 曲线是否平滑
+	float min_bar_width = 22; // 柱子的最小宽度设置。
+	float max_bar_width = 23; // 柱子的最大宽度设置。
+	float radius = 24; // 饼图的半径，原点为画布中心。配置值域为 (0,1]，1 代表饼图撑满绘图区域。
+	float inner_radius = 25; // 饼图的内半径，原点为画布中心。配置值域为 (0,1]
+	float start_angle = 26; // 配置坐标系的起始角度。
+	float end_angle = 27; // 配置坐标系的结束角度。
+	Slider slider = 28; // 缩略轴
+	Scrollbar scrollbar = 29; // 滚动条
+	string created_at = 30; // 创建时间
+	string created_by = 31; // 创建者
+	string updated_at = 32; // 更新时间
+	string updated_by = 33; // 更新者
+	string deleted_at = 34; // 删除时间
+	string deleted_by = 35; // 删除者
+}
+
+message Slider {
+	float start = 1; // 默认起始位置
+	float end = 2; // 默认结束位置
+	float height = 3; // 缩略轴高度
+}
+
+message Scrollbar {
+	string type = 1; // 'horizontal' | 'vertical'	滚动条类型
+	float width = 2; // 宽度，在 vertical 下生效
+	float height = 3; // 高度，在 horizontal 下生效
+	float category_size = 4; // 对应水平滚动条，为 x 轴每个分类字段的宽度；对于垂直滚动条，为 x 轴每个分类字段的高度
+}
+
+// 查找多个仪表盘情报
+message FindDashboardsRequest{
+	string domain = 1; // 所属公司域名
+	string app_id = 2; // 所属APP
+	string report_id = 3; // 报表ID
+	string database = 4; // 数据库
+}
+
+message FindDashboardsResponse{
+	repeated Dashboard dashboards = 1;
+}
+
+// 查找单个仪表盘情报
+message FindDashboardRequest{
+	string dashboard_id = 1; // 仪表盘ID
+	string database = 2; // 数据库
+}
+
+message FindDashboardResponse{
+	Dashboard dashboard = 1;
+}
+
+// 查找报表数据情报
+message FindDashboardDataRequest{
+	string dashboard_id = 1; // 仪表盘ID
+	repeated string owners = 2; // 数据所有者
+	string database = 3; // 数据库
+}
+
+message FindDashboardDataResponse{
+	repeated DashboardData dashboard_datas = 1; // 数据
+	string dashboard_name = 2; // 仪表盘名
+	string dashboard_type = 3; // 仪表盘类型(line，pie，bar)
+}
+
+message DashboardData {
+	string x_value = 1; // X轴项目
+	string x_name = 2; // X轴项目名称
+	string x_type = 3; // X轴项目字段类型
+	string g_value = 4; // g轴项目名称
+	string g_type = 5; // g轴项目字段类型
+	double y_value = 6; // Y轴值/值百分比
+	string y_name = 7; // Y轴项目名称
+}
+
+// 添加仪表盘
+message AddDashboardRequest{
+	string dashboard_name = 1; // 仪表盘名称
+	string domain = 2; // 所属公司域名
+	string app_id = 3; // 所属APP
+	string report_id = 4; // 报表ID
+	string dashboard_type = 5; // 仪表盘类型(line，pie，bar)
+	repeated float x_range = 7; // x轴渲染范围
+	repeated float y_range = 8; // y轴渲染范围
+	string tick_type = 9; // y轴分割类型
+	repeated int64 ticks = 10; // y轴自定义分割
+	int64 tick_count = 11; // y轴分割条数
+	string g_field_id = 12; // 分组项目
+	string x_field_id = 13; // 水平轴表示项目
+	string y_field_id = 14; // 垂直轴表示项目
+	bool limit_in_plot = 16; // 是否对超出坐标系范围进行剪切。
+	string step_type = 17; // 阶梯折线图类型，配置后 smooth 无效。 这里的 h 和 v 是 horizontal 和 vertical 的首字母。所以 vh 的意思就是起始点先竖直方向，然后水平方向。
+	bool is_stack = 18; // 对于存在 seriesField 分组字段的情况，我们可以设置 isStack = true，让折线堆叠累加起来
+	bool is_percent = 19; // 是否百分比面积图，百分比时默认开启 isStack。
+	bool is_group = 20; // 是否分组柱状图
+	bool smooth = 21; // 曲线是否平滑
+	float min_bar_width = 22; // 柱子的最小宽度设置。
+	float max_bar_width = 23; // 柱子的最大宽度设置。
+	float radius = 24; // 饼图的半径，原点为画布中心。配置值域为 (0,1]，1 代表饼图撑满绘图区域。
+	float inner_radius = 25; // 饼图的内半径，原点为画布中心。配置值域为 (0,1]
+	float start_angle = 26; // 配置坐标系的起始角度。
+	float end_angle = 27; // 配置坐标系的结束角度。
+	Slider slider = 28; // 缩略轴
+	Scrollbar scrollbar = 29; // 滚动条
+	string writer = 15; // 创建者
+	string database = 30; // 数据库
+}
+
+message AddDashboardResponse{
+	string dashboard_id = 1;
+}
+
+// 修改仪表盘情报
+message ModifyDashboardRequest{
+	string dashboard_id = 1; // 仪表盘ID
+	string dashboard_name = 2; // 仪表盘名称
+	string domain = 3; // 所属公司域名
+	string app_id = 4; // 所属APP
+	string report_id = 5; // 报表ID
+	string dashboard_type = 6; // 仪表盘类型(line，pie，bar)
+	repeated float x_range = 8; // x轴渲染范围
+	repeated float y_range = 9; // y轴渲染范围
+	string tick_type = 10; // y轴分割类型
+	repeated int64 ticks = 11; // y轴自定义分割
+	int64 tick_count = 12; // y轴分割条数
+	string g_field_id = 13; // 分组项目
+	string x_field_id = 14; // 水平轴表示项目
+	string y_field_id = 15; // 垂直轴表示项目
+	bool limit_in_plot = 16; // 是否对超出坐标系范围进行剪切。
+	string step_type = 17; // 阶梯折线图类型，配置后 smooth 无效。 这里的 h 和 v 是 horizontal 和 vertical 的首字母。所以 vh 的意思就是起始点先竖直方向，然后水平方向。
+	bool is_stack = 18; // 对于存在 seriesField 分组字段的情况，我们可以设置 isStack = true，让折线堆叠累加起来
+	bool is_percent = 19; // 是否百分比面积图，百分比时默认开启 isStack。
+	bool is_group = 20; // 是否分组柱状图
+	bool smooth = 21; // 曲线是否平滑
+	float min_bar_width = 22; // 柱子的最小宽度设置。
+	float max_bar_width = 23; // 柱子的最大宽度设置。
+	float radius = 24; // 饼图的半径，原点为画布中心。配置值域为 (0,1]，1 代表饼图撑满绘图区域。
+	float inner_radius = 25; // 饼图的内半径，原点为画布中心。配置值域为 (0,1]
+	float start_angle = 26; // 配置坐标系的起始角度。
+	float end_angle = 27; // 配置坐标系的结束角度。
+	Slider slider = 28; // 缩略轴
+	Scrollbar scrollbar = 29; // 滚动条
+	string writer = 30; // 更新者
+	string database = 31; // 数据库
+}
+
+message ModifyDashboardResponse{
+}
+
+// 删除单个仪表盘情报
+message DeleteDashboardRequest{
+	string dashboard_id = 1;
+	string writer = 2;
+	string database = 3; // 数据库
+}
+
+// 删除多个仪表盘情报
+message DeleteSelectDashboardsRequest{
+	repeated string dashboard_id_list = 1;
+	string writer = 2;
+	string database = 3; // 数据库
+}
+
+// 物理删除多个仪表盘情报
+message HardDeleteDashboardsRequest{
+	repeated string dashboard_id_list = 1;
+	string database = 2; // 数据库
+}
+
+message DeleteResponse{
+}
+
+// 恢复选中仪表盘情报
+message RecoverSelectDashboardsRequest{
+	repeated string dashboard_id_list = 1;
+	string writer = 2;
+	string database = 3; // 数据库
+}
+
+message RecoverSelectDashboardsResponse{
+}

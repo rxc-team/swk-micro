@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package check;
+
+service CheckHistoryService {
+	rpc FindHistories(HistoriesRequest) returns (HistoriesResponse) {}
+	rpc FindHistoryCount(CountRequest) returns (CountResponse) {}
+	rpc DeleteHistories(DeleteRequest) returns (DeleteResponse) {}
+	rpc Download(DownloadRequest) returns (stream DownloadResponse) {} 
+}
+
+// 履历数据
+message CheckHistory {
+	string check_id =1; // 履历ID
+	string item_id =2; // 台账数据ID
+	string datastore_id =3; // 所属台账
+	map<string, Value> items =4; // 字段对应的值
+	string check_type =5; // 盘点类型
+	string check_start_date =6; // 盘点开始日
+	string checked_at =7; // 盘点时间
+	string checked_by =8; // 盘点者
+}
+
+message Value {
+	string data_type = 1; // 字段类型
+    string value = 2; // 字段值
+}
+
+// 查找多条记录
+message HistoriesRequest{
+	string datastore_id = 1; // 所属台账
+	string item_id = 2; // 所属数据ID
+	int64 page_index = 3; // 当前页
+	int64 page_size = 4; // 每页的大小
+	string check_type = 5; // 盘点类型
+	string check_start_date = 6; // 盘点开始日
+	string checked_at_from = 7; // 盘点时间
+	string checked_at_to = 8; // 盘点时间
+	string checked_by = 9; // 盘点者
+	repeated string displayFields = 10; // 显示字段
+	string database = 11; // 数据库
+}
+
+message HistoriesResponse{
+	repeated CheckHistory histories = 1;
+	int64 total = 2;
+}
+
+// 查找多条记录
+message DownloadRequest{
+	string datastore_id = 1; // 所属台账
+	string item_id = 2; // 所属数据ID
+	string check_type = 3; // 盘点类型
+	string check_start_date = 4; // 盘点开始日
+	string checked_at_from = 5; // 盘点时间
+	string checked_at_to = 6; // 盘点时间
+	string checked_by = 7; // 盘点者
+	repeated string displayFields = 8; // 显示字段
+	string database = 9; // 数据库
+}
+
+message DownloadResponse{
+	CheckHistory history = 1;
+}
+
+// 查找多条记录
+message CountRequest{
+	string datastore_id = 1; // 所属台账
+	string item_id = 2; // 所属数据ID
+	string check_type = 3; // 盘点类型
+	string check_start_date = 4; // 盘点开始日
+	string checked_at_from = 5; // 盘点时间
+	string checked_at_to = 6; // 盘点时间
+	string checked_by = 7; // 盘点者
+	string database = 8; // 数据库
+}
+
+message CountResponse{
+	int64 total = 2;
+}
+
+// 物理删除选中数据记录
+message DeleteRequest{
+	repeated string check_id_list =1; // 履历ID集合
+	string database = 2; // 数据库
+}
+
+message DeleteResponse{
+}

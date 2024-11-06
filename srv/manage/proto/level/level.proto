@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package level;
+
+service LevelService {
+	rpc FindLevels(FindLevelsRequest) returns (FindLevelsResponse) {}
+	rpc FindLevel(FindLevelRequest) returns (FindLevelResponse) {}
+	rpc AddLevel(AddLevelRequest) returns (AddLevelResponse) {}
+	rpc ModifyLevel(ModifyLevelRequest) returns (ModifyLevelResponse) {}
+	rpc DeleteLevel(DeleteLevelRequest) returns (DeleteLevelResponse) {}
+	rpc DeleteLevels(DeleteLevelsRequest) returns (DeleteLevelsResponse) {}
+}
+
+// 授权等级类型
+message Level {
+ 	string level_id = 1; 			// 授权等级key
+ 	string level_name = 2; 			// 授权等级名称
+	repeated string allows = 3; 	// 授权等级许可
+	string created_at = 4;			// 创建时间
+	string created_by = 5;			// 创建者
+	string updated_at = 6;			// 更新时间
+	string updated_by = 7;			// 更新者
+}
+
+message FindLevelsRequest{
+}
+
+message FindLevelsResponse{
+	repeated Level levels = 1;
+}
+
+message FindLevelRequest{
+	string level_id = 1;
+}
+
+message FindLevelResponse{
+	Level level = 1;
+}
+
+message AddLevelRequest{
+	string level_name = 1; 			// 授权等级名称
+	repeated string allows = 2; 	// 授权等级许可
+	string writer = 3;				// 作成者
+}
+
+message AddLevelResponse{
+	string level_id = 1; 			// 授权等级id
+}
+
+message ModifyLevelRequest{
+	string level_id = 1; 			// 授权等级id
+	string level_name = 2; 			// 授权等级名称
+	repeated string allows = 3; 	// 授权等级许可
+	string writer = 4;
+}
+
+message ModifyLevelResponse{
+}
+
+message DeleteLevelRequest{
+	string level_id = 1; 			// 授权等级id
+}
+
+message DeleteLevelResponse{
+}
+
+message DeleteLevelsRequest{
+	repeated string level_ids = 1;
+}
+
+message DeleteLevelsResponse{
+}

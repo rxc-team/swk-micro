@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package permission;
+
+service PermissionService {
+	rpc FindActions(FindActionsRequest) returns (FindActionsResponse) {}
+	rpc FindPermissions(FindPermissionsRequest) returns (FindPermissionsResponse) {}
+}
+
+// 权限
+message Permission {
+ 	string permission_id = 1; 	// 权限ID
+ 	string role_id = 2; 		// 所属角色ID
+	string permission_type = 3; // 权限控制类型，common-顾客为单位的权限（文档），app-app为单位的权限（台账、报表等）
+	string app_id = 4; 			// 所属APP
+	string action_type = 5; 	// 权限范围 common下有folder,app下有datastore和report
+	repeated Action actions = 6; // 权限分组的KEY
+	string created_at = 7;		// 创建时间
+	string created_by = 8;		// 创建者
+	string updated_at = 9;		// 更新时间
+	string updated_by = 10;		// 更新者
+}
+
+message Action{
+ 	string object_id = 1;				//操作对象
+	repeated string fields = 2; 		//操作字段
+	map<string,bool> action_map = 3; 	// 操作权限 
+}
+
+message FindActionsRequest{
+	repeated string role_id = 1; 		// 所属角色ID
+	string permission_type = 2; // 权限控制类型，common-顾客为单位的权限（文档），app-app为单位的权限（台账、报表等）
+	string app_id = 3; 			// 所属APP
+	string action_type = 4; 	// 权限范围 common下有folder,app下有datastore和report
+	string object_id = 5; 		// 操作对象
+	string database = 6;    	// 数据库
+}
+
+message FindActionsResponse{
+	repeated Action actions = 1;
+}
+
+message FindPermissionsRequest{
+	string role_id = 1; 		// 所属角色ID
+	string database = 2;    	// 数据库
+}
+
+message FindPermissionsResponse{
+	repeated Permission permission = 1;
+}

@@ -1,0 +1,262 @@
+syntax = "proto3";
+
+package user;
+
+service UserService {
+	rpc Login(LoginRequest) returns (LoginResponse) {}
+	rpc FindUserByEmail(EmailRequest) returns (EmailResponse) {}
+	rpc FindRelatedUsers(FindRelatedUsersRequest) returns (FindRelatedUsersResponse) {}
+	rpc FindUsers(FindUsersRequest) returns (FindUsersResponse) {}
+	rpc FindUser(FindUserRequest) returns (FindUserResponse) {}
+	rpc FindDefaultUser(FindDefaultUserRequest) returns (FindDefaultUserResponse) {}
+	rpc AddUser(AddUserRequest) returns (AddUserResponse) {}
+	rpc ModifyUser(ModifyUserRequest) returns (ModifyUserResponse) {}
+	rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {}
+	rpc DeleteSelectUsers(DeleteSelectUsersRequest) returns (DeleteSelectUsersResponse) {}
+	rpc RecoverSelectUsers(RecoverSelectUsersRequest) returns (RecoverSelectUsersResponse) {}
+	rpc UnlockSelectUsers(UnlockSelectUsersRequest) returns (UnlockSelectUsersResponse) {}
+	rpc AddUserCollectionIndex(AddUserIndexRequest) returns (AddUserIndexResponse) {}
+	rpc Upload(stream UploadRequest) returns (stream UploadResponse) {}
+	rpc Download(DownloadRequest) returns (stream DownloadResponse) {}
+}
+
+// 用户
+message User {
+	string user_id = 1;
+	string user_name = 2;
+	string email = 3;
+	string notice_email = 21;
+	string password = 4;
+	string avatar = 5;
+	string current_app = 6;
+	string group = 7;
+	string signature = 8;
+	string language = 9;
+	string theme = 10;
+	repeated string roles = 11;
+	repeated string apps = 12;
+	string domain = 13;
+	string customer_id = 24;
+	string timezone = 20;
+	int32 user_type = 22;
+	string notice_email_status = 25;
+	int32 error_count = 23;
+	string created_at = 14;
+	string created_by = 15;
+	string updated_at = 16;
+	string updated_by = 17;
+	string deleted_at = 18;
+	string deleted_by = 19;
+}
+
+message AddUserIndexRequest{
+	string db = 1;
+}
+message  AddUserIndexResponse{
+}
+
+message LoginRequest{
+	string email = 1;
+	string password = 2;
+}
+
+message LoginResponse{
+	User user = 1;
+	string error = 2;
+}
+
+message EmailRequest{
+	string email = 1;
+}
+
+message EmailResponse{
+	User user = 1;
+}
+
+message FindUsersRequest{
+	string user_name = 1;
+	string email = 2;
+	string group = 3;
+	string app = 4;
+	string role = 5;
+	string domain = 6;
+	string invalidated_in = 7;
+	string error_count = 8;
+	string database = 9;
+}
+
+message FindUsersResponse{
+	repeated User users = 1;
+}
+
+message FindRelatedUsersRequest{
+	string domain = 1;
+	string invalidated_in = 2;
+	repeated string groupIDs = 3;
+	string database = 4;
+}
+
+message FindRelatedUsersResponse{
+	repeated User users = 1;
+}
+
+message FindUserRequest{
+	int32 type = 1;
+	string user_id = 2;
+	string email = 3;
+	string database = 4;
+}
+
+message FindUserResponse{
+	User user = 1;
+}
+
+message FindDefaultUserRequest{
+	int32 user_type = 1;
+	string database = 2;
+}
+
+message FindDefaultUserResponse{
+	User user = 1;
+}
+
+message AddUserRequest{
+	string user_name = 1;
+	string email = 2;
+	string notice_email = 15;
+	string password = 3;
+	string avatar = 4;
+	string current_app = 5;
+	string group = 6;
+	string signature = 7;
+	string language = 8;
+	string theme = 9;
+	repeated string roles = 10;
+	repeated string apps = 11;
+	string domain = 12;
+	string customer_id = 17;
+	string timezone = 14;
+	int32 user_type = 16;
+	string writer = 13;
+	string database = 19;
+	string notice_email_status = 20;
+}
+
+message AddUserResponse{
+	string user_id = 1;
+}
+
+message ModifyUserRequest{
+	string user_id = 1;
+	string user_name = 2;
+	string email = 3;
+	string notice_email = 15;
+	string second_check = 18;
+	string password = 4;
+	string avatar = 5;
+	string current_app = 6;
+	string group = 7;
+	string signature = 8;
+	string language = 9;
+	string theme = 10;
+	string timezone = 14;
+	repeated string roles = 11;
+	repeated string apps = 12;
+	string writer = 13;
+	string database = 16;
+	string notice_email_status = 17;
+}
+
+message ModifyUserResponse{
+}
+
+message DeleteUserRequest{
+	string user_id = 1;
+	string writer = 2;
+	string database = 3;
+}
+
+message DeleteUserResponse{
+}
+
+message DeleteSelectUsersRequest{
+	repeated string user_id_list = 1;
+	string writer = 2;
+	string database = 3;
+}
+
+message DeleteSelectUsersResponse{
+}
+
+message RecoverSelectUsersRequest{
+	repeated string user_id_list = 1;
+	string writer = 2;
+	string database = 3;
+}
+
+message RecoverSelectUsersResponse{
+}
+
+message UnlockSelectUsersRequest{
+	repeated string user_id_list = 1;
+	string writer = 2;
+	string database = 3;
+}
+
+message UnlockSelectUsersResponse{
+}
+
+enum SendStatus {
+	SECTION = 0;
+	COMPLETE = 1;
+}
+
+enum Status {
+	SUCCESS = 0;
+	FAILED = 1;
+}
+
+message UploadRequest{
+	SendStatus status = 19;
+	string user_id = 20;
+	string user_name = 1;
+	string email = 2;
+	string password = 3;
+	string avatar = 4;
+	string current_app = 5;
+	string group = 6;
+	string signature = 7;
+	string language = 8;
+	string theme = 9;
+	repeated string roles = 10;
+	repeated string apps = 11;
+	string domain = 12;
+	string customer_id = 13;
+	string timezone = 14;
+	int32  user_type = 15;
+	string notice_email_status = 16;
+	string notice_email = 21;
+	string writer = 17;
+	string database = 18;
+}
+
+message UploadResponse{
+	Status status = 1;
+	int64 inserted = 2; // 插入数量
+}
+
+message DownloadRequest{
+	string user_name = 1;
+	string email = 2;
+	string group = 3;
+	string app = 4;
+	string role = 5;
+	string domain = 6;
+	string invalidated_in = 7;
+	string error_count = 8;
+	string database = 9;
+}
+
+message DownloadResponse{
+	User user = 1;
+}

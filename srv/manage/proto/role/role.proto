@@ -1,0 +1,154 @@
+syntax = "proto3";
+
+package role;
+
+service RoleService {
+	rpc FindRoles(FindRolesRequest) returns (FindRolesResponse) {}
+	rpc FindRole(FindRoleRequest) returns (FindRoleResponse) {}
+	rpc AddRole(AddRoleRequest) returns (AddRoleResponse) {}
+	rpc ModifyRole(ModifyRoleRequest) returns (ModifyRoleResponse) {}
+	rpc DeleteRole(DeleteRoleRequest) returns (DeleteRoleResponse) {}
+	rpc DeleteSelectRoles(DeleteSelectRolesRequest) returns (DeleteSelectRolesResponse) {}
+	rpc HardDeleteRoles(HardDeleteRolesRequest) returns (HardDeleteRolesResponse) {}
+	rpc RecoverSelectRoles(RecoverSelectRolesRequest) returns (RecoverSelectRolesResponse) {}
+	rpc WhitelistClear(WhitelistClearRequest) returns (WhitelistClearResponse) {}
+}
+
+// 角色
+message Role {
+ 	string role_id = 1;
+ 	string role_name = 2;
+	string description = 3;
+	string domain = 4;
+	repeated IPSegment ip_segments = 5;
+	repeated string menus = 13;
+	int32  role_type = 6;
+	string created_at = 7;
+	string created_by = 8;
+	string updated_at = 9;
+	string updated_by = 10;
+	string deleted_at = 11;
+	string deleted_by = 12;
+}
+
+// 权限
+message Permission {
+	string permission_id = 1; 	// 权限ID
+	string role_id = 2; 		// 所属角色ID
+	string permission_type = 3; // 权限控制类型，common-顾客为单位的权限（文档），app-app为单位的权限（台账、报表等）
+	string app_id = 4; 			// 所属APP
+	string action_type = 5; 	// 权限范围 common下有folder,app下有datastore和report
+	repeated Action actions = 6; // 权限分组的KEY
+	string created_at = 7;		// 创建时间
+	string created_by = 8;		// 创建者
+	string updated_at = 9;		// 更新时间
+	string updated_by = 10;		// 更新者
+}
+
+message Action{
+	string object_id = 1;				//操作对象
+	repeated string fields = 2; 			//操作字段
+	map<string,bool> action_map = 3; 	// 操作权限 
+}
+
+message IPSegment{
+	string start = 1;
+ 	string end = 2;
+}
+
+message FindRolesRequest{
+	string role_id = 1;
+	string role_name = 2;
+	string description = 3;
+	string domain = 4;
+	string invalidated_in = 5;
+	string database = 6;
+	string role_type = 7;
+}
+
+message FindRolesResponse{
+	repeated Role roles = 1;
+}
+
+message FindRoleRequest{
+	string role_id = 1;
+	string database = 2;
+}
+
+message FindRoleResponse{
+	Role role = 1;
+}
+
+message AddRoleRequest{
+	string role_name = 1;
+    string description = 2;
+	string domain = 3;
+	repeated Permission permissions = 4;
+	repeated IPSegment ip_segments = 5;
+	repeated string menus = 9;
+	int32  role_type = 6;
+	string writer = 7;
+	string database = 8;
+}
+
+message AddRoleResponse{
+	string role_id = 1;
+}
+
+message ModifyRoleRequest{
+ 	string role_id = 1;
+ 	string role_name = 2;
+	string description = 3;
+	repeated Permission permissions = 4;
+	repeated IPSegment ip_segments = 5;
+	repeated string menus = 9;
+	int32  role_type = 6;
+	string writer = 7;
+	string database = 8;
+}
+
+message ModifyRoleResponse{
+}
+
+message DeleteRoleRequest{
+	string role_id = 1;
+	string writer = 2;
+	string database = 3;
+}
+
+message DeleteRoleResponse{
+}
+
+message DeleteSelectRolesRequest{
+	repeated string role_id_list = 1;
+	string writer = 2;
+	string database = 3;
+}
+
+message DeleteSelectRolesResponse{
+}
+
+message HardDeleteRolesRequest{
+	repeated string role_id_list = 1;
+	string database = 2;
+}
+
+message HardDeleteRolesResponse{
+}
+
+message RecoverSelectRolesRequest{
+	repeated string role_id_list = 1;
+	string writer = 2;
+	string database = 3;
+}
+
+message RecoverSelectRolesResponse{
+}
+
+message WhitelistClearRequest{
+	string writer = 1;
+	string database = 2;
+}
+
+message WhitelistClearResponse{
+}

@@ -1,0 +1,40 @@
+# GCE上のKubernetesに対してデプロイする
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+#  namespace: micro
+  name: system
+  labels:
+    component: microservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: system
+      component: microservice
+  template:
+    metadata:
+      labels:
+        app: system
+        component: microservice
+    spec:
+      containers:
+        - name: system
+          command: [
+          "/app/system-api",
+          "--registry=kubernetes",
+          "--server_address=0.0.0.0:8080",
+          "--broker_address=0.0.0.0:10001"
+          ]
+          env:
+          - name: ENV
+            value: {{ ENV }}
+          - name: TZ
+            value: Asia/Tokyo
+          image: gcr.io/{{ PROJECT_ID }}/system:{{ IMAGE }}
+          imagePullPolicy: Always
+          ports:
+          - containerPort: 8080
+            name: pit-port
+      nodeSelector:
+        cloud.google.com/gke-nodepool: {{ NODE_POOL }}

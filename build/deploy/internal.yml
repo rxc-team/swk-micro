@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+#  namespace: micro 
+  name: internal
+  labels:
+    component: microservice
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: internal
+      component: microservice
+  template:
+    metadata:
+      labels:
+        app: internal
+        component: microservice
+    spec:
+      containers:
+        - name: internal
+          command: [
+          "/app/internal-api",
+          "--registry=kubernetes",
+          "--server_address=0.0.0.0:8080",
+          "--broker_address=0.0.0.0:10001"
+          ]
+          env:
+          - name: ENV
+            value: {{ ENV }}
+          - name: TZ
+            value: "Asia/Tokyo"
+          - name: RABBITMQ
+            value: "amqp://administer:rabbitmq1234@rabbitmq.rabbitmq:5672"
+          - name: DEFAULT_PASSWORD
+            value: "Rxc1234%"
+          - name: DEFAULT_DOMAIN
+            value: "proship.co.jp"
+          - name: CONFIG_NAME
+            value: "minio"
+          - name: SYSTEM_POOL_SIZE
+            value: "100"
+          - name: DOWNLOAD_POOL_SIZE
+            value: "5"
+          - name: WEBUI_URL
+            value: {{ WEBUI_URL }}
+          - name: ADMIN_URL
+            value: {{ ADMIN_URL }}
+          - name: DEV_URL
+            value: {{ DEV_URL }}
+          - name: MONGO_SCRIPT_SERVER
+            value: "http://mongo-script:8000"
+          - name: VERSION
+            value: "2.4.7"
+          image: gcr.io/{{ PROJECT_ID }}/internal:{{ IMAGE }}
+          imagePullPolicy: Always
+          ports:
+          - containerPort: 8080
+            name: pit-port
+      nodeSelector:
+        cloud.google.com/gke-nodepool: {{ NODE_POOL }}

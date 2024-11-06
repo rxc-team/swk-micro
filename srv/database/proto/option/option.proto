@@ -1,0 +1,171 @@
+syntax = "proto3";
+
+package option;
+
+service OptionService {
+	rpc FindOptions(FindOptionsRequest) returns (FindOptionsResponse) {}
+	rpc FindOptionLabels(FindOptionLabelsRequest) returns (FindOptionLabelsResponse) {}
+	rpc FindOptionLable(FindOptionLabelRequest) returns (FindOptionLabelResponse) {}
+	rpc FindOption(FindOptionRequest) returns (FindOptionResponse) {}
+	rpc AddOption(AddRequest) returns (AddResponse) {}
+	rpc DeleteOptionChild(DeleteChildRequest) returns (DeleteResponse) {}
+	rpc DeleteOption(DeleteOptionRequest) returns (DeleteResponse) {}
+	rpc DeleteSelectOptions(DeleteSelectOptionsRequest) returns (DeleteResponse) {}
+	rpc HardDeleteOptionChild(HardDeleteChildRequest) returns (DeleteResponse) {}
+	rpc HardDeleteOptions(HardDeleteOptionsRequest) returns (DeleteResponse) {}
+	rpc RecoverOptionChild(RecoverChildRequest) returns (RecoverChildResponse) {}
+	rpc RecoverSelectOptions(RecoverSelectOptionsRequest) returns (RecoverSelectOptionsResponse) {}
+}
+
+// 选项
+message Option {
+ 	string option_id = 1; // 选择项ID
+  	string option_value = 2; // 选择项选中后的值
+	string option_label = 3; // 选择项显示的文字
+	int32  option_order = 4; // 选择项显示的顺序
+	string option_name = 5; // 选择项的名称
+	string option_memo = 6; // 选择项的备注
+	string app_id = 7; // 所属的app
+	string created_at = 8; // 创建时间
+	string created_by = 9; // 创建者
+	string updated_at = 10; // 更新时间
+	string updated_by = 11; // 更新者
+	string deleted_at = 12; // 删除时间
+	string deleted_by = 13; // 删除者
+}
+
+// 查找多个option组
+message FindOptionsRequest{
+	string app_id = 1; // 所属的app
+	string option_name = 2; // 选择项的名称
+	string option_memo = 3; // 选择项的备注
+	string invalidated_in = 4; // 是否包含无效数据
+	string database = 5; // 数据库
+}
+
+message FindOptionsResponse{
+	repeated Option options = 1; // 只返回optionID和名称
+}
+
+// 查找多个option
+message FindOptionLabelsRequest{
+	string app_id = 1; // 所属的app
+	string option_name = 3; // 选择项的名称
+	string option_memo = 4; // 选择项的备注
+	string invalidated_in = 5; // 是否包含无效数据
+	string database = 2; // 数据库
+}
+
+// 查找多个option
+message FindOptionLabelRequest{
+	string app_id = 1; // 所属的app
+	string option_id = 2; // 选择项ID
+	string option_value = 3; // 选择项选中后的值
+	string database = 4; // 数据库
+}
+
+message FindOptionLabelResponse{
+	 Option option = 1; // 返回option
+}
+
+message FindOptionLabelsResponse{
+	repeated Option options = 1; // 返回option
+}
+
+// 查找一个option组
+message FindOptionRequest{
+	string app_id = 1; // 所属的app
+	string option_id = 2; // 选择项ID
+	string invalid = 3; // 是否包含无效数据
+	string database = 4; // 数据库
+}
+
+message FindOptionResponse{
+	repeated Option options = 1;
+}
+
+
+// 添加单个选项
+message AddRequest{
+	string option_id = 1; // 选择项ID
+  	string option_value = 2; // 选择项选中后的值
+	string option_label = 3; // 选择项显示的文字
+	int32  option_order = 4; // 选择项显示的顺序
+	string option_name = 5; // 选择项的名称
+	string option_memo = 6; // 选择项的备注
+	string app_id = 7; // 所属的app
+	bool is_new_option_group = 8;
+	string writer = 9; // 创建者
+	string database = 10; // 数据库
+}
+
+message AddResponse{
+	string id = 1; // DB自动生成的ID
+	string option_id = 2; // 选项组ID
+}
+
+// 删除选项中的某一个选项
+message DeleteChildRequest{
+	string option_id = 1; // 选择项ID
+	string option_value = 2; // 选择项选中后的值
+	string app_id = 3; // 所属的app
+	string writer = 4; // 删除者
+	string database = 5; // 数据库
+}
+
+// 物理删除选项中的某一个选项
+message HardDeleteChildRequest{
+	string option_id = 1; // 选择项ID
+	string option_value = 2; // 选择项选中后的值
+	string app_id = 3; // 所属的app
+	string database = 4; // 数据库
+}
+
+// 恢复选项中的某一个选项
+message RecoverChildRequest{
+	string option_id = 1; // 选择项ID
+	string option_value = 2; // 选择项选中后的值
+	string app_id = 3; // 所属的app
+	string writer = 4; // 恢复者
+	string database = 5; // 数据库
+}
+
+message RecoverChildResponse{
+}
+
+// 删除一组选项
+message DeleteOptionRequest{
+	string option_id = 1; // 选择项ID
+	string app_id = 2; // 所属的app
+	string writer = 3; // 删除者
+	string database = 4; // 数据库
+}
+
+// 删除选中的选项
+message DeleteSelectOptionsRequest{
+	repeated string option_id_list = 1; // 选择项ID集合
+	string app_id = 2; // 所属的app
+	string writer = 3; // 删除者
+	string database = 4; // 数据库
+}
+
+// 物理删除选中的选项
+message HardDeleteOptionsRequest{
+	repeated string option_id_list = 1; // 选择项ID集合
+	string app_id = 2; // 所属的app
+	string database = 3; // 数据库
+}
+
+message DeleteResponse{
+}
+
+// 恢复选中的选项
+message RecoverSelectOptionsRequest{
+	repeated string option_id_list = 1; // 选择项ID集合
+	string app_id = 2; // 所属的app
+	string writer = 3; // 删除者
+	string database = 4; // 数据库
+}
+
+message RecoverSelectOptionsResponse{
+}

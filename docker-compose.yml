@@ -1,0 +1,140 @@
+version: "2"
+services:
+  consul:
+    command: -server -bootstrap -rejoin 
+    image: progrium/consul:latest
+    restart: always
+    hostname: "consul"
+    ports:
+    - "8300:8300"
+    - "8400:8400"
+    - "8500:8500"
+    - "8600:53/udp"
+  api:
+    command: --registry_address=consul:8500 --register_interval=5 --register_ttl=10 api
+    image: microhq/micro:latest
+    restart: always
+    links:
+      - consul
+      - database
+      - manage
+      - global
+      - storage
+    ports:
+      - "8080:8080"
+  # sidecar:
+  #   command: --registry_address=consul:8500 --register_interval=5 --register_ttl=10 sidecar
+  #   image: microhq/micro:latest
+  #   links:
+  #   - consul
+  #   ports:
+  #   - "8081:8081"
+  web:
+    command: --registry_address=consul:8500 --register_interval=5 --register_ttl=10 web
+    restart: always
+    image: microhq/micro:latest
+    links:
+      - consul
+      - hotel
+      - manager
+    ports:
+      - "8082:8082"
+
+  redis:
+    image: redis:3.2-alpine
+    container_name: redis
+    hostname: redis
+    restart: always
+    volumes:
+      - redis:/data
+    ports:
+      - 6379:6379
+    networks:
+  mongo:
+    image: mongo
+    container_name: mongo
+    hostname: mongo
+    restart: always
+    volumes:
+      - mongo_conf:/data/configdb
+      - mongo_db:/data/db
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 123456
+  minio:
+      image: minio/minio
+      container_name: minio
+      hostname: minio
+      restart: always
+      volumes:
+        - minio_config:/root/.minio
+        - minio_data:/data
+      ports:
+        - "9090:9000"
+      environment:
+        - MINIO_ACCESS_KEY=nextpit.proship
+        - MINIO_SECRET_KEY=nextpit.proship.2018
+      command:  server /data
+  
+  database:
+    build: ./srv/database
+    command: --registry_address=consul:8500
+    links:
+      - consul
+      - mongo
+
+  manage:
+    build: ./srv/manage
+    restart: always
+    command: --registry_address=consul:8500
+    links:
+      - consul
+      - mongo
+
+  storage:
+    build: ./srv/storage
+    restart: always
+    command: --registry_address=consul:8500
+    links:
+      - consul
+      - mongo
+      - minio
+
+  global:
+    build: ./srv/global
+    restart: always
+    command: --registry_address=consul:8500
+    links:
+      - consul
+      - mongo
+      - redis
+
+  internal:
+    build: ./api/internal
+    restart: always
+    command: --registry_address=consul:8500
+    links:
+      - consul
+      - database
+      - manage
+      - storage
+      - global
+  outer:
+    build: ./api/outer
+    restart: always
+    command: --registry_address=consul:8500
+    links:
+      - consul
+      - database
+      - manage
+      - storage
+      - global
+
+volumes:
+  mongo_conf:
+  mongo_db:
+  minio_config:
+  minio_data:
+  redis:

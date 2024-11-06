@@ -1,0 +1,115 @@
+syntax = "proto3";
+
+package access;
+
+service AccessService {
+	rpc FindUserAccess(FindUserAccesssRequest) returns (FindUserAccesssResponse) {}
+	rpc FindAccess(FindAccessRequest) returns (FindAccessResponse) {}
+	rpc FindOneAccess(FindOneAccessRequest) returns (FindOneAccessResponse) {}
+	rpc AddAccess(AddAccessRequest) returns (AddAccessResponse) {}
+	rpc DeleteSelectAccess(DeleteSelectAccessRequest) returns (DeleteSelectAccessResponse) {}
+	rpc HardDeleteAccess(HardDeleteAccessRequest) returns (HardDeleteAccessResponse) {}
+	rpc RecoverSelectAccess(RecoverSelectAccessRequest) returns (RecoverSelectAccessResponse) {}
+}
+
+// 角色
+message Access {
+ 	string access_id = 1;
+ 	string role_id = 2;
+	string group_id = 3;
+	map<string,AppData> apps = 4;
+	string created_at = 5;
+	string created_by = 6;
+	string updated_at = 7;
+	string updated_by = 8;
+	string deleted_at = 9;
+	string deleted_by = 10;
+}
+
+message AppData {
+	map<string,DataAccess> data_access = 1;
+}
+
+message DataAccess{
+   string datastore_id = 1;			//操作对象台账
+   repeated DataAction actions = 2; //授权数据操作
+}
+
+message DataAction{
+   string group_id = 1;				//数据所属组织
+   string access_key = 2;			//数据所属组织的key
+   bool can_find = 3; 				//读授权
+   bool can_update = 4; 			//更新授权
+   bool can_delete = 5; 			//删除授权
+}
+
+message FindUserAccesssRequest{
+	repeated string role_id = 1;
+	string group_id = 2;
+	string app_id = 3;			
+	string datastore_id = 4;			
+	string owner = 5;			
+	string action = 6;	 // 操作权限区分 R 代表读 W 代表更新 D 代表删除		
+	string database = 7;
+}
+
+message FindUserAccesssResponse{
+	repeated string access_keys = 1;
+}
+
+message FindAccessRequest{
+	string role_id = 1;
+	string group_id = 2;
+	string database = 3;
+}
+
+message FindAccessResponse{
+	repeated Access access_list = 1;
+}
+
+message FindOneAccessRequest{
+	string access_id = 1;
+	string database = 2;
+}
+
+message FindOneAccessResponse{
+	Access access = 1;
+}
+
+message AddAccessRequest{
+	string role_id = 1;
+	string group_id = 2;
+	map<string,AppData> apps = 3;
+	string writer = 4;
+	string database = 5;
+}
+
+message AddAccessResponse{
+	string access_id = 1;
+}
+
+message HardDeleteAccessRequest{
+	repeated string access_list = 1;
+	string database = 2;
+}
+
+message HardDeleteAccessResponse{
+}
+
+message RecoverSelectAccessRequest{
+	repeated string access_list = 1;
+	string writer = 2;
+	string database = 3;
+}
+
+message RecoverSelectAccessResponse{
+}
+
+message DeleteSelectAccessRequest{
+	repeated string access_list = 1;
+	string writer = 2;
+	string database = 3;
+}
+
+message DeleteSelectAccessResponse{
+}

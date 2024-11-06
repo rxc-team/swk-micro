@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package relation;
+
+service RelationService {
+	rpc FindRelations(RelationsRequest) returns (RelationsResponse) {}
+	rpc AddRelation(AddRequest) returns (AddResponse) {}
+	rpc DeleteRelation(DeleteRequest) returns (DeleteResponse) {}
+}
+
+// 流程实例定义
+message Relation {
+	string app_id =1; // 所属app
+	string object_id =2; // 流程对象ID
+	string group_id =3; // 所属组织
+	string workflow_id =4; // 流程ID
+	string action =5; // 流程对象所走的操作
+}
+
+// 查找多条记录
+message RelationsRequest{
+	string app_id =1; // 所属app
+	string object_id =2; // 流程对象ID
+	string group_id =3; // 所属组织
+	string workflow_id =4; // 流程ID
+	string action =5; // 流程对象所走的操作
+	string database = 6; // 数据库
+}
+
+message RelationsResponse{
+	repeated Relation relations = 1;
+}
+
+// 添加数据
+message AddRequest{
+	string app_id =1; // 所属app
+	string object_id =2; // 流程对象ID
+	string group_id =3; // 所属组织
+	string workflow_id =4; // 流程ID
+	string action =5; // 流程对象所走的操作
+	string database = 6; // 数据库
+	string writer = 7; // 创建者
+}
+
+message AddResponse{
+}
+
+// 删除数据记录
+message DeleteRequest{
+	string app_id =1; // 所属app
+	string object_id =2; // 流程对象ID
+	string group_id =3; // 所属组织
+	string workflow_id =4; // 流程ID
+	string database = 5; // 数据库
+}
+
+message DeleteResponse{
+}

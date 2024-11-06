@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package feed;
+
+service ImportService {
+	rpc FindImports(ImportsRequest) returns (ImportsResponse) {}
+	rpc FindImportItems(ImportItemsRequest) returns (ImportItemsResponse) {}
+	rpc AddImportItem(AddRequest) returns (AddResponse) {}
+	rpc DeleteImportItem(DeleteRequest) returns (DeleteResponse) {}
+}
+
+// 台账数据
+message ImportItem {
+	string app_id =1; // 所属APP
+	string datastore_id =2; // 所属台账
+	string mapping_id =6; // 映射配置
+	string job_id = 7; // 任务ID
+	map<string, string> items =3; // 字段对应的值
+	string created_at =4; // 创建时间
+	string created_by =5; // 创建者
+}
+
+// 查找多条记录
+message ImportsRequest{
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	string job_id = 5; // 任务ID
+	string writer = 3; // 创建者
+	string database = 4; // 数据库
+}
+
+message ImportsResponse{
+	repeated ImportItem items = 1;
+}
+
+// 查找多条记录
+message ImportItemsRequest{
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	string job_id = 6; // 任务ID
+	string writer = 3; // 创建者
+	string mapping_id =4; // 映射配置
+	string database = 5; // 数据库
+}
+
+message ImportItemsResponse{
+	repeated ImportItem items = 1;
+}
+
+// 添加数据
+message AddRequest{
+	repeated ImportItem items = 1;
+	string writer = 4; // 创建者
+	string database = 3; // 数据库
+}
+
+message AddResponse{
+}
+
+// 删除数据记录
+message DeleteRequest{
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	string job_id = 6; // 任务ID
+	string writer = 3; // 创建者
+	string mapping_id =4; // 映射配置
+	string database = 5; // 数据库
+}
+
+message DeleteResponse{
+}

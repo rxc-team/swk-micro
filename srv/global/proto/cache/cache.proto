@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package cache;
+
+service CacheService {
+	// 通过KEY获取配置信息
+	rpc SetCache(SetRequest) returns (Response) {}
+	rpc GetCache(GetRequest) returns (GetResponse) {}
+	rpc DeleteCache(DeleteRequest) returns (Response) {}
+}
+
+message SetRequest{
+	string value = 1;
+	repeated string key = 2;
+	int64 ttl = 3;
+}
+
+message GetRequest{
+	repeated string key = 1;
+	int64 ttl = 2;
+}
+
+message DeleteRequest{
+	repeated string key = 1;
+}
+
+message GetResponse{
+	string value = 1;
+}
+
+message Response{}

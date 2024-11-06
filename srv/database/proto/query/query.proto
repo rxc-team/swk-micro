@@ -1,0 +1,105 @@
+syntax = "proto3";
+
+package query;
+
+service QueryService {
+	rpc FindQueries(FindQueriesRequest) returns (FindQueriesResponse) {}
+	rpc FindQuery(FindQueryRequest) returns (FindQueryResponse) {}
+	rpc AddQuery(AddRequest) returns (AddResponse) {}
+	rpc DeleteQuery(DeleteRequest) returns (DeleteResponse) {}
+	rpc DeleteSelectQueries(DeleteSelectQueriesRequest) returns (DeleteResponse) {}
+	rpc HardDeleteQueries(HardDeleteQueriesRequest) returns (DeleteResponse) {}
+}
+
+// 条件
+message Condition {
+	string field_id = 1; // 检索字段ID
+    string field_type = 2; // 检索字段类型
+    string search_value = 3; // 检索值
+	string operator = 4; // 检索连接操作符
+    string condition_type = 5; // 检索连接类型
+    bool is_dynamic = 6; // 是否动态字段
+}
+
+// 快捷方式
+message Query {
+ 	string query_id = 1; // 快捷方式ID
+	string user_id = 2; // 所属用户
+	string datastore_id = 3; // 所属台账
+  	string query_name = 4; //快捷方式名
+  	string description = 6; // 描述
+	string condition_type = 7; // 字段条件(or或者and)
+	repeated Condition conditions = 8; // 检索条件
+	repeated string fields = 15; // 显示字段情报
+	string app_id = 16; // 所属APP
+	string created_at = 9; // 创建时间
+	string created_by = 10; // 创建者
+	string updated_at = 11; // 更新时间
+	string updated_by = 12; // 更新者
+	string deleted_at = 13; // 删除时间
+	string deleted_by = 14; // 删除者
+}
+
+// 查找多个快捷方式
+message FindQueriesRequest{
+	string user_id = 1; // 快捷方式所属的用户
+	string query_name = 2; // 快捷方式名
+	string datastore_id = 3; // 快捷方式所属的台账
+	string app_id = 5; // 所属APP
+	string database = 4; // 数据库
+}
+
+message FindQueriesResponse{
+	repeated Query query_list = 1; // 快捷方式结果集
+}
+
+// 查找单个快捷方式
+message FindQueryRequest{
+	string query_id = 1; // 快捷方式ID
+	string database = 2; // 数据库
+}
+
+message FindQueryResponse{
+	Query query = 1; // 查询query结果
+}
+
+// 添加单个快捷方式
+message AddRequest{
+	string user_id = 1; // 所属用户
+	string datastore_id = 2; // 所属台账
+  	string query_name = 3; //快捷方式名
+  	string description = 4; // 描述
+	repeated Condition conditions = 5; // 检索条件
+	repeated string fields = 9; // 显示字段情报
+	string app_id = 10; // 所属APP
+	string condition_type = 6; // 字段条件(or或者and)
+	string writer = 7; // 创建者
+	string database = 8; // 数据库
+}
+
+message AddResponse{
+	string query_id = 1; // 新创建的queryID
+}
+
+// 删除单个快捷方式
+message DeleteRequest{
+	string query_id = 1; // 快捷方式ID
+	string writer = 2; // 删除者
+	string database = 3; // 数据库
+}
+
+// 删除多个快捷方式
+message DeleteSelectQueriesRequest{
+	repeated string query_id_list = 1; // 快捷方式ID集
+	string writer = 2; // 删除者
+	string database = 3; // 数据库
+}
+
+// 物理删除多个快捷方式
+message HardDeleteQueriesRequest{
+	repeated string query_id_list = 1; // 快捷方式ID集
+	string database = 2; // 数据库
+}
+
+message DeleteResponse{
+}

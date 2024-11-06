@@ -1,0 +1,546 @@
+syntax = "proto3";
+
+package item;
+
+service ItemService {
+	rpc FindItems(ItemsRequest) returns (ItemsResponse) {}
+	rpc FindCount(CountRequest) returns (CountResponse) {}
+	rpc FindKaraCount(KaraCountRequest) returns (KaraCountResponse) {}
+	rpc FindUnApproveItems(UnApproveItemsRequest) returns (UnApproveItemsResponse) {}
+	rpc FindItem(ItemRequest) returns (ItemResponse) {}
+	rpc FindRishiritsu(RishiritsuRequest) returns (RishiritsuResponse) {}
+	rpc AddItem(AddRequest) returns (AddResponse) {}
+	rpc ModifyItem(ModifyRequest) returns (ModifyResponse) {}
+	rpc InventoryItem(InventoryItemRequest) returns (InventoryItemResponse) {}
+	rpc MutilInventoryItem(MutilInventoryItemRequest) returns (MutilInventoryItemResponse) {}
+	rpc ResetInventoryItems(ResetInventoryItemsRequest) returns (ResetInventoryItemsResponse) {}
+	rpc DeleteItem(DeleteRequest) returns (DeleteResponse) {}
+	rpc DeleteDatastoreItems(DeleteDatastoreItemsRequest) returns (DeleteResponse) {}
+	rpc DeleteItems(DeleteItemsRequest) returns (DeleteResponse) {}
+	rpc DeleteSelectItems(SelectedItemsRequest) returns ( stream SelectedItemsResponse) {}
+	rpc ChangeOwners(OwnersRequest) returns (OwnersResponse) {}
+	rpc ChangeSelectOwners(SelectOwnersRequest) returns (SelectOwnersResponse) {}
+	rpc ChangeItemOwner(ItemOwnerRequest) returns (ItemOwnerResponse) {}
+	rpc ChangeStatus(StatusRequest) returns (StatusResponse) {}
+	rpc ChangeLabelTime(LabelTimeRequest) returns (LabelTimeResponse) {}
+	rpc ChangeDebt(ChangeDebtRequest) returns (ChangeDebtResponse) {}
+	rpc ContractExpire(ContractExpireRequest) returns (ContractExpireResponse) {}
+	rpc ModifyContract(ModifyContractRequest) returns (ModifyContractResponse) {}
+	rpc TerminateContract(TerminateContractRequest) returns (TerminateContractResponse) {}
+
+	// double stream
+	rpc ImportItem(stream ImportRequest) returns (stream ImportResponse) {}
+	rpc ImportCheckItem(stream ImportCheckRequest) returns (stream ImportCheckResponse) {}
+	rpc MappingUpload(stream MappingUploadRequest) returns (stream MappingUploadResponse) {}
+	// single stream
+	rpc Download(DownloadRequest) returns (stream DownloadResponse) {} 
+	rpc FindAndModifyFile(FindRequest) returns (stream FindResponse) {}
+}
+
+// 条件
+message Condition {
+	string field_id = 1; // 检索字段ID
+    string field_type = 2; // 检索字段类型
+    string search_value = 3; // 检索值
+	string operator = 4; // 检索连接操作符
+	bool is_dynamic = 5; // 是否动态
+    string condition_type = 6; // 检索连接类型
+}
+
+message Value {
+	string data_type = 1; // 字段类型
+    string value = 2; // 字段值
+}
+
+// 台账数据
+message Item {
+	string item_id =1; // 台账数据ID
+	string app_id =2; // 所属APP
+	string datastore_id =3; // 所属台账
+	map<string, Value> items =4; // 字段对应的值
+	repeated string owners =6; // 所有者
+	string check_type =15; // 盘点种类
+	string check_status =18; // 检查状态
+	string created_at =7; // 创建时间
+	string created_by =8; // 创建者
+	string updated_at =9; // 更新时间
+	string updated_by =10; // 更新者
+	string checked_at =11; // 盘点时间
+	string checked_by =12; // 盘点者
+	string label_time =16; //  标签出力时间
+	string status =17; //  当前数据的状态（1默认状态，2表示审批中，不能更改数据）
+}
+
+// 查找多条记录
+message ItemsRequest{
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	repeated Condition condition_list = 3; // 字段条件
+	string condition_type = 4; // 字段条件(or或者and)
+	int64 page_index = 5; // 当前页
+	int64 page_size = 6; // 每页的大小
+	repeated SortItem sorts = 7; // 排序的值（升序ascend，降序descend，不排序null）
+	repeated string owners = 9; // 所有者
+	string database = 11; // 数据库
+	bool is_origin = 10; // 是否需要关联查询到用户和选项
+	bool showLookup = 12; // 是否需要关联台账的显示字段
+}
+
+// 查找多条记录
+message DownloadRequest{
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	repeated Condition condition_list = 3; // 字段条件
+	string condition_type = 4; // 字段条件(or或者and)
+	repeated SortItem sorts = 5; // 排序的值（升序ascend，降序descend，不排序null）
+	repeated string owners = 6; // 所有者
+	string database = 7; // 数据库
+}
+
+message SortItem {
+	string sort_key = 1; // 排序的字段
+	string sort_value = 2; // 排序的值（升序ascend，降序descend，不排序null）
+}
+
+message DownloadResponse{
+	Item item = 1;
+}
+
+message ItemsResponse{
+	repeated Item items = 1;
+	int64 total = 2;
+}
+
+// 查找数据
+message FindRequest {
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	string database = 3; // 数据库
+}
+
+message FindResponse {
+	string old_url = 1; // 旧的路径
+	string new_url = 2; // 新的路径
+}
+
+// 获取总件数
+message CountRequest{
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	repeated Condition condition_list = 3; // 字段条件
+	string condition_type = 4; // 字段条件(or或者and)
+	repeated string owners = 5; // 所有者
+	string database = 6; // 数据库
+}
+
+message CountResponse{
+	int64 total = 2;
+}
+
+// 获取空值总件数
+message KaraCountRequest{
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	string field_id = 3; // 字段ID
+    string field_type = 4; // 字段类型
+	repeated string owners = 5; // 所有者
+	string database = 6; // 数据库
+}
+
+message KaraCountResponse{
+	int64 total = 1;
+}
+
+// 查询台账未审批数据件数
+message UnApproveItemsRequest{
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	string status = 3; // 状态
+	string database = 4; // 数据库
+}
+message UnApproveItemsResponse{
+	int64 total = 1;
+}
+
+// 查询单条记录
+message ItemRequest{
+	string item_id = 1; // 台账数据ID
+	string datastore_id = 2; // 台账ID
+	bool is_origin = 3; // 是否需要关联查询到用户和选项
+	repeated string owners = 4; // 所有者
+	string database = 5; // 数据库
+}
+
+// 查询单条记录
+message RishiritsuRequest{
+	string datastore_id = 1; // 台账ID
+	string leasestymd = 2; // 租赁开始日
+	string leasekikan = 3; // 租赁期间
+	string database = 4; // 数据库
+}
+
+message ItemResponse{
+	Item item = 1;
+}
+
+message RishiritsuResponse{
+	Item item = 1;
+}
+
+// 添加数据
+message AddRequest{
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	map<string, Value> items =3; // 字段对应的值
+	repeated string owners = 4; // 所有者
+	string writer = 5; // 创建者
+	string database = 6; // 数据库
+	string lang_cd = 8; // 语言
+	string domain = 9; // domain
+}
+
+message AddResponse{
+	string item_id =1;
+}
+
+message ListItems {
+	map<string, Value> items =1; // 字段对应的值
+}
+
+// 附加数据
+message AttachItems {
+	map<string, Value> items =1; // 字段对应的值
+	string datastore_id = 2; // 所属台账
+}
+
+
+
+message ChangeData {
+	map<string, Value> query = 1; // 查询条件
+	map<string, Value> change = 2; // 更新数据
+	int64 index = 3; // 当前行号
+}
+
+message MappingMetaData {
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	string mapping_type = 4; // 映射类型
+	string update_type = 5; // 更新类型
+	string writer = 6; // 导入者
+	repeated string owners = 7; // 所有者
+	repeated string update_owners = 9; //  更新者权限
+	string database = 8; // 数据库
+	string lang_cd = 10; // 语言
+	string domain = 11; // domain
+}
+
+enum SendStatus {
+	SECTION = 0;
+	COMPLETE = 1;
+}
+
+message MappingUploadRequest{
+	SendStatus status = 1;
+	oneof request {
+		MappingMetaData meta = 2;
+		ChangeData data = 3;
+	}
+}
+
+enum Status {
+	SUCCESS = 0;
+	FAILED = 1;
+}
+
+message MappingUploadResponse{
+	Status status = 1;
+	ImportResult result = 2;// 返回错误结果
+}
+
+message ImportMetaData {
+	string key = 1; // 主键
+	string app_id = 2; // 所属APP
+	string datastore_id = 3; // 所属台账
+	repeated string owners = 4; // 所有者
+	repeated string update_owners = 5; //  更新者权限
+	string writer = 6; // 导入者
+	string database = 7; // 数据库
+	string lang_cd = 8; // 语言
+	string domain = 9; // domain
+}
+
+message ImportData {
+	ListItems items = 1; // 导入的数据
+	repeated AttachItems attach_items = 2; // 附加数据
+}
+
+message ImportRequest{
+	SendStatus status = 1;
+	oneof request {
+		ImportMetaData meta = 2;
+		ImportData data = 3;
+	}
+}
+
+message ImportResponse{
+	Status status = 1;
+	ImportResult result = 2;// 返回错误结果
+}
+
+message ImportCheckRequest{
+	SendStatus status = 1;
+	oneof request {
+		ImportMetaData meta = 2;
+		ChangeData data = 3;
+	}
+}
+
+message ImportCheckResponse{
+	Status status = 1;
+	ImportResult result = 2;// 返回错误结果
+}
+
+
+// 行错误
+message Error {
+	int64 first_line = 1; // 错误开始行
+	int64 last_line = 2; // 错误结束行
+	int64 current_line = 3; // 当前错误行
+	string field_id = 4; // 错误字段ID
+	string field_name = 5; // 错误字段名
+	string error_msg = 6; // 错误信息
+}
+
+// 导入结果
+message ImportResult {
+	int64 insert =1; // 新规条数
+	int64 modify =2; // 更新条数
+ 	repeated Error errors =3; // 错误
+}
+
+message InventoryItemRequest{
+	string item_id =1; // 盘点数据ID
+	string app_id = 7; // 所属APP
+	string datastore_id =2;  // 盘点的台账
+	string image =3; // 盘点的图片
+	string check_field =8; // 盘点的图片
+	string check_type =5; // 盘点种类
+	string writer = 4; // 盘点者
+	string database = 6; // 数据库
+}
+
+message InventoryItemResponse{
+}
+
+message ResetInventoryItemsRequest{
+	string app_id = 1; // 所属APP
+	string writer = 2; // 重置盘点者
+	string database = 3; // 数据库
+}
+
+message ResetInventoryItemsResponse{
+}
+
+message MutilInventoryItemRequest{
+	repeated string item_id_list = 1; // 盘点数据ID集合
+	string datastore_id = 2;  // 盘点的台账
+	string check_type = 4;  // 盘点的台账
+	string writer = 3; // 盘点者
+	string app_id = 6; // 所属APP
+	string database = 5; // 数据库
+}
+
+message MutilInventoryItemResponse{
+}
+
+// 更新记录
+message ModifyRequest{
+	string app_id = 6; // 所属APP
+	string item_id =1; // 数据ID
+	string datastore_id =2; // 所属台账
+	map<string, Value> items = 3; // 字段对应的值
+	repeated string owners = 4; // 更新者权限
+	string writer = 5; // 更新者
+	string database = 7; // 数据库
+	string lang_cd = 8; // 语言
+	string domain = 9; // domain
+}
+
+message ModifyResponse{
+}
+
+// 更新记录
+message StatusRequest{
+	string app_id = 1; // 所属APP
+	string item_id = 2; // 数据ID
+	string datastore_id = 3; // 所属台账
+	string status = 4; //  当前数据的状态（1默认状态，2表示审批中，不能更改数据）
+	string writer = 5; // 更新者
+	string database = 6; // 数据库
+}
+
+message StatusResponse{
+}
+
+// 更新记录
+message OwnersRequest{
+	string datastore_id =1; // 所属台账
+	string old_owner = 2; // 原所有者
+	string new_owner = 3; // 新所有者
+	string writer = 4; // 更新者
+	string database = 5; // 数据库
+}
+
+message OwnersResponse{
+}
+
+// 更新记录
+message SelectOwnersRequest{
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	repeated Condition condition_list = 3; // 字段条件
+	string condition_type = 4; // 字段条件(or或者and)
+	string owner = 5; // 新所有者
+	string writer = 6; // 更新者
+	string database = 7; // 数据库
+	repeated string old_owners =8; // 原所有者
+}
+
+message SelectOwnersResponse{
+}
+
+// 更新单条记录所属组织
+message ItemOwnerRequest{
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	string item_id = 3; // 数据ID
+	string owner = 4; // 新所有者
+	string writer = 5; // 更新者
+	string database = 6; // 数据库
+}
+
+message ItemOwnerResponse{
+}
+
+// 删除数据记录
+message DeleteRequest{
+	string item_id = 1; // 数据ID
+	string datastore_id = 2; // 台账ID
+	map<string, Value> items =5; // 字段对应的值
+	repeated string owners = 6; //  删除者权限
+	string writer = 3; // 删除者
+	string database = 4; // 数据库
+	string lang_cd = 8; // 语言
+	string domain = 9; // domain
+}
+
+// 删除台账的整个数据记录
+message DeleteDatastoreItemsRequest{
+	string datastore_id =1; // 所属台账
+	string writer = 2; // 删除者
+	string database = 3; // 数据库
+}
+
+// 删除多条数据记录
+message DeleteItemsRequest{
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	repeated Condition condition_list = 3; // 字段条件
+	string condition_type = 4; // 字段条件(or或者and)
+	string user_id = 5; // 所有者
+	string database = 6; // 数据库
+	string lang_cd = 8; // 语言
+	string domain = 9; // domain
+}
+
+message DeleteResponse{
+}
+// 删除多条数据记录
+message SelectedItemsRequest{
+	string app_id = 1; // 所属APP
+	string datastore_id = 2; // 所属台账
+	repeated string item_id_list = 3; // 选中的itemid
+	repeated string owners = 4; //删除者权限
+	string user_id = 5; // 所有者
+	string database = 6; // 数据库
+	string lang_cd = 8; // 语言
+	string domain = 9; // domain
+}
+
+message SelectedItemsResponse{
+	string delete_url = 1;
+}
+
+// 修改标签出力时间
+message LabelTimeRequest{
+	repeated string item_id_list =1; // 数据ID集合
+	string datastore_id = 2; // 台账ID
+	string database = 3; // 数据库
+}
+
+message LabelTimeResponse{
+}
+
+// 债务变更
+message ChangeDebtRequest{
+	string app_id = 6; // 所属APP
+	string item_id =1; // 数据ID
+	string datastore_id =2; // 所属台账
+	map<string, Value> items = 3; // 字段对应的值
+	repeated string owners = 4; // 更新者权限
+	string writer = 5; // 更新者
+	string database = 7; // 数据库
+	string lang_cd = 8; // 语言
+	string domain = 9; // domain
+}
+
+message ChangeDebtResponse{
+}
+
+// 契约满了
+message ContractExpireRequest{
+	string app_id = 1; // 所属APP
+	string item_id =2; // 数据ID
+	string datastore_id =3; // 所属台账
+	string writer = 4; // 更新者
+	map<string, Value> items = 6; // 字段对应的值
+	repeated string owners = 7; // 更新者权限
+	string database = 5; // 数据库
+	string lang_cd = 8; // 语言
+	string domain = 9; // domain
+}
+
+message ContractExpireResponse{
+}
+
+// 契约情报变更
+message ModifyContractRequest{
+	string app_id = 6; // 所属APP
+	string item_id =1; // 数据ID
+	string datastore_id =2; // 所属台账
+	map<string, Value> items = 3; // 字段对应的值
+	repeated string owners = 4; // 更新者权限
+	string writer = 5; // 更新者
+	string database = 7; // 数据库
+	string lang_cd = 8; // 语言
+	string domain = 9; // domain
+}
+
+message ModifyContractResponse{
+}
+
+// 中途解约
+message TerminateContractRequest{
+	string app_id = 6; // 所属APP
+	string item_id =1; // 数据ID
+	string datastore_id =2; // 所属台账
+	map<string, Value> items = 3; // 字段对应的值
+	repeated string owners = 4; // 更新者权限
+	string writer = 5; // 更新者
+	string database = 7; // 数据库
+	string lang_cd = 8; // 语言
+	string domain = 9; // domain
+}
+
+message TerminateContractResponse{
+}

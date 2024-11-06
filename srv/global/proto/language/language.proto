@@ -1,0 +1,180 @@
+syntax = "proto3";
+
+package language;
+
+service LanguageService {
+	// 查找当前domain下的所有多语言(目前中英日三种)
+	rpc FindLanguages(FindLanguagesRequest) returns (FindLanguagesResponse) {}
+	// 查找当前domain和langcd下面的语言
+	rpc FindLanguage(FindLanguageRequest) returns (FindLanguageResponse) {}
+	// 通过当前domain、langcd和对应的key，获取下面的语言结果
+	rpc FindLanguageValue(FindLanguageValueRequest) returns (FindLanguageValueResponse) {}
+	// 添加一种多语言数据
+	rpc AddLanguage(AddLanguageRequest) returns (AddLanguageResponse) {}
+	// 添加某个公司-某个APP-某种多语言的相关多语言数据(domain + app_id + langcd)
+	rpc AddLanguageData(AddLanguageDataRequest) returns (Response) {}
+	// 添加某个公司-某个APP-某个子项目集-某个子项目-某种多语言的相关多语言数据(domain + app_id + type + key + langcd)
+	rpc AddAppLanguageData(AddAppLanguageDataRequest) returns (Response) {}
+	// 添加某个公司共通项目的多语言数据(domain + type + key + langcd)
+	rpc AddCommonData(AddCommonDataRequest) returns (Response) {}
+	// 添加或更新多条多语言数据(domain + app_id + type + key + langcd)
+	rpc AddManyLanData(AddManyLanDataRequest) returns (Response) {}
+	// 删除某个公司共通项目的多语言数据(domain + type + key + langcd)
+	rpc DeleteCommonData(DeleteCommonDataRequest) returns (Response) {}
+	// 删除某个公司-某个APP-某种多语言的相关多语言数据(domain + app_id)
+	rpc DeleteLanguageData(DeleteLanguageDataRequest) returns (Response) {}
+	// 删除添加某个公司-某个APP-某个子项目集-某个子项目的相关多语言数据(domain + app_id + type + key)
+	rpc DeleteAppLanguageData(DeleteAppLanguageDataRequest) returns (Response) {}
+}
+
+// 语言
+message Language {
+ 	string lang_cd = 1;
+  	string text = 2;
+	string abbr = 3;
+	string domain = 4;
+	map<string, App> apps = 6;
+	Common common = 14;
+	string created_at = 7;
+	string created_by = 8;
+	string updated_at = 9;
+	string updated_by = 10;
+	string deleted_at = 11;
+	string deleted_by = 12;
+}
+
+message Common {
+	map<string, string> groups = 1;
+	map<string, string> workflows = 2;
+}
+
+message App {
+	string app_name = 1;
+	map<string, string> datastores = 2;
+	map<string, string> fields = 3;
+	map<string, string> queries = 4;
+	map<string, string> reports = 5;
+	map<string, string> dashboards = 6;
+	map<string, string> statuses = 7;
+	map<string, string> options = 8;
+	map<string, string> mappings = 9;
+	map<string, string> workflows = 10;
+}
+
+message LanData{
+	string app_id = 1;
+	string type = 2;
+	string key = 3;
+	string value = 4;
+}
+
+message FindLanguagesRequest{
+	string domain = 1;
+	string database = 2; // 数据库
+}
+
+message FindLanguagesResponse{
+	repeated Language language_list = 1;
+}
+
+message FindLanguageRequest{
+	string domain = 1;
+	string lang_cd = 2;
+	string database = 3; // 数据库
+}
+
+message FindLanguageResponse{
+	map<string, App> apps = 1;
+	Common common = 2;
+}
+
+message FindLanguageValueRequest{
+	string domain = 1;
+	string lang_cd = 2;
+	string key = 4;
+	string database = 3; // 数据库
+}
+
+message FindLanguageValueResponse{
+	string name = 1;
+}
+
+message AddLanguageRequest{
+	 string domain = 1;
+ 	 string lang_cd = 2;
+  	 string text = 3;
+	 string abbr = 4;
+	 string writer = 5;
+	 string database = 6; // 数据库
+}
+
+message AddLanguageResponse{
+	string lang_cd = 1;
+}
+
+message AddLanguageDataRequest{
+	string domain = 1;
+	string lang_cd = 2;
+	string app_id = 3;
+	string app_name = 4;
+	string writer = 5;
+	string database = 6; // 数据库
+}
+
+message AddAppLanguageDataRequest{
+	string domain = 1;
+	string lang_cd = 2;
+	string app_id = 3;
+	string type = 4;
+	string key = 5;
+	string value = 6;
+	string writer = 7;
+	string database = 8; // 数据库
+}
+
+message AddManyLanDataRequest{
+	string domain = 1;
+	string lang_cd = 2;
+	repeated LanData lans = 3;
+	string writer = 4;
+	string database = 5; // 数据库
+}
+
+message DeleteAppLanguageDataRequest{
+	string domain = 1;
+	string app_id = 2;
+	string type = 3;
+	string key = 4;
+	string writer = 5;
+	string database = 6; // 数据库
+}
+
+message AddCommonDataRequest{
+	string domain = 1;
+	string lang_cd = 2;
+	string type = 4;
+	string key = 5;
+	string value = 6;
+	string writer = 7;
+	string database = 8; 
+}
+
+message DeleteCommonDataRequest{
+	string domain = 1;
+	string type = 3;
+	string key = 4;
+	string writer = 5;
+	string database = 6; // 数据库
+}
+
+message DeleteLanguageDataRequest{
+	string domain = 1;
+	string app_id = 2;
+	string writer = 3;
+	string database = 4; // 数据库
+}
+
+message Response{
+
+}
+

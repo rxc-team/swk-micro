@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package subject;
+
+service SubjectService {
+	rpc FindSubjects(SubjectsRequest) returns (SubjectsResponse) {}
+	rpc FindSubject(SubjectRequest) returns (SubjectResponse) {}
+	rpc ImportSubject(ImportRequest) returns (ImportResponse) {}
+	rpc ModifySubject(ModifyRequest) returns (ModifyResponse) {}
+	rpc DeleteSubject(DeleteRequest) returns (DeleteResponse) {}
+}
+
+// 科目
+message Subject {
+	string subject_key =1; // 科目KEY
+	string subject_name =2; // 科目名称
+	string default_name =3; // 默认科目名称
+	string assets_type =4; // 资产类型
+	string app_id =5; // 所属APP
+	string journal_id =6; // 仕訳ID
+	string pattern_id =7; // 会计处理分类ID
+	string created_at =8; // 创建时间
+	string created_by =9; // 创建者
+	string updated_at =10; // 更新时间
+	string updated_by =11; // 更新者
+}
+
+// 查找多条记录
+message SubjectsRequest{
+	string assets_type =1; // 资产类型
+	string app_id =2; // 所属APP
+	string database =3; // 数据库
+}
+
+message SubjectsResponse{
+	repeated Subject subjects = 1;
+}
+
+// 查询单条记录
+message SubjectRequest{
+	string subject_key =1; // 科目KEY
+	string assets_type =2; // 资产类型
+	string app_id =3; // 所属APP
+	string database =4; // 数据库
+}
+
+message SubjectResponse{
+	Subject subject = 1;
+}
+
+// 导入科目数据
+message ImportRequest{
+	repeated Subject subjects = 1; // 导入的数据
+	string database = 2; // 数据库
+	string writer = 3; // 创建者
+}
+
+message ImportResponse{
+}
+
+// 更新记录
+message ModifyRequest{
+	string subject_key =1; // 科目KEY-条件
+	string assets_type =2; // 资产类型-条件
+	string app_id =3; // 所属APP-条件
+	string subject_name =4; // 科目名称-变更项目
+	string default_name =5; // 默认科目名称
+	string database =6; // 数据库
+	string writer =7; // 更新者
+}
+
+message ModifyResponse{
+}
+
+// 删除数据记录
+message DeleteRequest{
+	string subject_key =1; // 科目KEY
+	string assets_type =2; // 资产类型
+	string app_id =3; // 所属APP
+	string database =4; // 数据库
+}
+
+message DeleteResponse{
+}

@@ -1,0 +1,386 @@
+[
+  {
+    "code": "common.zone.001",
+    "value": "Etc/GMT+12"
+  },
+  {
+    "code": "common.zone.002",
+    "value": "Etc/GMT+11"
+  },
+  {
+    "code": "common.zone.003",
+    "value": "Pacific/Honolulu"
+  },
+  {
+    "code": "common.zone.004",
+    "value": "America/Anchorage"
+  },
+  {
+    "code": "common.zone.005",
+    "value": "America/Santa_Isabel"
+  },
+  {
+    "code": "common.zone.006",
+    "value": "America/Los_Angeles"
+  },
+  {
+    "code": "common.zone.007",
+    "value": "America/Chihuahua"
+  },
+  {
+    "code": "common.zone.008",
+    "value": "America/Phoenix"
+  },
+  {
+    "code": "common.zone.009",
+    "value": "America/Denver"
+  },
+  {
+    "code": "common.zone.010",
+    "value": "America/Guatemala"
+  },
+  {
+    "code": "common.zone.011",
+    "value": "America/Chicago"
+  },
+  {
+    "code": "common.zone.012",
+    "value": "America/Regina"
+  },
+  {
+    "code": "common.zone.013",
+    "value": "America/Mexico_City"
+  },
+  {
+    "code": "common.zone.014",
+    "value": "America/Bogota"
+  },
+  {
+    "code": "common.zone.015",
+    "value": "America/Indiana/Indianapolis"
+  },
+  {
+    "code": "common.zone.016",
+    "value": "America/New_York"
+  },
+  {
+    "code": "common.zone.017",
+    "value": "America/Caracas"
+  },
+  {
+    "code": "common.zone.018",
+    "value": "America/Halifax"
+  },
+  {
+    "code": "common.zone.019",
+    "value": "America/Asuncion"
+  },
+  {
+    "code": "common.zone.020",
+    "value": "America/La_Paz"
+  },
+  {
+    "code": "common.zone.021",
+    "value": "America/Cuiaba"
+  },
+  {
+    "code": "common.zone.022",
+    "value": "America/Santiago"
+  },
+  {
+    "code": "common.zone.023",
+    "value": "America/St_Johns"
+  },
+  {
+    "code": "common.zone.024",
+    "value": "America/Sao_Paulo"
+  },
+  {
+    "code": "common.zone.025",
+    "value": "America/Godthab"
+  },
+  {
+    "code": "common.zone.026",
+    "value": "America/Cayenne"
+  },
+  {
+    "code": "common.zone.027",
+    "value": "America/Argentina/Buenos_Aires"
+  },
+  {
+    "code": "common.zone.028",
+    "value": "America/Montevideo"
+  },
+  {
+    "code": "common.zone.029",
+    "value": "Etc/GMT+2"
+  },
+  {
+    "code": "common.zone.030",
+    "value": "Atlantic/Cape_Verde"
+  },
+  {
+    "code": "common.zone.031",
+    "value": "Atlantic/Azores"
+  },
+  {
+    "code": "common.zone.032",
+    "value": "Africa/Casablanca"
+  },
+  {
+    "code": "common.zone.033",
+    "value": "Atlantic/Reykjavik"
+  },
+  {
+    "code": "common.zone.034",
+    "value": "Europe/London"
+  },
+  {
+    "code": "common.zone.035",
+    "value": "Etc/GMT"
+  },
+  {
+    "code": "common.zone.036",
+    "value": "Europe/Berlin"
+  },
+  {
+    "code": "common.zone.037",
+    "value": "Europe/Paris"
+  },
+  {
+    "code": "common.zone.038",
+    "value": "Africa/Lagos"
+  },
+  {
+    "code": "common.zone.039",
+    "value": "Europe/Budapest"
+  },
+  {
+    "code": "common.zone.040",
+    "value": "Europe/Warsaw"
+  },
+  {
+    "code": "common.zone.041",
+    "value": "Africa/Windhoek"
+  },
+  {
+    "code": "common.zone.042",
+    "value": "Europe/Istanbul"
+  },
+  {
+    "code": "common.zone.043",
+    "value": "Europe/Kiev"
+  },
+  {
+    "code": "common.zone.044",
+    "value": "Africa/Cairo"
+  },
+  {
+    "code": "common.zone.045",
+    "value": "Asia/Damascus"
+  },
+  {
+    "code": "common.zone.046",
+    "value": "Asia/Amman"
+  },
+  {
+    "code": "common.zone.047",
+    "value": "Africa/Johannesburg"
+  },
+  {
+    "code": "common.zone.048",
+    "value": "Asia/Jerusalem"
+  },
+  {
+    "code": "common.zone.049",
+    "value": "Asia/Beirut"
+  },
+  {
+    "code": "common.zone.050",
+    "value": "Asia/Baghdad"
+  },
+  {
+    "code": "common.zone.051",
+    "value": "Europe/Minsk"
+  },
+  {
+    "code": "common.zone.052",
+    "value": "Asia/Riyadh"
+  },
+  {
+    "code": "common.zone.053",
+    "value": "Africa/Nairobi"
+  },
+  {
+    "code": "common.zone.054",
+    "value": "Asia/Tehran"
+  },
+  {
+    "code": "common.zone.055",
+    "value": "Europe/Moscow"
+  },
+  {
+    "code": "common.zone.056",
+    "value": "Asia/Tbilisi"
+  },
+  {
+    "code": "common.zone.057",
+    "value": "Asia/Yerevan"
+  },
+  {
+    "code": "common.zone.058",
+    "value": "Asia/Dubai"
+  },
+  {
+    "code": "common.zone.059",
+    "value": "Asia/Baku"
+  },
+  {
+    "code": "common.zone.060",
+    "value": "Indian/Mauritius"
+  },
+  {
+    "code": "common.zone.061",
+    "value": "Asia/Kabul"
+  },
+  {
+    "code": "common.zone.062",
+    "value": "Asia/Tashkent"
+  },
+  {
+    "code": "common.zone.063",
+    "value": "Asia/Karachi"
+  },
+  {
+    "code": "common.zone.064",
+    "value": "Asia/Colombo"
+  },
+  {
+    "code": "common.zone.065",
+    "value": "Asia/Kolkata"
+  },
+  {
+    "code": "common.zone.066",
+    "value": "Asia/Kathmandu"
+  },
+  {
+    "code": "common.zone.067",
+    "value": "Asia/Almaty"
+  },
+  {
+    "code": "common.zone.068",
+    "value": "Asia/Dhaka"
+  },
+  {
+    "code": "common.zone.069",
+    "value": "Asia/Yekaterinburg"
+  },
+  {
+    "code": "common.zone.070",
+    "value": "Asia/Yangon"
+  },
+  {
+    "code": "common.zone.071",
+    "value": "Asia/Bangkok"
+  },
+  {
+    "code": "common.zone.072",
+    "value": "Asia/Novosibirsk"
+  },
+  {
+    "code": "common.zone.073",
+    "value": "Asia/Krasnoyarsk"
+  },
+  {
+    "code": "common.zone.074",
+    "value": "Asia/Ulaanbaatar"
+  },
+  {
+    "code": "common.zone.075",
+    "value": "Asia/Shanghai"
+  },
+  {
+    "code": "common.zone.076",
+    "value": "Australia/Perth"
+  },
+  {
+    "code": "common.zone.077",
+    "value": "Asia/Singapore"
+  },
+  {
+    "code": "common.zone.078",
+    "value": "Asia/Taipei"
+  },
+  {
+    "code": "common.zone.079",
+    "value": "Asia/Irkutsk"
+  },
+  {
+    "code": "common.zone.080",
+    "value": "Asia/Seoul"
+  },
+  {
+    "code": "common.zone.081",
+    "value": "Asia/Tokyo"
+  },
+  {
+    "code": "common.zone.082",
+    "value": "Australia/Darwin"
+  },
+  {
+    "code": "common.zone.083",
+    "value": "Australia/Adelaide"
+  },
+  {
+    "code": "common.zone.084",
+    "value": "Australia/Hobart"
+  },
+  {
+    "code": "common.zone.085",
+    "value": "Asia/Yakutsk"
+  },
+  {
+    "code": "common.zone.086",
+    "value": "Australia/Brisbane"
+  },
+  {
+    "code": "common.zone.087",
+    "value": "Pacific/Port_Moresby"
+  },
+  {
+    "code": "common.zone.088",
+    "value": "Australia/Sydney"
+  },
+  {
+    "code": "common.zone.089",
+    "value": "Asia/Vladivostok"
+  },
+  {
+    "code": "common.zone.090",
+    "value": "Pacific/Guadalcanal"
+  },
+  {
+    "code": "common.zone.091",
+    "value": "Etc/GMT-12"
+  },
+  {
+    "code": "common.zone.092",
+    "value": "Pacific/Fiji"
+  },
+  {
+    "code": "common.zone.093",
+    "value": "Asia/Magadan"
+  },
+  {
+    "code": "common.zone.094",
+    "value": "Pacific/Auckland"
+  },
+  {
+    "code": "common.zone.095",
+    "value": "Pacific/Tongatapu"
+  },
+  {
+    "code": "common.zone.096",
+    "value": "Pacific/Apia"
+  }
+]

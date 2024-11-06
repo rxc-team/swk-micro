@@ -1,0 +1,159 @@
+syntax = "proto3";
+
+package customer;
+
+service CustomerService {
+	rpc FindCustomers(FindCustomersRequest) returns (FindCustomersResponse) {}
+	rpc FindCustomer(FindCustomerRequest) returns (FindCustomerResponse) {}
+	rpc FindCustomerByDomain(FindCustomerByDomainRequest) returns (FindCustomerByDomainResponse) {}
+	rpc AddCustomer(AddCustomerRequest) returns (AddCustomerResponse) {}
+	rpc ModifyCustomer(ModifyCustomerRequest) returns (ModifyCustomerResponse) {}
+	rpc ModifyUsedSize(ModifyUsedSizeRequest) returns (ModifyUsedSizeResponse) {}
+	rpc ModifyUsedUsers(ModifyUsedUsersRequest) returns (ModifyUsedUsersResponse) {}
+	rpc DeleteCustomer(DeleteCustomerRequest) returns (DeleteCustomerResponse) {}
+	rpc DeleteSelectCustomers(DeleteSelectCustomersRequest) returns (DeleteSelectCustomersResponse) {}
+	rpc HardDeleteCustomers(HardDeleteCustomersRequest) returns (HardDeleteCustomersResponse) {}
+	rpc RecoverSelectCustomers(RecoverSelectCustomersRequest) returns (RecoverSelectCustomersResponse) {}
+}
+
+// 顾客
+message Customer {
+	string customer_id = 1;
+	string customer_name = 2;
+	bool second_check = 15;
+	string customer_logo = 3;
+	string domain = 4;
+	string database = 11;
+	string default_user = 12;
+	string default_user_email = 16;
+	string default_timezone = 13;
+	string default_language = 14;
+	int32 max_users = 17;
+	int32 used_users = 18;
+	double max_size = 19;
+	double used_size = 20;
+	double max_data_size = 23;
+	double used_data_size = 24;
+	string level = 21;
+	int64  upload_file_size = 25;
+	string created_at = 5;
+	string created_by = 6;
+	string updated_at = 7;
+	string updated_by = 8;
+	string deleted_at = 9;
+	string deleted_by = 10;
+}
+
+
+message FindCustomersRequest{
+	string customer_name = 1;
+	string invalidated_in = 2;
+	string domain = 3;
+}
+
+message FindCustomersResponse{
+	repeated Customer customers = 1;
+}
+
+message FindCustomerRequest{
+	string customer_id = 1;
+}
+
+message FindCustomerResponse{
+	Customer customer = 1;
+}
+
+message FindCustomerByDomainRequest{
+	string domain = 1; 
+}
+
+message FindCustomerByDomainResponse{
+	Customer customer = 1;
+}
+
+message AddCustomerRequest{
+	string customer_name = 1;
+	string customer_logo = 2;
+	bool second_check = 8;
+	string domain = 3;
+	string writer = 4;
+	string default_user = 5;
+	string default_user_email = 9;
+	string default_timezone = 6;
+	string default_language = 7;
+	int32 max_users = 10;
+	int32 used_users = 11;
+	double max_size = 12;
+	double max_data_size = 14;
+	string level = 13;
+	int64  upload_file_size = 15;
+}
+
+message AddCustomerResponse{
+	string customer_id = 1;
+}
+
+message ModifyCustomerRequest{
+	string customer_id = 1;
+	string customer_name = 2;
+	string second_check = 5;
+	string default_user_email = 6;
+	int32 max_users = 7;
+	int32 used_users = 8;
+	string customer_logo = 3;
+	string writer = 4;
+	double max_size = 9;
+	double max_data_size = 11;
+	string level = 10;
+	int64  upload_file_size = 12;
+}
+
+message ModifyCustomerResponse{
+}
+
+message ModifyUsedUsersRequest{
+	string customer_id=1;
+	int32 used_users = 2;
+}
+
+message ModifyUsedUsersResponse{
+}
+
+message ModifyUsedSizeRequest{
+	string domain=1;
+	double used_size = 2;
+}
+
+message ModifyUsedSizeResponse{
+}
+
+message DeleteCustomerRequest{
+	string customer_id = 1;
+	string writer = 2;
+}
+
+message DeleteCustomerResponse{
+}
+
+message DeleteSelectCustomersRequest{
+	repeated string customer_id_list = 1;
+	string writer = 2;
+}
+
+message DeleteSelectCustomersResponse{
+}
+
+message HardDeleteCustomersRequest{
+	repeated string customer_id_list = 1;
+}
+
+message HardDeleteCustomersResponse{
+}
+
+message RecoverSelectCustomersRequest{
+	repeated string customer_id_list = 1;
+	string writer = 2;
+}
+
+message RecoverSelectCustomersResponse{
+}

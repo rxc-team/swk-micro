@@ -1,0 +1,157 @@
+syntax = "proto3";
+
+package datahistory;
+
+service HistoryService {
+	rpc FindHistories(HistoriesRequest) returns (HistoriesResponse) {}
+	rpc FindLastHistories(LastRequest) returns (LastResponse) {}
+	rpc FindHistoryCount(CountRequest) returns (CountResponse) {}
+	rpc FindHistory(HistoryRequest) returns (HistoryResponse) {}
+	rpc CreateIndex(CreateIndexRequest) returns (CreateIndexResponse) {} 
+	rpc Download(DownloadRequest) returns (stream DownloadResponse) {} 
+}
+
+message Change {
+	string field_id =1; // 字段ID
+	string local_name =2; // 变更时的字段名称（删除使用）
+	string field_name =3; // 当前字段名称
+    string old_value =4; // 上一次字段值
+    string new_value =5; // 最新的字段值
+}
+
+message FixedValue {
+	string data_type = 1; // 字段类型
+    string value = 2; // 字段值
+}
+
+// 履历数据
+message FieldHistory {
+	string history_id =1; // 履历ID
+	string history_type =2; // 履历类型（新规，更新，删除）
+	string datastore_id =3; // 所属台账
+	string item_id =4; // 台账数据ID
+	string field_id =5; // 字段ID
+	string local_name =6; // 变更时的字段名称（删除使用）
+	string field_name = 7; // 当前字段名称
+    string old_value = 8; // 上一次字段值
+    string new_value = 9; // 最新的字段值
+	string created_at =10; // 创建时间
+	string created_by =11; // 创建者
+}
+// 履历数据
+message DownloadHistory {
+	string history_id =1; // 履历ID
+	string history_type =2; // 履历类型（新规，更新，删除）
+	string datastore_id =3; // 所属台账
+	string item_id =4; // 台账数据ID
+	string field_id =5; // 台账数据ID
+	string local_name =6; // 台账数据ID
+	string field_name = 7; // 字段类型
+    string old_value = 8; // 上一次字段值
+    string new_value = 9; // 最新的字段值
+	map<string, FixedValue> fixed_items =10; // 固定字段对应的值
+	string created_at =11; // 创建时间
+	string created_by =12; // 创建者
+}
+// 履历数据
+message History {
+	string history_id =1; // 履历ID
+	string history_type =2; // 履历类型（新规，更新，删除）
+	string datastore_id =3; // 所属台账
+	string item_id =4; // 台账数据ID
+	map<string, FixedValue> fixed_items =5; // 固定字段对应的值
+	repeated Change changes =6; // 可查看的变更字段
+	int64 total_changes =7; // 总的变更字段数量
+	string created_at =8; // 创建时间
+	string created_by =9; // 创建者
+}
+
+// 查找多条记录
+message HistoriesRequest{
+	string datastore_id = 1; // 所属台账
+	string item_id = 2; // 所属数据ID
+	string history_type =3; // 履历类型（新规，更新，删除）
+	int64 page_index = 4; // 当前页
+	int64 page_size = 5; // 每页的大小
+	string field_id = 6; // 变更字段
+	string created_at_from = 7; // 变更时间起
+	string created_at_to = 8; // 变更时间止
+	string old_value =9; // 上一次字段值
+    string new_value =10; // 最新的字段值
+	repeated string field_list =11;// 可查询的字段 
+	string database = 12; // 数据库
+}
+
+// 查找多条记录
+message DownloadRequest{
+	string datastore_id = 1; // 所属台账
+	string item_id = 2; // 所属数据ID
+	string history_type =3; // 履历类型（新规，更新，删除）
+	string field_id = 4; // 变更字段
+	string created_at_from = 5; // 变更时间起
+	string created_at_to = 6; // 变更时间止
+	string database = 7; // 数据库
+	string old_value =8; // 上一次字段值
+    string new_value =9; // 最新的字段值
+	repeated string field_list =10;// 可查询的字段 
+}
+
+message DownloadResponse{
+	DownloadHistory history = 1;
+}
+
+message HistoriesResponse{
+	repeated FieldHistory histories = 1;
+	int64 total = 2;
+}
+
+// 查找多条记录
+message CountRequest{
+	string datastore_id = 1; // 所属台账
+	string item_id = 2; // 所属数据ID
+	string history_type =3; // 履历类型（新规，更新，删除）
+	string field_id = 4; // 变更字段
+	string created_at_from = 5; // 变更时间起
+	string created_at_to = 6; // 变更时间止
+	string database = 7; // 数据库
+	string old_value =8; // 上一次字段值
+    string new_value =9; // 最新的字段值
+	repeated string field_list =10;// 可查询的字段 
+}
+
+message CountResponse{
+	int64 total = 2;
+}
+
+// 查询单条记录
+message HistoryRequest{
+	string history_id = 1; // 台账数据ID
+	repeated string field_list =2;// 可查询的字段 
+	string database = 3; // 数据库
+}
+
+message HistoryResponse{
+	History history = 1;
+}
+
+// 查询最新更新记录（10条左右）
+message LastRequest{
+	string item_id = 1; // 台账数据ID
+	string datastore_id = 2; // 台账数据ID
+	repeated string field_list =3;// 可查询的字段 
+	string database = 4; // 数据库
+}
+
+message LastResponse{
+	repeated History history_list = 1;
+	int64 total = 2;
+}
+
+// 创建history索引
+message CreateIndexRequest{
+	string customer_id = 1; // 顾客ID
+}
+
+message CreateIndexResponse{
+}
+

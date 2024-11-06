@@ -1,0 +1,150 @@
+syntax = "proto3";
+
+package generate;
+
+service GenerateService {
+	rpc FindGenerateConfig(FindRequest) returns (FindResponse) {}
+	rpc AddGenerateConfig(AddRequest) returns (AddResponse) {}
+	rpc ModifyGenerateConfig(ModifyRequest) returns (ModifyResponse) {}
+	rpc UploadData(UploadRequest) returns (UploadResponse) {}
+	rpc FindRowData(RowRequest) returns (RowResponse) {}
+	rpc FindColumnData(ColumnRequest) returns (ColumnResponse) {}
+	rpc DeleteGenerateConfig(DeleteRequest) returns (DeleteResponse) {}
+}
+
+// 台账数据
+message GenerateConfig {
+	string app_id =1; // 所属APP
+	string user_id =2; // 创建者
+	string datastore_id =3; // 台账ID（新创建台账没有ID）
+	string api_key =4; // 台账APIKEY
+	string datastore_name =5; // 台账名称
+	bool   can_check =6; // 是否可以盘点
+	repeated Field fields = 7; // 字段信息
+	string mapping_id = 8; // 映射ID
+	int64 step =9; // 当前所在步
+}
+
+// 字段
+message Field {
+	string field_id = 1; // 字段ID
+	string app_id = 2; // 所属APP
+	string datastore_id = 3; // 所属台账
+	string field_name = 4; // 字段名称
+	string field_type = 5; // 字段类型
+	bool is_fixed = 36; // 是否固定字段
+	bool is_required = 6; // 是否必须入力
+	bool is_image = 7; // 是否是图片
+	bool is_check_image = 35; // 是否盘点图片
+	bool as_title = 8; // 是否作为标题
+	bool unique = 26; // 是否为唯一字段
+	string lookup_app_id = 9; // 关联字段的所属APP
+	string lookup_datastore_id = 10; // 关联字段的所属台账
+	string lookup_field_id = 11; // 关联字段的ID
+	string user_group_id = 12; // 用户组
+	string option_id = 13; // 选项组
+	int64 min_length = 27;// 最小长度
+	int64 max_length = 28;// 最大长度
+	int64 min_value = 29;// 最小值
+	int64 max_value = 30;// 最大值
+	int64 display_order = 25; // 表示顺
+	int64 display_digits = 31; // 表示位數
+	int64 precision = 37; // 小数精度
+	string prefix = 32; // 序列前綴
+	string return_type = 33; // 返回类型
+	string formula = 34; // 公式
+	string csv_header = 19; // CSV文件名
+	bool can_change = 20; // 是否可变更，从元数据读取的情况不可变更
+	bool is_empty_line = 21; // 不需要导入到元台账的场合设置为true
+	string check_errors = 22; // 检查错误
+}
+
+// 查找多条记录
+message FindRequest{
+	string app_id = 1; // 所属APP
+	string user_id = 2; // 所属用户
+	string database = 3; // 数据库
+}
+
+message FindResponse{
+	GenerateConfig gen_config = 1;
+}
+
+// 添加数据
+message AddRequest{
+	string app_id = 1; // 所属APP
+	string user_id = 2; // 所属用户
+	string database = 3; // 数据库
+}
+
+message AddResponse{
+}
+
+// 更新数据
+message ModifyRequest{
+	string app_id =1; // 所属APP
+	string user_id =2; // 创建者
+	string datastore_id =3; // 台账ID（新创建台账没有ID）
+	string api_key =4; // 台账APIKEY
+	string datastore_name =5; // 台账名称
+	string can_check =6; // 是否可以盘点
+	repeated Field fields = 7; // 字段信息
+	string mapping_id = 8; // 映射ID
+	int64 step =9; // 当前所在步
+	string database = 10; // 数据库
+}
+
+message ModifyResponse{
+}
+
+// 上传数据
+message UploadRequest {
+	repeated Item items =1; // 字段对应的值
+	string database =2; // 数据库
+}
+
+message UploadResponse{
+}
+
+// 获取行数据
+message RowRequest {
+	string app_id =1; // 所属APP
+	string user_id =2; // 创建者
+	int64 page_index = 3; // 当前页
+	int64 page_size = 4; // 每页的大小
+	string database = 5; // 数据库
+}
+
+message Item{
+	string app_id =1; // 所属APP
+	string user_id =2; // 创建者
+	map<string, string> item_map =3; // 字段对应的值
+}
+
+message RowResponse{
+	repeated Item items =3; // 字段对应的值
+}
+
+// 获取列数据
+message ColumnRequest {
+	string app_id =1; // 所属APP
+	string user_id =2; // 创建者
+	string column_name =3; // 列名
+	string database = 5; // 数据库
+}
+
+message ColumnResponse{
+	repeated string items =3; // 字段对应的值
+}
+
+// 删除数据记录
+message DeleteRequest{
+	string app_id =1; // 所属APP
+	string user_id =2; // 创建者
+	string database = 3; // 数据库
+}
+
+message DeleteResponse{
+}
+
+

@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-script
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: mongo-script-lp
+      component: microservice
+      role: lp
+  template:
+    metadata:
+      labels:
+        name: mongo-script-lp
+        component: microservice
+        role: lp
+    spec:
+      containers:
+      - name: mongo-script
+        image: gcr.io/{{ PROJECT_ID }}/mongo-script:{{ IMAGE }}
+        imagePullPolicy: Always
+        env:
+          - name: ENV
+            value: {{ ENV }}
+          - name: API_PORT
+            value: "8000"
+          - name: WEB_SOCKET_PORT
+            value: "8001"
+          - name: REDIS_HOST
+            value: "redis-service"
+          - name: REDIS_PORT
+            value: "6379"
+          - name: REDIS_PASSWORD
+            value: "+9AWKLIuchtSIYrdbesRGH14uhfutNos7aZX0JKwPXg="
+          - name: REDIS_DB
+            value: "10"
+        ports:
+        - containerPort: 8001
+          hostPort: 8001
+      nodeSelector:
+        cloud.google.com/gke-nodepool: {{ NODE_POOL }}

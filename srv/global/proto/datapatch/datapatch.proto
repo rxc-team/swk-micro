@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package datapatch;
+
+service DataPatchService {
+	rpc DataPatch1216(DataPatch1216Request) returns (DataPatch1216Response) {}
+}
+
+message DataPatch1216Request{
+	string domain = 1;
+	string lang_cd = 2;
+	string app_id = 3;
+	string kind = 4;
+	string type = 5;
+	bool del_kbn = 6;
+	map<string, string> value = 7;
+	string database = 8;
+	string writer = 9;
+}
+
+message DataPatch1216Response{}

@@ -1,0 +1,108 @@
+{
+    "mongo": {
+        "local": {
+            "host": "mongodb1:27017,mongodb2:27017,mongodb3:27017",
+            "port": "27017",
+            "username": "root",
+            "password": "admin",
+            "database": "pit2",
+            "replicasetname": "mongos",
+            "source": "admin"
+        },
+        "dev": {
+            "host": "mongodb-service:27017",
+            "port": "27017",
+            "username": "devops",
+            "password": "KWpKgJxXvUI/fKrCN8zgiavIZEflT+xAq0fVV6TuFWWPi2r+mwC5NeFLXcJWsiBuIRb8P9jyKxTzhV1DpgxujQ==",
+            "database": "pit2",
+            "replicasetname": "MainRepSet",
+            "source": "admin"
+        },
+        "stg": {
+            "host": "mongod-0.mongodb-service:27017,mongod-1.mongodb-service:27017,mongod-2.mongodb-service:27017",
+            "port": "27017",
+            "username": "devops",
+            "password": "pit123456",
+            "database": "pit2",
+            "replicasetname": "MainRepSet",
+            "source": "admin"
+        },
+        "prod": {
+            "host": "mongos",
+            "port": "27017",
+            "username": "devops",
+            "password": "KWpKgJxXvUI/fKrCN8zgiavIZEflT+xAq0fVV6TuFWWPi2r+mwC5NeFLXcJWsiBuIRb8P9jyKxTzhV1DpgxujQ==",
+            "database": "pit2",
+            "replicasetname": "",
+            "source": "admin"
+        }
+    },
+    "redis": {
+        "local": {
+            "host": "172.18.32.40",
+            "port": "6379",
+            "password": "redis123"
+        },
+        "dev": {
+            "host": "redis-service",
+            "port": "6379",
+            "password": "+9AWKLIuchtSIYrdbesRGH14uhfutNos7aZX0JKwPXg="
+        },
+        "stg": {
+            "host": "redis-service",
+            "port": "6379",
+            "password": "+9AWKLIuchtSIYrdbesRGH14uhfutNos7aZX0JKwPXg="
+        },
+        "prod": {
+            "host": "redis-service",
+            "port": "6379",
+            "password": "+9AWKLIuchtSIYrdbesRGH14uhfutNos7aZX0JKwPXg="
+        }
+    },
+    "storage": {
+        "local": {
+            "platform": "minio",
+            "bucket": "pit3",
+            "region": "test",
+            "public_path": "public",
+            "endpoint": "172.18.32.40:9090",
+            "access_id": "nextpit.proship",
+            "secret_key": "nextpit.proship.2018",
+            "service_account": "",
+            "project_id": ""
+        },
+        "dev": {
+            "platform": "minio",
+            "bucket": "pit2",
+            "region": "test",
+            "public_path": "public",
+            "endpoint": "minio-service:9000",
+            "access_id": "03HAITLEFPEVBX6HCWNP",
+            "secret_key": "ovXubBxn4ycWLZchDjv7RBMbZ2uskJ+d0ASY7oaD",
+            "service_account": "",
+            "project_id": ""
+        },
+        "stg": {
+            "platform": "minio",
+            "bucket": "pit2",
+            "region": "test",
+            "public_path": "public",
+            "endpoint": "minio-service:9000",
+            "access_id": "03HAITLEFPEVBX6HCWNP",
+            "secret_key": "ovXubBxn4ycWLZchDjv7RBMbZ2uskJ+d0ASY7oaD",
+            "service_account": "",
+            "project_id": ""
+        },
+        "prod": {
+            "platform": "minio",
+            "bucket": "pit2",
+            "region": "test",
+            "public_path": "public",
+            "endpoint": "minio-service:9000",
+            "access_id": "03HAITLEFPEVBX6HCWNP",
+            "secret_key": "ovXubBxn4ycWLZchDjv7RBMbZ2uskJ+d0ASY7oaD",
+            "service_account": "",
+            "project_id": ""
+        }
+    }
+}

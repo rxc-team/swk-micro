@@ -1,0 +1,42 @@
+# GCE上のKubernetesに対してデプロイする
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+#  namespace: micro
+  name: import
+  labels:
+    component: microservice
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: import
+      component: microservice
+  template:
+    metadata:
+      labels:
+        app: import
+        component: microservice
+    spec:
+      containers:
+        - name: import
+          command: [
+          "/app/import-srv",
+          "--registry=kubernetes",
+          "--server_address=0.0.0.0:8080",
+          "--broker_address=0.0.0.0:10001"
+          ]
+          env:
+          - name: ENV
+            value: {{ ENV }}
+          - name: TZ
+            value: Asia/Tokyo
+          - name: RABBITMQ
+            value: amqp://administer:rabbitmq1234@rabbitmq.rabbitmq:5672
+          image: gcr.io/{{ PROJECT_ID }}/import:{{ IMAGE }}
+          imagePullPolicy: Always
+          ports:
+          - containerPort: 8080
+            name: pit-port
+      nodeSelector:
+        cloud.google.com/gke-nodepool: {{ NODE_POOL }}

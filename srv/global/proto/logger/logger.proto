@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package logger;
+
+service LoggerService {
+	// 获取该domain下的所有日志
+	rpc FindLoggers(LoggersRequest) returns (LoggersResponse) {}
+	// 添加日志记录
+	rpc AddLogger(AddRequest) returns (AddResponse) {}
+	// 创建日志索引
+	rpc CreateLoggerIndex(CreateIndexRequest) returns (CreateIndexResponse) {}
+}
+
+// 日志
+message Logger {
+ 	string app_name = 1; // 服务名称
+ 	string user_id = 2; // 当前用户
+ 	string domain = 3; // 当前用户的domian
+ 	string log_type = 5; // 日志类型，包含【micro、batch、login】
+  	string process_id = 6; // 当前处理的ID
+	string client_ip = 9; // 当前访问的IP
+	string source = 10; // 当前log发生的代码位置
+	string msg = 14; // 消息内容/或者ID
+	string time = 15; // 发生时间
+	string level = 16; // 发生消息等级
+	map<string,string> params = 17; // 消息参数
+}
+
+message LoggersRequest{
+	string app_name = 1; // 服务名称
+ 	string user_id = 2; // 当前用户
+ 	string domain = 3; // 当前用户的domian
+ 	string log_type = 5; // 日志类型，包含【micro、batch、login】
+  	string process_id = 6; // 当前处理的ID
+	string client_ip = 9; // 当前访问的IP
+	string time = 15; // 发生时间
+	string start_time =7; // 开始时间
+	string end_time =8; // 结束时间
+	int64 page_index = 10; // 当前页
+	int64 page_size = 11; // 每页的大小
+	string level = 16; // 发生消息等级
+}
+
+message LoggersResponse{
+	repeated Logger loggers = 1;
+	int64 total = 2;
+}
+
+message AddRequest{
+	string app_name = 1; // 服务名称
+ 	string user_id = 2; // 当前用户
+ 	string domain = 3; // 当前用户的domian
+ 	string log_type = 5; // 日志类型，包含【micro、batch、login】
+  	string process_id = 6; // 当前处理的ID
+	string client_ip = 9; // 当前访问的IP
+	string source = 10; // 当前log发生的代码位置
+	string msg = 14; // 消息内容/或者参数
+	string time = 15; // 发生时间
+	string level = 16; // 发生消息等级
+	map<string,string> params = 17; // 消息参数
+}
+
+message AddResponse{
+}
+
+message CreateIndexRequest{
+}
+
+message CreateIndexResponse{
+}

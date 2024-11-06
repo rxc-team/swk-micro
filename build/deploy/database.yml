@@ -1,0 +1,47 @@
+# GCE上のKubernetesに対してデプロイする
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+#  namespace: micro
+  name: database
+  labels:
+    component: microservice
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: database
+      component: microservice
+  template:
+    metadata:
+      labels:
+        app: database
+        component: microservice
+    spec:
+      containers:
+        - name: database
+          command: [
+          "/app/database-srv",
+          "--registry=kubernetes",
+          "--server_address=0.0.0.0:8080",
+          "--broker_address=0.0.0.0:10001"
+          ]
+          env:
+          - name: ENV
+            value: {{ ENV }}
+          - name: TZ
+            value: Asia/Tokyo
+          - name: RABBITMQ
+            value: amqp://administer:rabbitmq1234@rabbitmq.rabbitmq:5672
+          image: gcr.io/{{ PROJECT_ID }}/database:{{ IMAGE }}
+          imagePullPolicy: Always
+          ports:
+          - containerPort: 8080
+            name: pit-port
+          #resources:
+          #  requests:
+          #    memory: 3Gi
+          #  limits:
+          #    memory: 6Gi
+      nodeSelector:
+        cloud.google.com/gke-nodepool: {{ NODE_POOL }}

@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package group;
+
+service GroupService {
+	rpc FindGroups(FindGroupsRequest) returns (FindGroupsResponse) {}
+	rpc FindGroup(FindGroupRequest) returns (FindGroupResponse) {}
+	rpc FindGroupAccess(FindGroupAccessRequest) returns (FindGroupAccessResponse) {}
+	rpc AddGroup(AddGroupRequest) returns (AddGroupResponse) {}
+	rpc ModifyGroup(ModifyGroupRequest) returns (ModifyGroupResponse) {}
+	rpc HardDeleteGroups(HardDeleteGroupsRequest) returns (HardDeleteGroupsResponse) {}
+}
+
+// 用户组
+message Group {
+	string group_id = 1;
+	string parent_group_id = 2;
+	string group_name = 3;
+	int64  display_order = 4; 
+	string access_key = 5;
+	string domain = 6;
+	string created_at = 7;
+	string created_by = 8;
+	string updated_at = 9;
+	string updated_by = 10;
+	string deleted_at = 11;
+	string deleted_by = 12;
+}
+
+message FindGroupsRequest{
+	string domain = 1;
+	string group_name = 2;
+	string database = 3;
+}
+
+message FindGroupsResponse{
+	repeated Group groups = 1;
+}
+
+message FindGroupRequest{
+	string group_id = 1;
+	string database = 2;
+}
+
+message FindGroupResponse{
+	Group group = 1;
+}
+
+message FindGroupAccessRequest{
+	string group_id = 1;
+	string database = 2;
+}
+
+message FindGroupAccessResponse{
+	string access_key = 1;
+}
+
+message AddGroupRequest{
+	string parent_group_id = 1;
+	string group_name = 2;
+	int64  display_order = 3;
+	string domain = 4;
+	string writer = 5;
+	string database = 6;
+}
+
+message AddGroupResponse{
+	string group_id = 1;
+}
+
+message ModifyGroupRequest{
+	string group_id = 1;
+	string parent_group_id = 2;
+	string group_name = 3;
+	string writer = 4;
+	string database = 5;
+	string datastore = 9;
+}
+
+message ModifyGroupResponse{
+}
+
+message HardDeleteGroupsRequest{
+	repeated string group_id_list = 1;
+	string database = 2;
+}
+
+message HardDeleteGroupsResponse{
+}

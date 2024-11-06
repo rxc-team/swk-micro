@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+package coldata;
+
+service ColDataService {
+    rpc FindColDatas(FindColDatasRequest) returns (FindColDatasResponse) {}
+    rpc SelectColData(SelectColDataRequest) returns (SelectColDataResponse) {}
+    rpc CreateColData(CreateColDataRequest) returns (CreateColDataResponse) {}
+    rpc Download(DownloadRequest) returns (stream DownloadResponse) {}
+}
+
+//总表单条台账
+message ColData {
+    string keiyakuno = 1;
+    string keiyakuymd = 2;
+    string leasestymd = 3;
+    int64 extentionoption = 4;
+    int64 leasekikan = 5;
+    string leaseexpireymd = 6;
+    string keiyakunm = 7;
+    string biko1 = 8;
+    string paymentstymd = 9;
+    string paymentcycle = 10;
+    string paymentday = 11;
+    int64 paymentcounts = 12;
+    int64 residualvalue = 13;
+    string rishiritsu = 14;
+    int64 initialdirectcosts = 15;
+    int64 restorationcosts = 16;
+    string sykshisankeisan = 17;
+    string field_viw = 18;
+    string field_22c = 19;
+    string field_1av = 20;
+    string field_206 = 21;
+    string field_14l = 22;
+    string field_7p3 = 23;
+    string field_248 = 24;
+    string field_3k7 = 25;
+    string field_1vg = 26;
+    string field_5fj = 27;
+    string field_20h = 28;
+    string field_2h1 = 29;
+    string field_qi4 = 30;	
+    string field_1ck = 31;	
+    string field_u1q = 32;
+    string hkkjitenzan = 33;
+    string sonnekigaku = 34;
+    int64 year = 35;
+    int64 month = 36;
+    int64 paymentleasefee = 37;
+    int64 interest = 38;
+    int64 repayment = 39;
+    int64 firstbalance = 40;
+    int64 balance = 41;
+    int64 endboka = 42;
+    int64 boka = 43;
+    int64 syokyaku = 44;
+    string segmentcd = 45;
+    string bunruicd = 46;
+    string update_time = 47; //  更新时间
+}
+
+message FindColDatasRequest{
+    string database = 1;
+    string app_id = 2;
+    int64 page_index = 3; // 当前页
+	int64 page_size = 4; // 每页的大小
+}
+
+message FindColDatasResponse{
+	repeated ColData colDatas = 1;
+    int64 total = 2; // 总件数
+}
+
+message SelectColDataRequest{
+    string database = 1;
+    string app_id = 2;
+    string keiyakuno = 3;
+    int64 year = 4;
+    int64 month = 5;
+    int64 page_index = 6; // 当前页
+	int64 page_size = 7; // 每页的大小
+    int64 total = 8; // 总件数
+    string date = 9; 
+    string update_time =10; //  更新时间
+}
+
+message SelectColDataResponse{
+	repeated ColData colDatas = 1;
+    int64 total = 2; // 总件数
+}
+
+message Value{
+    string data_type = 1; //字段类型
+    string value = 2; //字段值
+}
+
+message CreateColDataRequest{
+    string database = 1; //数据库
+    map<string,Value> items = 2; //字段对应的值
+}
+
+message CreateColDataResponse{
+
+}
+
+message DownloadRequest{
+    string database = 1;
+    string app_id = 2;
+    string keiyakuno = 3;
+    int64 year = 4;
+    int64 month = 5;
+}
+
+message DownloadResponse{
+	ColData colDatas = 1;
+}

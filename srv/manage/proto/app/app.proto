@@ -1,0 +1,183 @@
+syntax = "proto3";
+
+package app;
+
+service AppService {
+	rpc FindAppsByIds(FindAppsByIdsRequest) returns (FindAppsByIdsResponse) {}
+	rpc FindApps(FindAppsRequest) returns (FindAppsResponse) {}
+	rpc FindApp(FindAppRequest) returns (FindAppResponse) {}
+	rpc AddApp(AddAppRequest) returns (AddAppResponse) {}
+	rpc ModifyApp(ModifyAppRequest) returns (ModifyAppResponse) {}
+	rpc ModifyAppSort(ModifyAppSortRequest) returns (ModifyAppSortResponse) {}
+	rpc ModifyAppConfigs(ModifyConfigsRequest) returns (ModifyConfigsResponse) {}
+	rpc DeleteApp(DeleteAppRequest) returns (DeleteAppResponse) {}
+	rpc DeleteSelectApps(DeleteSelectAppsRequest) returns (DeleteSelectAppsResponse) {}
+	rpc HardDeleteApps(HardDeleteAppsRequest) returns (HardDeleteAppsResponse) {}
+	rpc RecoverSelectApps(RecoverSelectAppsRequest) returns (RecoverSelectAppsResponse) {}
+	rpc NextMonth(NextMonthRequest) returns (NextMonthResponse) {}
+}
+
+// APP
+message App {
+ 	string app_id = 1;
+	string app_name = 2;
+	int64  display_order = 3;
+	string template_id = 4;
+	string domain = 5;
+	string created_at = 6;
+	string created_by = 7;
+	string updated_at = 8;
+	string updated_by = 9;
+	string deleted_at = 10;
+	string deleted_by = 11;
+	bool is_trial = 12;
+	string follow_app = 18; // 是否跟随源app的使用时间
+	string start_time = 13;
+	string end_time = 14;
+	string copy_from = 15;
+	string remarks = 16;
+	string app_type = 17;
+	Configs configs = 19; // app配置
+}
+// AppConfigs
+message Configs {
+	string special = 1; // 特殊字符验证
+	string check_start_date = 2; // 检查开始日期
+	string syori_ym = 3; // 处理月度
+	string short_leases = 4; // 短期租赁时间
+	string kishu_ym = 5; // 期首月度
+	string minor_base_amount = 6; // 少额基准额
+}
+message ModifyConfigsRequest {
+	string app_id = 2;
+	string database = 3;
+	Configs configs = 1; 
+}
+message ModifyConfigsResponse { 
+}
+
+message FindAppsRequest{
+	string domain = 1;
+	string app_name = 2;
+	string invalidated_in = 3;
+	string is_trial = 4;
+	string start_time = 5;
+	string end_time = 6;
+	string copy_from = 8;
+	string database = 7;
+	string app_type = 9;
+}
+
+message FindAppsResponse{
+	repeated App apps = 1;
+}
+
+message FindAppsByIdsRequest{
+	string domain = 1;
+	repeated string app_id_list = 2;
+	string database = 3;
+}
+
+message FindAppsByIdsResponse{
+	repeated App apps = 1;
+}
+
+message FindAppRequest{
+	string app_id = 1;
+	string database = 2;
+}
+
+message FindAppResponse{
+	App app = 1;
+}
+
+message AddAppRequest{
+	string app_name = 1;
+	int64  display_order = 2;
+	string template_id = 3;
+	string domain = 4;
+	bool is_trial = 6;
+	string start_time = 7;
+	Configs configs = 16; // app配置
+	string end_time = 8;
+	string copy_from = 10;
+	string follow_app = 14; // 是否跟随源app的使用时间
+	string remarks = 11;
+	string writer = 5;
+	string database = 9;
+	string app_type = 12;
+	bool with_data = 13; // 复制app是否复制数据
+	bool with_file = 15; // 复制app是否复制文件
+}
+
+message AddAppResponse{
+	string app_id = 1;
+}
+
+message ModifyAppRequest{
+	string app_id = 1;
+	string app_name = 2;
+	string domain = 3;
+	string is_trial = 5;
+	string start_time = 6;
+	string end_time = 7;
+	string remarks = 9;
+	string writer = 4;
+	string database = 8;
+}
+
+message ModifyAppResponse{
+}
+
+message ModifyAppSortRequest{
+	repeated App app_list	= 1;
+	string writer = 2;
+	string database = 3;
+}
+
+message ModifyAppSortResponse{
+}
+
+message DeleteAppRequest{
+	string app_id = 1;
+	string writer = 2;
+	string database = 3;
+}
+
+message DeleteAppResponse{
+}
+
+message DeleteSelectAppsRequest{
+	repeated string app_id_list = 1;
+	string writer = 2;
+	string database = 3;
+}
+
+message DeleteSelectAppsResponse{
+}
+
+message HardDeleteAppsRequest{
+	repeated string app_id_list = 1;
+	string database = 2;
+}
+
+message HardDeleteAppsResponse{
+}
+
+message RecoverSelectAppsRequest{
+	repeated string app_id_list = 1;
+	string writer = 2;
+	string database = 3;
+}
+
+message RecoverSelectAppsResponse{
+}
+
+message NextMonthRequest{
+	string app_id = 1;
+	string Database = 2;
+	string value = 4;
+}
+
+message NextMonthResponse{
+}
