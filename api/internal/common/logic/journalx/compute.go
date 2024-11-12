@@ -2655,7 +2655,7 @@ func importData(p InsertParam, items ImportData) (*item.ImportResult, error) {
 			Meta: &item.ImportMetaData{
 				Key:         "",
 				AppId:       p.appID,
-				DatastoreId: p.datastoreID,
+				DatastoreId: p.dsMap["shiwake"],
 				Writer:      p.userID,
 				Owners:      p.owners,
 				Database:    p.db,
