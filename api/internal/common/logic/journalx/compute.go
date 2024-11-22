@@ -527,7 +527,7 @@ func GenAddAndSubData(domain, db, appID, userID, lang string, owners []string) (
 		handleMonth := cfg.GetSyoriYm()
 
 		// 获取分录数据
-		jouData, err := getJournal(db, appID, "01")
+		jouData, err := getJournal(db, appID, "04")
 		if err != nil {
 			path := filex.WriteAndSaveFile(domain, appID, []string{err.Error()})
 			// 发送消息 获取数据失败，终止任务
@@ -645,7 +645,7 @@ func GenAddAndSubData(domain, db, appID, userID, lang string, owners []string) (
 			Database:    db,
 		}, userID)
 
-		// 通过履历数据生成分录data
+		// 通过增减履历数据生成分录data
 		param := InsertParam{
 			db:          db,
 			jobID:       jobID,
@@ -654,7 +654,7 @@ func GenAddAndSubData(domain, db, appID, userID, lang string, owners []string) (
 			shiwakeno:   shiwakeno,
 			handleMonth: handleMonth,
 			appID:       appID,
-			datastoreID: dsMap["rireki"],
+			datastoreID: dsMap["zougenrireki"],
 			userID:      userID,
 			owners:      owners,
 			dsMap:       dsMap,
@@ -662,14 +662,15 @@ func GenAddAndSubData(domain, db, appID, userID, lang string, owners []string) (
 			asSubMap:    asSubMap,
 		}
 
-		err = buildLeaseHistory(param)
+		//  生成数据
+		err = buildObtainData(param)
 		if err != nil {
 			path := filex.WriteAndSaveFile(domain, appID, []string{err.Error()})
 			// 发送消息 获取数据失败，终止任务
 			jobx.ModifyTask(task.ModifyRequest{
 				JobId:       jobID,
 				Message:     err.Error(),
-				CurrentStep: "collect-data",
+				CurrentStep: "gen-data",
 				EndTime:     time.Now().UTC().Format("2006-01-02 15:04:05"),
 				ErrorFile: &task.File{
 					Url:  path.MediaLink,
@@ -692,6 +693,239 @@ func GenAddAndSubData(domain, db, appID, userID, lang string, owners []string) (
 	}()
 
 	return r, nil
+}
+
+// buildObtainData 生成增减履历分录数据
+func buildObtainData(p InsertParam) (e error) {
+	ct := grpc.NewClient(
+		grpc.MaxSendMsgSize(100*1024*1024), grpc.MaxRecvMsgSize(100*1024*1024),
+	)
+
+	itemService := item.NewItemService("database", ct)
+
+	var opss client.CallOption = func(o *client.CallOptions) {
+		o.RequestTimeout = time.Minute * 10
+		o.DialTimeout = time.Minute * 10
+	}
+
+	handleDate, err := time.Parse("2006-01", p.handleMonth)
+	if err != nil {
+		loggerx.ErrorLog("getObtainData", err.Error())
+		return err
+	}
+
+	lastDay := getMonthLastDay(handleDate)
+
+	conditions := []*item.Condition{}
+	conditions = append(conditions, &item.Condition{
+		FieldId:     "shutokudate",
+		FieldType:   "date",
+		SearchValue: p.handleMonth + "-01",
+		Operator:    ">=",
+		IsDynamic:   true,
+	})
+
+	conditions = append(conditions, &item.Condition{
+		FieldId:     "shutokudate",
+		FieldType:   "date",
+		SearchValue: p.handleMonth + "-" + lastDay,
+		Operator:    "<=",
+		IsDynamic:   true,
+	})
+
+	accesskeys := sessionx.GetAccessKeys(p.db, p.userID, p.datastoreID, "R")
+
+	// 先获取总的件数
+	cReq := item.CountRequest{
+		AppId:         p.appID,
+		DatastoreId:   p.datastoreID,
+		ConditionList: conditions,
+		ConditionType: "and",
+		Owners:        accesskeys,
+		Database:      p.db,
+	}
+
+	countResponse, err := itemService.FindCount(context.TODO(), &cReq, opss)
+	if err != nil {
+		loggerx.ErrorLog("getObtainData", err.Error())
+		return err
+	}
+
+	// 根据总的件数分批下载数据
+	// 每次2000为一组数据
+	total := float64(countResponse.GetTotal())
+	count := math.Ceil(total / 500)
+
+	for index := int64(0); index < int64(count); index++ {
+
+		var req item.ItemsRequest
+		var sorts []*item.SortItem
+		sorts = append(sorts, &item.SortItem{
+			SortKey:   "shisanbangouoya.value",
+			SortValue: "ascend",
+		})
+		sorts = append(sorts, &item.SortItem{
+			SortKey:   "shisanbangoueda.value",
+			SortValue: "ascend",
+		})
+		req.Sorts = sorts
+		req.ConditionList = conditions
+		req.ConditionType = "and"
+		req.DatastoreId = p.datastoreID
+		req.PageIndex = index + 1
+		req.PageSize = 500
+		req.AppId = p.appID
+		req.Owners = accesskeys
+		req.Database = p.db
+		req.IsOrigin = true
+
+		itemResp, err := itemService.FindItems(context.TODO(), &req, opss)
+		if err != nil {
+			loggerx.ErrorLog("getObtainData", err.Error())
+			return err
+		}
+
+		var data ItemData
+
+		for _, item := range itemResp.GetItems() {
+			itemMap := item.Items
+			data = append(data, itemMap)
+		}
+
+		// 分录数据编辑
+		var items ImportData
+		index := 1
+		for count, obtainItem := range data {
+			pattern := getPattern("04001", p.jouData)
+			koushinbangouoya := obtainItem["koushinbangouoya"].GetValue()
+			koushinbangoueda := obtainItem["koushinbangoueda"].GetValue()
+			obtainAccesskeys := sessionx.GetAccessKeys(p.db, p.userID, p.dsMap["zougenrireki"], "R")
+			itemMap, err := getKoushinbangouData(p.db, p.appID, p.dsMap["zougenrireki"], koushinbangouoya, koushinbangoueda, obtainAccesskeys)
+			if err != nil {
+				loggerx.ErrorLog("getObtainData", err.Error())
+				return err
+			}
+
+			branchCount := 1
+			for line, sub := range pattern.GetSubjects() {
+				expression := formula.NewExpression(sub.AmountField)
+				params := getParam(sub.AmountField)
+				for _, pm := range params {
+					it, ok := obtainItem[pm]
+					if !ok {
+						it = &item.Value{
+							DataType: "number",
+							Value:    "0",
+						}
+					}
+					val, err := strconv.ParseFloat(it.GetValue(), 64)
+					if err != nil {
+						loggerx.ErrorLog("getObtainData", err.Error())
+						return err
+					}
+					expression.AddParameter(pm, val)
+				}
+
+				result, err := expression.Evaluate()
+				if err != nil {
+					loggerx.ErrorLog("getObtainData", err.Error())
+					return err
+				}
+
+				fv, err := result.Float64()
+				if err != nil {
+					loggerx.ErrorLog("getObtainData", err.Error())
+					return err
+				}
+
+				if fv == 0.0 {
+					continue
+				}
+
+				assetsType := itemMap["bunruicd"].GetValue()
+				subMap := p.asSubMap[assetsType]
+
+				// 创建登录数据
+				itemsData := copyMap(itemMap)
+
+				itemsData["keiyakuno"] = &item.Value{
+					DataType: "lookup",
+					Value:    obtainItem["kaishacd"].GetValue(),
+				}
+
+				itemsData["shiwakeno"] = &item.Value{
+					DataType: "text",
+					Value:    p.shiwakeno,
+				}
+				itemsData["shiwakeymd"] = &item.Value{
+					DataType: "date",
+					Value:    time.Now().Format("2006-01-02"),
+				}
+				itemsData["shiwakeym"] = &item.Value{
+					DataType: "text",
+					Value:    p.handleMonth,
+				}
+				itemsData["partten"] = &item.Value{
+					DataType: "text",
+					Value:    pattern.PatternId,
+				}
+				itemsData["lineno"] = &item.Value{
+					DataType: "number",
+					Value:    strconv.Itoa(line + 1),
+				}
+				itemsData["taishakukubun"] = &item.Value{
+					DataType: "text",
+					Value:    sub.LendingDivision,
+				}
+				itemsData["kanjokamoku"] = &item.Value{
+					DataType: "text",
+					Value:    subMap[sub.GetSubjectKey()],
+				}
+				itemsData["shiwakekingaku"] = &item.Value{
+					DataType: "number",
+					Value:    result.String(),
+				}
+				itemsData["shiwakeaggno_parent"] = &item.Value{
+					DataType: "text",
+					Value:    strconv.Itoa(count + 1),
+				}
+				itemsData["shiwakeaggno_branch"] = &item.Value{
+					DataType: "text",
+					Value:    strconv.Itoa(branchCount),
+				}
+				itemsData["shiwaketype"] = &item.Value{
+					DataType: "text",
+					Value:    "1",
+				}
+				itemsData["remark"] = &item.Value{
+					DataType: "text",
+					Value:    pattern.PatternName,
+				}
+				itemsData["index"] = &item.Value{
+					DataType: "number",
+					Value:    strconv.Itoa(index),
+				}
+
+				its := &item.ListItems{
+					Items: itemsData,
+				}
+
+				items = append(items, its)
+
+				index++
+				branchCount++
+			}
+		}
+
+		response, err := importData(p, items)
+		if err != nil {
+			loggerx.ErrorLog("getObtainData", err.Error())
+			return err
+		}
+		fmt.Printf("%+v", response)
+	}
+
+	return nil
 }
 
 func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e error) {
@@ -2617,6 +2851,61 @@ func getKeiyakuData(db, appID, datastoreID, keiyakuno string, accesskeys []strin
 	response, err := itemService.FindItems(context.TODO(), &req, opss)
 	if err != nil {
 		loggerx.ErrorLog("getKeiyakuData", err.Error())
+		return
+	}
+
+	if response.GetTotal() == 0 {
+		return nil, errors.New("not found data")
+	}
+	if response.GetTotal() > 1 {
+		return nil, errors.New("found more data")
+	}
+
+	items := response.GetItems()
+
+	return items[0].GetItems(), nil
+}
+
+// getKoushinbangouData 获取履历数据（根据koushinbangou查询）
+func getKoushinbangouData(db, appID, datastoreID, koushinbangouoya, koushinbangoueda string, accesskeys []string) (d map[string]*item.Value, err error) {
+	ct := grpc.NewClient(
+		grpc.MaxSendMsgSize(100*1024*1024), grpc.MaxRecvMsgSize(100*1024*1024),
+	)
+
+	itemService := item.NewItemService("database", ct)
+
+	var opss client.CallOption = func(o *client.CallOptions) {
+		o.RequestTimeout = time.Minute * 10
+		o.DialTimeout = time.Minute * 10
+	}
+
+	var req item.ItemsRequest
+	conditions := []*item.Condition{}
+	conditions = append(conditions, &item.Condition{
+		FieldId:     "koushinbangouoya",
+		FieldType:   "text",
+		SearchValue: koushinbangouoya,
+		Operator:    "=",
+		IsDynamic:   true,
+	})
+	conditions = append(conditions, &item.Condition{
+		FieldId:     "koushinbangoueda",
+		FieldType:   "text",
+		SearchValue: koushinbangoueda,
+		Operator:    "=",
+		IsDynamic:   true,
+	})
+	req.ConditionList = conditions
+	req.ConditionType = "and"
+	req.DatastoreId = datastoreID
+	req.AppId = appID
+	req.Owners = accesskeys
+	req.IsOrigin = true
+	req.Database = db
+
+	response, err := itemService.FindItems(context.TODO(), &req, opss)
+	if err != nil {
+		loggerx.ErrorLog("getKoushinbangouData", err.Error())
 		return
 	}
 
