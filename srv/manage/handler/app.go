@@ -15,20 +15,20 @@ type App struct{}
 
 // log出力使用
 const (
-	AppProcessName = "App"
-
-	ActionFindApps          = "FindApps"
-	ActionFindAppListApps   = "FindAppListApps"
-	ActionFindApp           = "FindApp"
-	ActionAddApp            = "AddApp"
-	ActionModifyApp         = "ModifyApp"
-	ActionModifyAppConfigs  = "ModifyAppConfigs"
-	ActionModifyAppSort     = "ModifyAppSort"
-	ActionDeleteApp         = "DeleteApp"
-	ActionDeleteSelectApps  = "DeleteSelectApps"
-	ActionHardDeleteApps    = "HardDeleteApps"
-	ActionRecoverSelectApps = "RecoverSelectApps"
-	ActionNextMonth         = "NextMonth"
+	AppProcessName             = "App"
+	ActionFindApps             = "FindApps"
+	ActionFindAppListApps      = "FindAppListApps"
+	ActionFindApp              = "FindApp"
+	ActionAddApp               = "AddApp"
+	ActionModifyApp            = "ModifyApp"
+	ActionModifyAppConfigs     = "ModifyAppConfigs"
+	ActionModifyAppSort        = "ModifyAppSort"
+	ActionDeleteApp            = "DeleteApp"
+	ActionDeleteSelectApps     = "DeleteSelectApps"
+	ActionHardDeleteApps       = "HardDeleteApps"
+	ActionRecoverSelectApps    = "RecoverSelectApps"
+	ActionNextMonth            = "NextMonth"
+	ActionModifyAppHandleMonth = "ModifyAppHandleMonth   "
 )
 
 // FindApps 查找多个APP记录
@@ -281,5 +281,19 @@ func (a *App) NextMonth(ctx context.Context, req *app.NextMonthRequest, rsp *app
 	}
 
 	utils.InfoLog(ActionNextMonth, utils.MsgProcessEnded)
+	return nil
+}
+
+// ModifyAppHandleMonth 更新处理月度
+func (a *App) ModifyAppHandleMonth(ctx context.Context, req *app.ModifyAppHandleMonthRequest, rsp *app.ModifyAppHandleMonthResponse) error {
+	utils.InfoLog(ActionModifyAppHandleMonth, utils.MsgProcessStarted)
+
+	err := model.ModifyAppHandleMonth(ctx, req.GetDatabase(), req.GetAppId(), req.GetHandlemonth())
+	if err != nil {
+		utils.ErrorLog(ActionModifyAppHandleMonth, err.Error())
+		return err
+	}
+
+	utils.InfoLog(ActionModifyAppHandleMonth, utils.MsgProcessEnded)
 	return nil
 }

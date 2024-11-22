@@ -54,6 +54,7 @@ type AppService interface {
 	HardDeleteApps(ctx context.Context, in *HardDeleteAppsRequest, opts ...client.CallOption) (*HardDeleteAppsResponse, error)
 	RecoverSelectApps(ctx context.Context, in *RecoverSelectAppsRequest, opts ...client.CallOption) (*RecoverSelectAppsResponse, error)
 	NextMonth(ctx context.Context, in *NextMonthRequest, opts ...client.CallOption) (*NextMonthResponse, error)
+	ModifyAppHandleMonth(ctx context.Context, in *ModifyAppHandleMonthRequest, opts ...client.CallOption) (*ModifyAppHandleMonthResponse, error)
 }
 
 type appService struct {
@@ -188,6 +189,16 @@ func (c *appService) NextMonth(ctx context.Context, in *NextMonthRequest, opts .
 	return out, nil
 }
 
+func (c *appService) ModifyAppHandleMonth(ctx context.Context, in *ModifyAppHandleMonthRequest, opts ...client.CallOption) (*ModifyAppHandleMonthResponse, error) {
+	req := c.c.NewRequest(c.name, "AppService.ModifyAppHandleMonth", in)
+	out := new(ModifyAppHandleMonthResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for AppService service
 
 type AppServiceHandler interface {
@@ -203,6 +214,7 @@ type AppServiceHandler interface {
 	HardDeleteApps(context.Context, *HardDeleteAppsRequest, *HardDeleteAppsResponse) error
 	RecoverSelectApps(context.Context, *RecoverSelectAppsRequest, *RecoverSelectAppsResponse) error
 	NextMonth(context.Context, *NextMonthRequest, *NextMonthResponse) error
+	ModifyAppHandleMonth(context.Context, *ModifyAppHandleMonthRequest, *ModifyAppHandleMonthResponse) error
 }
 
 func RegisterAppServiceHandler(s server.Server, hdlr AppServiceHandler, opts ...server.HandlerOption) error {
@@ -219,6 +231,7 @@ func RegisterAppServiceHandler(s server.Server, hdlr AppServiceHandler, opts ...
 		HardDeleteApps(ctx context.Context, in *HardDeleteAppsRequest, out *HardDeleteAppsResponse) error
 		RecoverSelectApps(ctx context.Context, in *RecoverSelectAppsRequest, out *RecoverSelectAppsResponse) error
 		NextMonth(ctx context.Context, in *NextMonthRequest, out *NextMonthResponse) error
+		ModifyAppHandleMonth(ctx context.Context, in *ModifyAppHandleMonthRequest, out *ModifyAppHandleMonthResponse) error
 	}
 	type AppService struct {
 		appService
@@ -278,3 +291,8 @@ func (h *appServiceHandler) RecoverSelectApps(ctx context.Context, in *RecoverSe
 func (h *appServiceHandler) NextMonth(ctx context.Context, in *NextMonthRequest, out *NextMonthResponse) error {
 	return h.AppServiceHandler.NextMonth(ctx, in, out)
 }
+
+func (h *appServiceHandler) ModifyAppHandleMonth(ctx context.Context, in *ModifyAppHandleMonthRequest, out *ModifyAppHandleMonthResponse) error {
+	return h.AppServiceHandler.ModifyAppHandleMonth(ctx, in, out)
+}
+

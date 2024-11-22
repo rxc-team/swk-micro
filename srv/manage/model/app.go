@@ -1208,3 +1208,27 @@ func NextMonth(ctx context.Context, db string, conf Config) (err error) {
 
 	return nil
 }
+
+// ModifyAppHandleMonth 更新处理月度
+func ModifyAppHandleMonth(ctx context.Context, db string, appID string, handlemonth string) (err error) {
+	client := database.New()
+	c := client.Database(database.GetDBName(db)).Collection(AppsCollection)
+
+	query := bson.M{
+		"app_id": appID,
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"configs.syori_ym": handlemonth,
+		},
+	}
+
+	_, err = c.UpdateOne(ctx, query, update)
+	if err != nil {
+		utils.DebugLog("ModifyAppHandleMonth", fmt.Sprintf("ModifyAppHandleMonth", err))
+		return err
+	}
+
+	return nil
+}

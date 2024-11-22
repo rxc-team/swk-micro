@@ -15,6 +15,7 @@ service AppService {
 	rpc HardDeleteApps(HardDeleteAppsRequest) returns (HardDeleteAppsResponse) {}
 	rpc RecoverSelectApps(RecoverSelectAppsRequest) returns (RecoverSelectAppsResponse) {}
 	rpc NextMonth(NextMonthRequest) returns (NextMonthResponse) {}
+	rpc ModifyAppHandleMonth(ModifyAppHandleMonthRequest) returns (ModifyAppHandleMonthResponse) {}
 }
 
 // APP
@@ -180,4 +181,13 @@ message NextMonthRequest{
 }
 
 message NextMonthResponse{
+}
+
+message ModifyAppHandleMonthRequest{
+	string app_id = 1;
+	string database = 2;
+	string handlemonth = 3;
+}
+
+message ModifyAppHandleMonthResponse{
 }
