@@ -29,6 +29,7 @@ type bvParam struct {
 	Datastore   string
 	DB          string
 	Special     string
+	HandleMonth string
 	Data        []string
 	Header      []string
 	UserList    []*user.User
@@ -449,6 +450,11 @@ Loop:
 				}
 			}
 		case "date":
+			if mp.FromKey == "keijoudate" && rowItems[mp.ToKey][0:7] != p.HandleMonth {
+				// 处理月度不匹配
+				errorList = append(errorList, fmt.Sprintf("行 %d はエラーです。[ %s ] は処理月度と一致しません。", p.Index, mp.ToKey))
+				break Loop
+			}
 			if mp.PrimaryKey {
 				// 判断是否导入该字段的数据
 				if value, ok := rowItems[mp.ToKey]; ok {

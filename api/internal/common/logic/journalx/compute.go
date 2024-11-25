@@ -718,7 +718,7 @@ func buildObtainData(p InsertParam) (e error) {
 
 	conditions := []*item.Condition{}
 	conditions = append(conditions, &item.Condition{
-		FieldId:     "shutokudate",
+		FieldId:     "keijoudate",
 		FieldType:   "date",
 		SearchValue: p.handleMonth + "-01",
 		Operator:    ">=",
@@ -726,7 +726,7 @@ func buildObtainData(p InsertParam) (e error) {
 	})
 
 	conditions = append(conditions, &item.Condition{
-		FieldId:     "shutokudate",
+		FieldId:     "keijoudate",
 		FieldType:   "date",
 		SearchValue: p.handleMonth + "-" + lastDay,
 		Operator:    "<=",

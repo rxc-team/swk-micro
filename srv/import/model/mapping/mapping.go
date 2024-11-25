@@ -150,6 +150,7 @@ func Import(base Params, filePath string) {
 			i += 2
 		}
 	}
+	handleMonth := response.GetApp().GetConfigs().GetSyoriYm()
 
 	// 读取文件
 	fs, err := os.Open(filePath)
@@ -424,6 +425,7 @@ func Import(base Params, filePath string) {
 			Index:       index,
 			Special:     specialchar,
 			EmptyChange: base.EmptyChange,
+			HandleMonth: handleMonth,
 		}
 
 		result, errList := buildAndValidate(parm)
