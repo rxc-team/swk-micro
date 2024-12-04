@@ -46,6 +46,8 @@ type JournalService interface {
 	FindJournal(ctx context.Context, in *JournalRequest, opts ...client.CallOption) (*JournalResponse, error)
 	ImportJournal(ctx context.Context, in *ImportRequest, opts ...client.CallOption) (*ImportResponse, error)
 	ModifyJournal(ctx context.Context, in *ModifyRequest, opts ...client.CallOption) (*ModifyResponse, error)
+	AddDownloadSetting(ctx context.Context, in *AddDownloadSettingRequest, opts ...client.CallOption) (*AddDownloadSettingResponse, error)
+	FindDownloadSetting(ctx context.Context, in *FindDownloadSettingRequest, opts ...client.CallOption) (*FindDownloadSettingResponse, error)
 }
 
 type journalService struct {
@@ -100,6 +102,26 @@ func (c *journalService) ModifyJournal(ctx context.Context, in *ModifyRequest, o
 	return out, nil
 }
 
+func (c *journalService) AddDownloadSetting(ctx context.Context, in *AddDownloadSettingRequest, opts ...client.CallOption) (*AddDownloadSettingResponse, error) {
+	req := c.c.NewRequest(c.name, "JournalService.AddDownloadSetting", in)
+	out := new(AddDownloadSettingResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *journalService) FindDownloadSetting(ctx context.Context, in *FindDownloadSettingRequest, opts ...client.CallOption) (*FindDownloadSettingResponse, error) {
+	req := c.c.NewRequest(c.name, "JournalService.FindDownloadSetting", in)
+	out := new(FindDownloadSettingResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for JournalService service
 
 type JournalServiceHandler interface {
@@ -107,6 +129,8 @@ type JournalServiceHandler interface {
 	FindJournal(context.Context, *JournalRequest, *JournalResponse) error
 	ImportJournal(context.Context, *ImportRequest, *ImportResponse) error
 	ModifyJournal(context.Context, *ModifyRequest, *ModifyResponse) error
+	AddDownloadSetting(context.Context, *AddDownloadSettingRequest, *AddDownloadSettingResponse) error
+	FindDownloadSetting(context.Context, *FindDownloadSettingRequest, *FindDownloadSettingResponse) error
 }
 
 func RegisterJournalServiceHandler(s server.Server, hdlr JournalServiceHandler, opts ...server.HandlerOption) error {
@@ -115,6 +139,8 @@ func RegisterJournalServiceHandler(s server.Server, hdlr JournalServiceHandler, 
 		FindJournal(ctx context.Context, in *JournalRequest, out *JournalResponse) error
 		ImportJournal(ctx context.Context, in *ImportRequest, out *ImportResponse) error
 		ModifyJournal(ctx context.Context, in *ModifyRequest, out *ModifyResponse) error
+		AddDownloadSetting(ctx context.Context, in *AddDownloadSettingRequest, out *AddDownloadSettingResponse) error
+		FindDownloadSetting(ctx context.Context, in *FindDownloadSettingRequest, out *FindDownloadSettingResponse) error
 	}
 	type JournalService struct {
 		journalService
@@ -141,4 +167,12 @@ func (h *journalServiceHandler) ImportJournal(ctx context.Context, in *ImportReq
 
 func (h *journalServiceHandler) ModifyJournal(ctx context.Context, in *ModifyRequest, out *ModifyResponse) error {
 	return h.JournalServiceHandler.ModifyJournal(ctx, in, out)
+}
+
+func (h *journalServiceHandler) AddDownloadSetting(ctx context.Context, in *AddDownloadSettingRequest, out *AddDownloadSettingResponse) error {
+	return h.JournalServiceHandler.AddDownloadSetting(ctx, in, out)
+}
+
+func (h *journalServiceHandler) FindDownloadSetting(ctx context.Context, in *FindDownloadSettingRequest, out *FindDownloadSettingResponse) error {
+	return h.JournalServiceHandler.FindDownloadSetting(ctx, in, out)
 }

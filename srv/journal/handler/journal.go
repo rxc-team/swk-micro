@@ -16,11 +16,13 @@ type Journal struct{}
 const (
 	JournalProcessName = "Journal"
 
-	ActionFindJournals  = "FindJournals"
-	ActionFindJournal   = "FindJournal"
-	ActionImportJournal = "ImportJournal"
-	ActionModifyJournal = "ModifyJournal"
-	ActionDeleteJournal = "DeleteJournal"
+	ActionFindJournals        = "FindJournals"
+	ActionFindJournal         = "FindJournal"
+	ActionImportJournal       = "ImportJournal"
+	ActionModifyJournal       = "ModifyJournal"
+	ActionDeleteJournal       = "DeleteJournal"
+	ActionAddDownloadSetting  = "AddDownloadSetting"
+	ActionFindDownloadSetting = "FindDownloadSetting"
 )
 
 // FindJournals 获取多个仕訳
@@ -136,5 +138,59 @@ func (f *Journal) ModifyJournal(ctx context.Context, req *journal.ModifyRequest,
 	}
 
 	utils.InfoLog(ActionModifyJournal, utils.MsgProcessEnded)
+	return nil
+}
+
+// 添加分录下载设定
+func (f *Journal) AddDownloadSetting(ctx context.Context, req *journal.AddDownloadSettingRequest, rsp *journal.AddDownloadSettingResponse) error {
+	var rules []*model.FieldRule
+	for _, r := range req.GetFieldRule() {
+		rule := &model.FieldRule{
+			DownloadName: r.DownloadName,
+			FieldId:      r.FieldId,
+			FieldName:    r.FieldName,
+			FieldType:    r.FieldType,
+			FixedValue:   r.FixedValue,
+			IsFixedvalue: r.IsFixedvalue,
+			PitName:      r.PitName,
+		}
+		rules = append(rules, rule)
+	}
+
+	params := model.FieldConf{
+		AppId:         req.AppId,
+		LayoutName:    req.LayoutName,
+		CharEncoding:  req.CharEncoding,
+		HeaderRow:     req.HeaderRow,
+		SeparatorChar: req.SeparatorChar,
+		LineBreaks:    req.LineBreaks,
+		FixedLength:   req.FixedLength,
+		NumberItems:   req.NumberItems,
+		ValidFlag:     req.ValidFlag,
+		FieldRule:     rules,
+	}
+
+	err := model.AddDownloadSetting(req.GetDatabase(), req.GetAppId(), params)
+	if err != nil {
+		utils.ErrorLog(ActionAddDownloadSetting, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// 添加分录下载设定
+func (f *Journal) FindDownloadSetting(ctx context.Context, req *journal.FindDownloadSettingRequest, rsp *journal.FindDownloadSettingResponse) error {
+
+	res, err := model.FindDownloadSetting(req.GetDatabase(), req.GetAppId())
+	if err != nil {
+		utils.ErrorLog(ActionFindDownloadSetting, err.Error())
+		return err
+	}
+
+	*rsp = *res.ToProto()
+
+	utils.InfoLog(ActionFindDownloadSetting, utils.MsgProcessEnded)
+
 	return nil
 }

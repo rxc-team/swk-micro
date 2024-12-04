@@ -7,6 +7,8 @@ service JournalService {
 	rpc FindJournal(JournalRequest) returns (JournalResponse) {}
 	rpc ImportJournal(ImportRequest) returns (ImportResponse) {}
 	rpc ModifyJournal(ModifyRequest) returns (ModifyResponse) {}
+	rpc AddDownloadSetting(AddDownloadSettingRequest) returns (AddDownloadSettingResponse) {}
+	rpc FindDownloadSetting(FindDownloadSettingRequest) returns (FindDownloadSettingResponse) {}
 }
 
 // 分录
@@ -85,4 +87,52 @@ message ModifyRequest{
 }
 
 message ModifyResponse{
+}
+
+// 添加分录下载设定
+message AddDownloadSettingRequest{
+	string app_id = 1;
+	string layout_name = 2;
+	string char_encoding = 3;
+	string header_row = 4;
+	string separator_char = 5;
+	string line_breaks = 6;
+	bool fixed_length = 7;
+	int64 number_items = 8;
+	string valid_flag = 9;
+	repeated FieldRule field_rule = 10;
+	string database = 11; // 数据库
+}
+
+message AddDownloadSettingResponse{
+}
+
+// 字段规则
+message FieldRule {
+	string download_name = 1;
+	string field_id = 2;
+	string field_name = 3;
+	string field_type = 4;
+	string fixed_value = 5;
+	bool is_fixedvalue = 6;
+	string pit_name = 7;
+}
+
+// 查询分录下载设定
+message FindDownloadSettingRequest{
+	string app_id = 1;
+	string database = 2; // 数据库
+}
+
+message FindDownloadSettingResponse{                 
+    string app_id = 1;              
+    string layout_name = 2;          
+    string char_encoding = 3;        
+    string header_row = 4;           
+    string separator_char = 5;       
+    string line_breaks = 6;          
+    bool fixed_length = 7;           
+    int64 number_items = 8;
+	string valid_flag = 9;      
+    repeated FieldRule field_rule = 10;  
 }

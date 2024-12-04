@@ -49,6 +49,31 @@ type (
 		AmountName      string `json:"amount_name" bson:"amount_name"`
 		AmountField     string `json:"amount_field" bson:"amount_field"`
 	}
+
+	//Field规则
+	FieldConf struct {
+		AppId         string       `json:"app_id" bson:"app_id"`
+		LayoutName    string       `json:"layout_name" bson:"layout_name"`
+		CharEncoding  string       `json:"char_encoding" bson:"char_encoding"`
+		HeaderRow     string       `json:"header_row" bson:"header_row"`
+		SeparatorChar string       `json:"separator_char" bson:"separator_char"`
+		LineBreaks    string       `json:"line_breaks" bson:"line_breaks"`
+		FixedLength   bool         `json:"fixed_length" bson:"fixed_length"`
+		NumberItems   int64        `json:"number_items" bson:"number_items"`
+		ValidFlag     string       `json:"valid_flag" bson:"valid_flag"`
+		FieldRule     []*FieldRule `json:"field_rule" bson:"field_rule"`
+	}
+
+	// FieldRule规则
+	FieldRule struct {
+		DownloadName string `json:"download_name" bson:"download_name"`
+		FieldId      string `json:"field_id" bson:"field_id"`
+		FieldName    string `json:"field_name" bson:"field_name"`
+		FieldType    string `json:"field_type" bson:"field_type"`
+		FixedValue   string `json:"fixed_value" bson:"fixed_value"`
+		IsFixedvalue bool   `json:"is_fixedvalue" bson:"is_fixedvalue"`
+		PitName      string `json:"pit_name" bson:"pit_name"`
+	}
 )
 
 // ToProto 转换为proto数据
@@ -98,6 +123,41 @@ func (w *JSubject) ToProto() *journal.Subject {
 		SubjectName:     w.SubjectName,
 		AmountName:      w.AmountName,
 		AmountField:     w.AmountField,
+	}
+}
+
+// ToProto 转换为 proto 数据
+func (m *FieldConf) ToProto() *journal.FindDownloadSettingResponse {
+	// 创建 FieldRule 的 proto 列表
+	var fieldRules []*journal.FieldRule
+	for _, r := range m.FieldRule {
+		fieldRules = append(fieldRules, r.ToProto())
+	}
+
+	return &journal.FindDownloadSettingResponse{
+		AppId:         m.AppId,
+		LayoutName:    m.LayoutName,
+		CharEncoding:  m.CharEncoding,
+		HeaderRow:     m.HeaderRow,
+		SeparatorChar: m.SeparatorChar,
+		LineBreaks:    m.LineBreaks,
+		FixedLength:   m.FixedLength,
+		NumberItems:   m.NumberItems,
+		ValidFlag:     m.ValidFlag,
+		FieldRule:     fieldRules,
+	}
+}
+
+// ToProto 转换为 proto 数据
+func (f *FieldRule) ToProto() *journal.FieldRule {
+	return &journal.FieldRule{
+		DownloadName: f.DownloadName,
+		FieldId:      f.FieldId,
+		FieldName:    f.FieldName,
+		FieldType:    f.FieldType,
+		FixedValue:   f.FixedValue,
+		IsFixedvalue: f.IsFixedvalue,
+		PitName:      f.PitName,
 	}
 }
 
@@ -272,4 +332,49 @@ func ModifyJournal(db, writer string, param JournalParam) (err error) {
 	}
 
 	return nil
+}
+
+// 添加分录下载设定
+func AddDownloadSetting(db string, appID string, fd FieldConf) (err error) {
+	client := database.New()
+	c := client.Database(database.GetDBName(db)).Collection("journals_download")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	query := bson.M{
+		"app_id": appID,
+	}
+
+	_, err = c.DeleteOne(ctx, query)
+	if err != nil {
+		utils.ErrorLog("AddDownloadSetting", err.Error())
+		return err
+	}
+
+	if _, err = c.InsertOne(ctx, fd); err != nil {
+		utils.ErrorLog("AddDownloadSetting", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// 查询分录下载设定
+func FindDownloadSetting(db string, appID string) (fd *FieldConf, err error) {
+	client := database.New()
+	c := client.Database(database.GetDBName(db)).Collection("journals_download")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	query := bson.M{
+		"app_id": appID,
+	}
+	var result *FieldConf
+
+	if err := c.FindOne(ctx, query).Decode(&result); err != nil {
+		utils.ErrorLog("FindDownloadSetting", err.Error())
+		return result, err
+	}
+
+	return result, nil
 }
