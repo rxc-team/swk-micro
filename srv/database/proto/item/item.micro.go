@@ -50,6 +50,8 @@ type ItemService interface {
 	FindRishiritsu(ctx context.Context, in *RishiritsuRequest, opts ...client.CallOption) (*RishiritsuResponse, error)
 	AddItem(ctx context.Context, in *AddRequest, opts ...client.CallOption) (*AddResponse, error)
 	ModifyItem(ctx context.Context, in *ModifyRequest, opts ...client.CallOption) (*ModifyResponse, error)
+	ConfimItem(ctx context.Context, in *JournalRequest, opts ...client.CallOption) (*JournalResponse, error)
+	GenerateItem(ctx context.Context, in *JournalRequest, opts ...client.CallOption) (*JournalResponse, error)
 	InventoryItem(ctx context.Context, in *InventoryItemRequest, opts ...client.CallOption) (*InventoryItemResponse, error)
 	MutilInventoryItem(ctx context.Context, in *MutilInventoryItemRequest, opts ...client.CallOption) (*MutilInventoryItemResponse, error)
 	ResetInventoryItems(ctx context.Context, in *ResetInventoryItemsRequest, opts ...client.CallOption) (*ResetInventoryItemsResponse, error)
@@ -160,6 +162,26 @@ func (c *itemService) AddItem(ctx context.Context, in *AddRequest, opts ...clien
 func (c *itemService) ModifyItem(ctx context.Context, in *ModifyRequest, opts ...client.CallOption) (*ModifyResponse, error) {
 	req := c.c.NewRequest(c.name, "ItemService.ModifyItem", in)
 	out := new(ModifyResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *itemService) ConfimItem(ctx context.Context, in *JournalRequest, opts ...client.CallOption) (*JournalResponse, error) {
+	req := c.c.NewRequest(c.name, "ItemService.ConfimItem", in)
+	out := new(JournalResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *itemService) GenerateItem(ctx context.Context, in *JournalRequest, opts ...client.CallOption) (*JournalResponse, error) {
+	req := c.c.NewRequest(c.name, "ItemService.GenerateItem", in)
+	out := new(JournalResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -628,6 +650,8 @@ type ItemServiceHandler interface {
 	FindRishiritsu(context.Context, *RishiritsuRequest, *RishiritsuResponse) error
 	AddItem(context.Context, *AddRequest, *AddResponse) error
 	ModifyItem(context.Context, *ModifyRequest, *ModifyResponse) error
+	ConfimItem(context.Context, *JournalRequest, *JournalResponse) error
+	GenerateItem(context.Context, *JournalRequest, *JournalResponse) error
 	InventoryItem(context.Context, *InventoryItemRequest, *InventoryItemResponse) error
 	MutilInventoryItem(context.Context, *MutilInventoryItemRequest, *MutilInventoryItemResponse) error
 	ResetInventoryItems(context.Context, *ResetInventoryItemsRequest, *ResetInventoryItemsResponse) error
@@ -663,6 +687,8 @@ func RegisterItemServiceHandler(s server.Server, hdlr ItemServiceHandler, opts .
 		FindRishiritsu(ctx context.Context, in *RishiritsuRequest, out *RishiritsuResponse) error
 		AddItem(ctx context.Context, in *AddRequest, out *AddResponse) error
 		ModifyItem(ctx context.Context, in *ModifyRequest, out *ModifyResponse) error
+		ConfimItem(ctx context.Context, in *JournalRequest, out *JournalResponse) error
+		GenerateItem(ctx context.Context, in *JournalRequest, out *JournalResponse) error
 		InventoryItem(ctx context.Context, in *InventoryItemRequest, out *InventoryItemResponse) error
 		MutilInventoryItem(ctx context.Context, in *MutilInventoryItemRequest, out *MutilInventoryItemResponse) error
 		ResetInventoryItems(ctx context.Context, in *ResetInventoryItemsRequest, out *ResetInventoryItemsResponse) error
@@ -726,6 +752,14 @@ func (h *itemServiceHandler) AddItem(ctx context.Context, in *AddRequest, out *A
 
 func (h *itemServiceHandler) ModifyItem(ctx context.Context, in *ModifyRequest, out *ModifyResponse) error {
 	return h.ItemServiceHandler.ModifyItem(ctx, in, out)
+}
+
+func (h *itemServiceHandler) ConfimItem(ctx context.Context, in *JournalRequest, out *JournalResponse) error {
+	return h.ItemServiceHandler.ConfimItem(ctx, in, out)
+}
+
+func (h *itemServiceHandler) GenerateItem(ctx context.Context, in *JournalRequest, out *JournalResponse) error {
+	return h.ItemServiceHandler.GenerateItem(ctx, in, out)
 }
 
 func (h *itemServiceHandler) InventoryItem(ctx context.Context, in *InventoryItemRequest, out *InventoryItemResponse) error {

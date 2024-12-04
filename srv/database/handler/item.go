@@ -33,6 +33,8 @@ const (
 	ActionChangeOwners         = "ChangeOwners"
 	ActionChangeItemOwner      = "ChangeItemOwner"
 	ActionChangeStatus         = "ChangeStatus"
+	ActionConfimItem           = "ConfimItem"
+	ActionGenerateItem         = "GenerateItem"
 )
 
 // FindItems 获取台账下的所有数据
@@ -373,6 +375,34 @@ func (i *Item) ModifyItem(ctx context.Context, req *item.ModifyRequest, rsp *ite
 	}
 
 	utils.InfoLog(ActionModifyItem, utils.MsgProcessEnded)
+	return nil
+}
+
+// GenerateItem 更新台账数据作成
+func (i *Item) GenerateItem(ctx context.Context, req *item.JournalRequest, rsp *item.JournalResponse) error {
+	utils.InfoLog(ActionGenerateItem, utils.MsgProcessStarted)
+
+	err := model.GenerateItem(req.GetDatabase(), req.GetDatastoreId(), req.GetStartDate(), req.GetLastDate())
+	if err != nil {
+		utils.ErrorLog(ActionGenerateItem, err.Error())
+		return err
+	}
+
+	utils.InfoLog(ActionGenerateItem, utils.MsgProcessEnded)
+	return nil
+}
+
+// ConfimItem 更新台账数据确认
+func (i *Item) ConfimItem(ctx context.Context, req *item.JournalRequest, rsp *item.JournalResponse) error {
+	utils.InfoLog(ActionConfimItem, utils.MsgProcessStarted)
+
+	err := model.ConfimItem(req.GetDatabase(), req.GetDatastoreId(), req.GetStartDate(), req.GetLastDate())
+	if err != nil {
+		utils.ErrorLog(ActionConfimItem, err.Error())
+		return err
+	}
+
+	utils.InfoLog(ActionConfimItem, utils.MsgProcessEnded)
 	return nil
 }
 

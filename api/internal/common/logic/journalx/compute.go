@@ -472,7 +472,7 @@ func GenAddAndSubData(domain, db, appID, userID, lang string, owners []string) (
 		ShowProgress: false,
 		Message:      i18n.Tr(lang, "job.J_014"),
 		TaskType:     "journal",
-		Steps:        []string{"start", "collect-data", "delete-old-data", "gen-data", "end"},
+		Steps:        []string{"start", "collect-data", "delete-old-data", "gen-data", "modify_status", "end"},
 		CurrentStep:  "start",
 		Database:     db,
 		AppId:        appID,
@@ -617,6 +617,14 @@ func GenAddAndSubData(domain, db, appID, userID, lang string, owners []string) (
 			IsDynamic:     true,
 			ConditionType: "",
 		})
+		conditions = append(conditions, &item.Condition{
+			FieldId:       "journalstatus",
+			FieldType:     "text",
+			SearchValue:   "確定",
+			Operator:      "<>",
+			IsDynamic:     true,
+			ConditionType: "",
+		})
 		delreq.ConditionList = conditions
 
 		_, err = itemService.DeleteItems(context.TODO(), &delreq, opss)
@@ -733,6 +741,14 @@ func buildObtainData(p InsertParam) (e error) {
 		IsDynamic:   true,
 	})
 
+	conditions = append(conditions, &item.Condition{
+		FieldId:     "journalstatus",
+		FieldType:   "text",
+		SearchValue: "確定",
+		Operator:    "<>",
+		IsDynamic:   true,
+	})
+
 	accesskeys := sessionx.GetAccessKeys(p.db, p.userID, p.datastoreID, "R")
 
 	// 先获取总的件数
@@ -785,33 +801,17 @@ func buildObtainData(p InsertParam) (e error) {
 			return err
 		}
 
-		var data ItemData
-
-		for _, item := range itemResp.GetItems() {
-			itemMap := item.Items
-			data = append(data, itemMap)
-		}
-
 		// 分录数据编辑
 		var items ImportData
 		index := 1
-		for count, obtainItem := range data {
+		for count, obtainItem := range itemResp.GetItems() {
 			pattern := getPattern("04001", p.jouData)
-			koushinbangouoya := obtainItem["koushinbangouoya"].GetValue()
-			koushinbangoueda := obtainItem["koushinbangoueda"].GetValue()
-			obtainAccesskeys := sessionx.GetAccessKeys(p.db, p.userID, p.dsMap["zougenrireki"], "R")
-			itemMap, err := getKoushinbangouData(p.db, p.appID, p.dsMap["zougenrireki"], koushinbangouoya, koushinbangoueda, obtainAccesskeys)
-			if err != nil {
-				loggerx.ErrorLog("getObtainData", err.Error())
-				return err
-			}
-
 			branchCount := 1
 			for line, sub := range pattern.GetSubjects() {
 				expression := formula.NewExpression(sub.AmountField)
 				params := getParam(sub.AmountField)
 				for _, pm := range params {
-					it, ok := obtainItem[pm]
+					it, ok := obtainItem.Items[pm]
 					if !ok {
 						it = &item.Value{
 							DataType: "number",
@@ -842,17 +842,24 @@ func buildObtainData(p InsertParam) (e error) {
 					continue
 				}
 
-				assetsType := itemMap["bunruicd"].GetValue()
+				assetsType := obtainItem.Items["bunruicd"].GetValue()
 				subMap := p.asSubMap[assetsType]
 
 				// 创建登录数据
-				itemsData := copyMap(itemMap)
+				itemsData := copyMap(obtainItem.Items)
 
 				itemsData["keiyakuno"] = &item.Value{
 					DataType: "lookup",
-					Value:    obtainItem["kaishacd"].GetValue(),
+					Value:    obtainItem.Items["kaishacd"].GetValue(),
 				}
-
+				itemsData["koushinbangouoya"] = &item.Value{
+					DataType: "text",
+					Value:    obtainItem.Items["koushinbangouoya"].GetValue(),
+				}
+				itemsData["koushinbangoueda"] = &item.Value{
+					DataType: "text",
+					Value:    obtainItem.Items["koushinbangoueda"].GetValue(),
+				}
 				itemsData["shiwakeno"] = &item.Value{
 					DataType: "text",
 					Value:    p.shiwakeno,
@@ -901,6 +908,10 @@ func buildObtainData(p InsertParam) (e error) {
 					DataType: "text",
 					Value:    pattern.PatternName,
 				}
+				itemsData["journalstatus"] = &item.Value{
+					DataType: "text",
+					Value:    "作成",
+				}
 				itemsData["index"] = &item.Value{
 					DataType: "number",
 					Value:    strconv.Itoa(index),
@@ -923,6 +934,38 @@ func buildObtainData(p InsertParam) (e error) {
 			return err
 		}
 		fmt.Printf("%+v", response)
+	}
+
+	// 发送消息 数据状态修改
+	jobx.ModifyTask(task.ModifyRequest{
+		JobId:       p.jobID,
+		Message:     "仕訳状態更新",
+		CurrentStep: "modify_status",
+		Database:    p.db,
+	}, p.userID)
+
+	var req item.JournalRequest
+	req.DatastoreId = p.datastoreID
+	req.Database = p.db
+	req.StartDate = p.handleMonth + "-01"
+	req.LastDate = p.handleMonth + "-" + lastDay
+
+	_, err = itemService.GenerateItem(context.TODO(), &req, opss)
+	if err != nil {
+		path := filex.WriteAndSaveFile(p.domain, p.appID, []string{err.Error()})
+		// 发送消息 获取数据失败，终止任务
+		jobx.ModifyTask(task.ModifyRequest{
+			JobId:       p.jobID,
+			Message:     err.Error(),
+			CurrentStep: "modify_status",
+			EndTime:     time.Now().UTC().Format("2006-01-02 15:04:05"),
+			ErrorFile: &task.File{
+				Url:  path.MediaLink,
+				Name: path.Name,
+			},
+			Database: p.db,
+		}, p.userID)
+		return
 	}
 
 	return nil
@@ -2893,6 +2936,13 @@ func getKoushinbangouData(db, appID, datastoreID, koushinbangouoya, koushinbango
 		FieldType:   "text",
 		SearchValue: koushinbangoueda,
 		Operator:    "=",
+		IsDynamic:   true,
+	})
+	conditions = append(conditions, &item.Condition{
+		FieldId:     "journalstatus",
+		FieldType:   "text",
+		SearchValue: "確定",
+		Operator:    "<>",
 		IsDynamic:   true,
 	})
 	req.ConditionList = conditions

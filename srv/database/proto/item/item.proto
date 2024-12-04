@@ -11,6 +11,8 @@ service ItemService {
 	rpc FindRishiritsu(RishiritsuRequest) returns (RishiritsuResponse) {}
 	rpc AddItem(AddRequest) returns (AddResponse) {}
 	rpc ModifyItem(ModifyRequest) returns (ModifyResponse) {}
+	rpc ConfimItem(JournalRequest) returns (JournalResponse) {}
+	rpc GenerateItem(JournalRequest) returns (JournalResponse) {}
 	rpc InventoryItem(InventoryItemRequest) returns (InventoryItemResponse) {}
 	rpc MutilInventoryItem(MutilInventoryItemRequest) returns (MutilInventoryItemResponse) {}
 	rpc ResetInventoryItems(ResetInventoryItemsRequest) returns (ResetInventoryItemsResponse) {}
@@ -367,6 +369,17 @@ message ModifyRequest{
 }
 
 message ModifyResponse{
+}
+
+// 确定记录
+message JournalRequest{
+	string datastore_id = 1; // 所属台账
+	string database = 2; // 数据库
+	string start_date = 3; // 开始日
+	string last_date = 4; // 结束日
+}
+
+message JournalResponse{
 }
 
 // 更新记录

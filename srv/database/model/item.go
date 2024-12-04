@@ -3688,6 +3688,95 @@ func ModifyItem(db string, p *ItemUpdateParam) (err error) {
 	return nil
 }
 
+// GenerateItem
+func GenerateItem(db, datastoreID, startDate, lastDate string) (err error) {
+	client := database.New()
+	c := client.Database(database.GetDBName(db)).Collection(GetItemCollectionName(datastoreID))
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+
+	startDay, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		utils.ErrorLog("Error parsing start date:", err.Error())
+		return
+	}
+
+	lastDay, err := time.Parse("2006-01-02", lastDate)
+	if err != nil {
+		utils.ErrorLog("Error parsing start date:", err.Error())
+		return
+	}
+
+	query := bson.M{
+		"$and": []bson.M{
+			{"items.keijoudate.value": bson.M{"$gte": startDay}},
+			{"items.keijoudate.value": bson.M{"$lte": lastDay}},
+			{"items.journalstatus.value": bson.M{"$ne": "確定"}},
+		},
+	}
+
+	update := bson.M{"$set": bson.M{
+		"items.journalstatus.value": "作成",
+	}}
+
+	queryJSON, _ := json.Marshal(query)
+	utils.DebugLog("ConfimItem", fmt.Sprintf("query: [ %s ]", queryJSON))
+
+	updateJSON, _ := json.Marshal(update)
+	utils.DebugLog("ConfimItem", fmt.Sprintf("update: [ %s ]", updateJSON))
+
+	_, err = c.UpdateMany(ctx, query, update)
+	if err != nil {
+		utils.ErrorLog("ConfimItem", err.Error())
+		return err
+	}
+	return
+}
+
+// ConfimItem
+func ConfimItem(db, datastoreID, startDate, lastDate string) (err error) {
+	client := database.New()
+	c := client.Database(database.GetDBName(db)).Collection(GetItemCollectionName(datastoreID))
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	startDay, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		utils.ErrorLog("Error parsing start date:", err.Error())
+		return
+	}
+
+	lastDay, err := time.Parse("2006-01-02", lastDate)
+	if err != nil {
+		utils.ErrorLog("Error parsing start date:", err.Error())
+		return
+	}
+
+	query := bson.M{
+		"$and": []bson.M{
+			{"items.keijoudate.value": bson.M{"$gte": startDay}},
+			{"items.keijoudate.value": bson.M{"$lte": lastDay}},
+		},
+	}
+
+	update := bson.M{"$set": bson.M{
+		"items.journalstatus.value": "確定",
+	}}
+
+	queryJSON, _ := json.Marshal(query)
+	utils.DebugLog("ConfimItem", fmt.Sprintf("query: [ %s ]", queryJSON))
+
+	updateJSON, _ := json.Marshal(update)
+	utils.DebugLog("ConfimItem", fmt.Sprintf("update: [ %s ]", updateJSON))
+
+	_, err = c.UpdateMany(ctx, query, update)
+	if err != nil {
+		utils.ErrorLog("ConfimItem", err.Error())
+		return err
+	}
+	return
+}
+
 // ResetInventoryItems 盘点台账盘点数据盘点状态重置
 func ResetInventoryItems(db, userID, appID string) (err error) {
 	client := database.New()
@@ -4885,4 +4974,29 @@ func deleteItem(db, datastoreID, itemID, userID, lang, domain string, owners []s
 	session.EndSession(ctx)
 
 	return nil
+}
+
+// getMonthLastDay  获取当前月份的最后一天
+func getMonthLastDay(date time.Time) (day string) {
+	// 年月日取得
+	years := date.Year()
+	month := date.Month()
+
+	// 月末日取得
+	lastday := 0
+	if month != 2 {
+		if month == 4 || month == 6 || month == 9 || month == 11 {
+			lastday = 30
+		} else {
+			lastday = 31
+		}
+	} else {
+		if ((years%4) == 0 && (years%100) != 0) || (years%400) == 0 {
+			lastday = 29
+		} else {
+			lastday = 28
+		}
+	}
+
+	return strconv.Itoa(lastday)
 }

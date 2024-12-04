@@ -67,8 +67,16 @@ func initAuthRouterWeb(router *gin.Engine) {
 		journalRoute.POST("/journals", journal.ImportJournal)
 		// 计算分录
 		journalRoute.GET("/compute/journals", journal.JournalCompute)
+		// 查找分录作成数据
+		journalRoute.GET("/journals/findSakuseiData", journal.FindSakuseiData)
+		// 分录确定
+		journalRoute.GET("/journals/confim", journal.JournalConfim)
 		// 修改分录记录
 		journalRoute.PUT("/journals/:j_id", journal.ModifyJournal)
+		// 添加分录下载设置
+		journalRoute.POST("/download/setting", journal.AddDownloadSetting)
+		// 查询分录下载设置
+		journalRoute.GET("/download/find", journal.FindDownloadSetting)
 	}
 
 	subject := new(webui.Subject)
