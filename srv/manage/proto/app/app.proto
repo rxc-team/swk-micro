@@ -15,7 +15,7 @@ service AppService {
 	rpc HardDeleteApps(HardDeleteAppsRequest) returns (HardDeleteAppsResponse) {}
 	rpc RecoverSelectApps(RecoverSelectAppsRequest) returns (RecoverSelectAppsResponse) {}
 	rpc NextMonth(NextMonthRequest) returns (NextMonthResponse) {}
-	rpc ModifyAppHandleMonth(ModifyAppHandleMonthRequest) returns (ModifyAppHandleMonthResponse) {}
+	rpc ModifySwkSetting(ModifySwkSettingRequest) returns (ModifySwkSettingResponse) {}
 }
 
 // APP
@@ -39,6 +39,7 @@ message App {
 	string remarks = 16;
 	string app_type = 17;
 	Configs configs = 19; // app配置
+	bool swk_control = 20; 
 }
 // AppConfigs
 message Configs {
@@ -183,11 +184,12 @@ message NextMonthRequest{
 message NextMonthResponse{
 }
 
-message ModifyAppHandleMonthRequest{
+message ModifySwkSettingRequest{
 	string app_id = 1;
 	string database = 2;
-	string handlemonth = 3;
+	string handleMonth = 3;
+	bool swk_control = 4;
 }
 
-message ModifyAppHandleMonthResponse{
+message ModifySwkSettingResponse{
 }

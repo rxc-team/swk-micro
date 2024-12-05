@@ -21,24 +21,24 @@ type App struct{}
 const (
 	AppProcessName = "App"
 	// Action
-	ActionFindApps             = "FindApps"
-	ActionFindApp              = "FindApp"
-	ActionFindUserApp          = "FindUserApp"
-	ActionAddApp               = "AddApp"
-	ActionModifyApp            = "ModifyApp"
-	ActionModifyAppSort        = "ModifyAppSort"
-	ActionDeleteApp            = "DeleteApp"
-	ActionDeleteSelectApps     = "DeleteSelectApps"
-	ActionHardDeleteApps       = "HardDeleteApps"
-	ActionHardDeleteCopyApps   = "HardDeleteCopyApps"
-	ActionRecoverSelectApps    = "RecoverSelectApps"
-	ActionaddDefaultGroup      = "addDefaultGroup"
-	ActionaddAppLangItem       = "addAppLangItem"
-	ActionaddDefaultAdminUser  = "addDefaultAdminUser"
-	ActionaddDefaultAdminRole  = "addDefaultAdminRole"
-	ActionAddGroup             = "AddGroup"
-	ActionmodifyAppHandleMonth = "ModifyAppHandleMonth"
-	defaultPasswordEnv         = "DEFAULT_PASSWORD"
+	ActionFindApps            = "FindApps"
+	ActionFindApp             = "FindApp"
+	ActionFindUserApp         = "FindUserApp"
+	ActionAddApp              = "AddApp"
+	ActionModifyApp           = "ModifyApp"
+	ActionModifyAppSort       = "ModifyAppSort"
+	ActionDeleteApp           = "DeleteApp"
+	ActionDeleteSelectApps    = "DeleteSelectApps"
+	ActionHardDeleteApps      = "HardDeleteApps"
+	ActionHardDeleteCopyApps  = "HardDeleteCopyApps"
+	ActionRecoverSelectApps   = "RecoverSelectApps"
+	ActionaddDefaultGroup     = "addDefaultGroup"
+	ActionaddAppLangItem      = "addAppLangItem"
+	ActionaddDefaultAdminUser = "addDefaultAdminUser"
+	ActionaddDefaultAdminRole = "addDefaultAdminRole"
+	ActionAddGroup            = "AddGroup"
+	ActionModifySwkSetting    = "ModifySwkSetting"
+	defaultPasswordEnv        = "DEFAULT_PASSWORD"
 )
 
 // FindApp 查找单个APP记录
@@ -92,28 +92,29 @@ func (a *App) FindUserApp(c *gin.Context) {
 	})
 }
 
-// modifyAppHandleMonth 修改APP处理月度
-// @Router /apps/{a_id}/handleMonth
-func (a *App) ModifyAppHandleMonth(c *gin.Context) {
-	loggerx.InfoLog(c, ActionmodifyAppHandleMonth, loggerx.MsgProcessStarted)
+// ModifySwkSetting 更新月次设定
+// @Router /apps/{a_id}/swkSetting
+func (a *App) ModifySwkSetting(c *gin.Context) {
+	loggerx.InfoLog(c, ActionModifySwkSetting, loggerx.MsgProcessStarted)
 
 	appService := app.NewAppService("manage", client.DefaultClient)
 
-	var req app.ModifyAppHandleMonthRequest
+	var req app.ModifySwkSettingRequest
 	req.Database = sessionx.GetUserCustomer(c)
 	if err := c.BindJSON(&req); err != nil {
-		httpx.GinHTTPError(c, ActionmodifyAppHandleMonth, err)
+		httpx.GinHTTPError(c, ActionModifySwkSetting, err)
 		return
 	}
 
-	_, err := appService.ModifyAppHandleMonth(context.TODO(), &req)
+	_, err := appService.ModifySwkSetting(context.TODO(), &req)
 	if err != nil {
-		httpx.GinHTTPError(c, ActionmodifyAppHandleMonth, err)
+		httpx.GinHTTPError(c, ActionModifySwkSetting, err)
 		return
 	}
-	loggerx.InfoLog(c, ActionmodifyAppHandleMonth, loggerx.MsgProcessEnded)
+
+	loggerx.InfoLog(c, ActionModifySwkSetting, loggerx.MsgProcessEnded)
 	c.JSON(200, httpx.Response{
 		Status:  0,
-		Message: msg.GetMsg("ja-JP", msg.Info, msg.I003, fmt.Sprintf(httpx.Temp, AppProcessName, ActionmodifyAppHandleMonth)),
+		Message: msg.GetMsg("ja-JP", msg.Info, msg.I003, fmt.Sprintf(httpx.Temp, AppProcessName, ActionModifySwkSetting)),
 	})
 }

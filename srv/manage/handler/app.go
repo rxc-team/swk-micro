@@ -15,20 +15,20 @@ type App struct{}
 
 // log出力使用
 const (
-	AppProcessName             = "App"
-	ActionFindApps             = "FindApps"
-	ActionFindAppListApps      = "FindAppListApps"
-	ActionFindApp              = "FindApp"
-	ActionAddApp               = "AddApp"
-	ActionModifyApp            = "ModifyApp"
-	ActionModifyAppConfigs     = "ModifyAppConfigs"
-	ActionModifyAppSort        = "ModifyAppSort"
-	ActionDeleteApp            = "DeleteApp"
-	ActionDeleteSelectApps     = "DeleteSelectApps"
-	ActionHardDeleteApps       = "HardDeleteApps"
-	ActionRecoverSelectApps    = "RecoverSelectApps"
-	ActionNextMonth            = "NextMonth"
-	ActionModifyAppHandleMonth = "ModifyAppHandleMonth   "
+	AppProcessName          = "App"
+	ActionFindApps          = "FindApps"
+	ActionFindAppListApps   = "FindAppListApps"
+	ActionFindApp           = "FindApp"
+	ActionAddApp            = "AddApp"
+	ActionModifyApp         = "ModifyApp"
+	ActionModifyAppConfigs  = "ModifyAppConfigs"
+	ActionModifyAppSort     = "ModifyAppSort"
+	ActionDeleteApp         = "DeleteApp"
+	ActionDeleteSelectApps  = "DeleteSelectApps"
+	ActionHardDeleteApps    = "HardDeleteApps"
+	ActionRecoverSelectApps = "RecoverSelectApps"
+	ActionNextMonth         = "NextMonth"
+	ActionModifySwkSetting  = "ModifySwkSetting   "
 )
 
 // FindApps 查找多个APP记录
@@ -284,16 +284,16 @@ func (a *App) NextMonth(ctx context.Context, req *app.NextMonthRequest, rsp *app
 	return nil
 }
 
-// ModifyAppHandleMonth 更新处理月度
-func (a *App) ModifyAppHandleMonth(ctx context.Context, req *app.ModifyAppHandleMonthRequest, rsp *app.ModifyAppHandleMonthResponse) error {
-	utils.InfoLog(ActionModifyAppHandleMonth, utils.MsgProcessStarted)
+// ModifySwkSetting 更新月次设定
+func (a *App) ModifySwkSetting(ctx context.Context, req *app.ModifySwkSettingRequest, rsp *app.ModifySwkSettingResponse) error {
+	utils.InfoLog(ActionModifySwkSetting, utils.MsgProcessStarted)
 
-	err := model.ModifyAppHandleMonth(ctx, req.GetDatabase(), req.GetAppId(), req.GetHandlemonth())
+	err := model.ModifySwkSetting(ctx, req.GetDatabase(), req.GetAppId(), req.GetHandleMonth(), req.GetSwkControl())
 	if err != nil {
-		utils.ErrorLog(ActionModifyAppHandleMonth, err.Error())
+		utils.ErrorLog(ActionModifySwkSetting, err.Error())
 		return err
 	}
 
-	utils.InfoLog(ActionModifyAppHandleMonth, utils.MsgProcessEnded)
+	utils.InfoLog(ActionModifySwkSetting, utils.MsgProcessEnded)
 	return nil
 }

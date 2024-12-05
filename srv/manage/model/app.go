@@ -46,6 +46,7 @@ type App struct {
 	FollowApp    string             `json:"follow_app" bson:"follow_app"`
 	Remarks      string             `json:"remarks" bson:"remarks"`
 	Configs      Configs            `json:"configs" bson:"configs"`
+	SwkControl   bool               `json:"swk_control" bson:"swk_control"`
 	CreatedAt    time.Time          `json:"created_at" bson:"created_at"`
 	CreatedBy    string             `json:"created_by" bson:"created_by"`
 	UpdatedAt    time.Time          `json:"updated_at" bson:"updated_at"`
@@ -83,6 +84,7 @@ func (a *App) ToProto() *app.App {
 		CopyFrom:     a.CopyFrom,
 		FollowApp:    a.FollowApp,
 		Remarks:      a.Remarks,
+		SwkControl:   a.SwkControl,
 		CreatedAt:    a.CreatedAt.String(),
 		CreatedBy:    a.CreatedBy,
 		UpdatedAt:    a.UpdatedAt.String(),
@@ -1209,8 +1211,8 @@ func NextMonth(ctx context.Context, db string, conf Config) (err error) {
 	return nil
 }
 
-// ModifyAppHandleMonth 更新处理月度
-func ModifyAppHandleMonth(ctx context.Context, db string, appID string, handlemonth string) (err error) {
+// ModifySwkSetting 更新月次设定
+func ModifySwkSetting(ctx context.Context, db string, appID string, handleMonth string, swkControl bool) (err error) {
 	client := database.New()
 	c := client.Database(database.GetDBName(db)).Collection(AppsCollection)
 
@@ -1220,13 +1222,14 @@ func ModifyAppHandleMonth(ctx context.Context, db string, appID string, handlemo
 
 	update := bson.M{
 		"$set": bson.M{
-			"configs.syori_ym": handlemonth,
+			"configs.syori_ym": handleMonth,
+			"swk_control":      swkControl,
 		},
 	}
 
 	_, err = c.UpdateOne(ctx, query, update)
 	if err != nil {
-		utils.DebugLog("ModifyAppHandleMonth", fmt.Sprintf("ModifyAppHandleMonth", err))
+		utils.ErrorLog("ModifySwkSetting", err.Error())
 		return err
 	}
 
