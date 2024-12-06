@@ -399,6 +399,7 @@ func getSubjectMap(db, appID, datastoreID string, accesskeys []string) (asSubMap
 	}
 
 	asSubMap = make(map[string]SubData)
+	asSubMap[""] = defSubMap
 	count := 1
 	for ch := range subChan {
 		if ch.Error != nil {
