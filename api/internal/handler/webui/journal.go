@@ -288,6 +288,7 @@ func (f *Journal) FindSakuseiData(c *gin.Context) {
 	}
 
 	lastDay := getMonthLastDay(handleDate)
+	defaultTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
 
 	conditions := []*item.Condition{}
 	conditions = append(conditions, &item.Condition{
@@ -307,9 +308,17 @@ func (f *Journal) FindSakuseiData(c *gin.Context) {
 	})
 
 	conditions = append(conditions, &item.Condition{
-		FieldId:     "journalstatus",
-		FieldType:   "text",
-		SearchValue: "作成",
+		FieldId:     "sakuseidate",
+		FieldType:   "date",
+		SearchValue: defaultTime.Format(time.RFC3339),
+		Operator:    "<>",
+		IsDynamic:   true,
+	})
+
+	conditions = append(conditions, &item.Condition{
+		FieldId:     "kakuteidate",
+		FieldType:   "date",
+		SearchValue: defaultTime.Format(time.RFC3339),
 		Operator:    "=",
 		IsDynamic:   true,
 	})

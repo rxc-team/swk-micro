@@ -609,6 +609,8 @@ func GenAddAndSubData(domain, db, appID, userID, lang string, owners []string) (
 		delreq.Database = db
 		delreq.ConditionType = "and"
 
+		defaultTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
+
 		var conditions []*item.Condition
 		conditions = append(conditions, &item.Condition{
 			FieldId:       "shiwaketype",
@@ -619,10 +621,10 @@ func GenAddAndSubData(domain, db, appID, userID, lang string, owners []string) (
 			ConditionType: "",
 		})
 		conditions = append(conditions, &item.Condition{
-			FieldId:       "journalstatus",
-			FieldType:     "text",
-			SearchValue:   "確定",
-			Operator:      "<>",
+			FieldId:       "kakuteidate",
+			FieldType:     "date",
+			SearchValue:   defaultTime.Format(time.RFC3339),
+			Operator:      "=",
 			IsDynamic:     true,
 			ConditionType: "",
 		})
@@ -724,6 +726,7 @@ func buildObtainData(p InsertParam) (e error) {
 	}
 
 	lastDay := getMonthLastDay(handleDate)
+	defaultTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
 
 	conditions := []*item.Condition{}
 	conditions = append(conditions, &item.Condition{
@@ -743,10 +746,10 @@ func buildObtainData(p InsertParam) (e error) {
 	})
 
 	conditions = append(conditions, &item.Condition{
-		FieldId:     "journalstatus",
-		FieldType:   "text",
-		SearchValue: "確定",
-		Operator:    "<>",
+		FieldId:     "kakuteidate",
+		FieldType:   "date",
+		SearchValue: defaultTime.Format(time.RFC3339),
+		Operator:    "=",
 		IsDynamic:   true,
 	})
 
@@ -909,9 +912,9 @@ func buildObtainData(p InsertParam) (e error) {
 					DataType: "text",
 					Value:    pattern.PatternName,
 				}
-				itemsData["journalstatus"] = &item.Value{
-					DataType: "text",
-					Value:    "作成",
+				itemsData["sakuseidate"] = &item.Value{
+					DataType: "date",
+					Value:    time.Now().Format("2006-01-02"),
 				}
 				itemsData["index"] = &item.Value{
 					DataType: "number",
@@ -2923,6 +2926,8 @@ func getKoushinbangouData(db, appID, datastoreID, koushinbangouoya, koushinbango
 		o.DialTimeout = time.Minute * 10
 	}
 
+	defaultTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
+
 	var req item.ItemsRequest
 	conditions := []*item.Condition{}
 	conditions = append(conditions, &item.Condition{
@@ -2940,10 +2945,10 @@ func getKoushinbangouData(db, appID, datastoreID, koushinbangouoya, koushinbango
 		IsDynamic:   true,
 	})
 	conditions = append(conditions, &item.Condition{
-		FieldId:     "journalstatus",
-		FieldType:   "text",
-		SearchValue: "確定",
-		Operator:    "<>",
+		FieldId:     "kakuteidate",
+		FieldType:   "date",
+		SearchValue: defaultTime.Format(time.RFC3339),
+		Operator:    "=",
 		IsDynamic:   true,
 	})
 	req.ConditionList = conditions

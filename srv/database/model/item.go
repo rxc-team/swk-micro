@@ -3707,27 +3707,29 @@ func GenerateItem(db, datastoreID, startDate, lastDate string) (err error) {
 		return
 	}
 
+	defaultTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
+
 	query := bson.M{
 		"$and": []bson.M{
 			{"items.keijoudate.value": bson.M{"$gte": startDay}},
 			{"items.keijoudate.value": bson.M{"$lte": lastDay}},
-			{"items.journalstatus.value": bson.M{"$ne": "確定"}},
+			{"items.kakuteidate.value": defaultTime},
 		},
 	}
 
 	update := bson.M{"$set": bson.M{
-		"items.journalstatus.value": "作成",
+		"items.sakuseidate.value": time.Now(),
 	}}
 
 	queryJSON, _ := json.Marshal(query)
-	utils.DebugLog("ConfimItem", fmt.Sprintf("query: [ %s ]", queryJSON))
+	utils.DebugLog("GenerateItem", fmt.Sprintf("query: [ %s ]", queryJSON))
 
 	updateJSON, _ := json.Marshal(update)
-	utils.DebugLog("ConfimItem", fmt.Sprintf("update: [ %s ]", updateJSON))
+	utils.DebugLog("GenerateItem", fmt.Sprintf("update: [ %s ]", updateJSON))
 
 	_, err = c.UpdateMany(ctx, query, update)
 	if err != nil {
-		utils.ErrorLog("ConfimItem", err.Error())
+		utils.ErrorLog("GenerateItem", err.Error())
 		return err
 	}
 	return
@@ -3760,7 +3762,7 @@ func ConfimItem(db, datastoreID, startDate, lastDate string) (err error) {
 	}
 
 	update := bson.M{"$set": bson.M{
-		"items.journalstatus.value": "確定",
+		"items.kakuteidate.value": time.Now(),
 	}}
 
 	queryJSON, _ := json.Marshal(query)
