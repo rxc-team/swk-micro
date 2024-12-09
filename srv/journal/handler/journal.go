@@ -146,13 +146,10 @@ func (f *Journal) AddDownloadSetting(ctx context.Context, req *journal.AddDownlo
 	var rules []*model.FieldRule
 	for _, r := range req.GetFieldRule() {
 		rule := &model.FieldRule{
-			DownloadName: r.DownloadName,
-			FieldId:      r.FieldId,
-			FieldName:    r.FieldName,
-			FieldType:    r.FieldType,
-			FixedValue:   r.FixedValue,
-			IsFixedvalue: r.IsFixedvalue,
-			PitName:      r.PitName,
+			DownloadName:  r.DownloadName,
+			FieldId:       r.FieldId,
+			EditContent:   r.EditContent,
+			SettingMethod: r.SettingMethod,
 		}
 		rules = append(rules, rule)
 	}

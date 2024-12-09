@@ -66,13 +66,10 @@ type (
 
 	// FieldRule规则
 	FieldRule struct {
-		DownloadName string `json:"download_name" bson:"download_name"`
-		FieldId      string `json:"field_id" bson:"field_id"`
-		FieldName    string `json:"field_name" bson:"field_name"`
-		FieldType    string `json:"field_type" bson:"field_type"`
-		FixedValue   string `json:"fixed_value" bson:"fixed_value"`
-		IsFixedvalue bool   `json:"is_fixedvalue" bson:"is_fixedvalue"`
-		PitName      string `json:"pit_name" bson:"pit_name"`
+		DownloadName  string `json:"download_name" bson:"download_name"`
+		FieldId       string `json:"field_id" bson:"field_id"`
+		EditContent   string `json:"edit_content" bson:"edit_content"`
+		SettingMethod string `json:"setting_method" bson:"setting_method"`
 	}
 )
 
@@ -151,13 +148,10 @@ func (m *FieldConf) ToProto() *journal.FindDownloadSettingResponse {
 // ToProto 转换为 proto 数据
 func (f *FieldRule) ToProto() *journal.FieldRule {
 	return &journal.FieldRule{
-		DownloadName: f.DownloadName,
-		FieldId:      f.FieldId,
-		FieldName:    f.FieldName,
-		FieldType:    f.FieldType,
-		FixedValue:   f.FixedValue,
-		IsFixedvalue: f.IsFixedvalue,
-		PitName:      f.PitName,
+		DownloadName:  f.DownloadName,
+		FieldId:       f.FieldId,
+		EditContent:   f.EditContent,
+		SettingMethod: f.SettingMethod,
 	}
 }
 

@@ -77,6 +77,8 @@ func initAuthRouterWeb(router *gin.Engine) {
 		journalRoute.POST("/download/setting", journal.AddDownloadSetting)
 		// 查询分录下载设置
 		journalRoute.GET("/download/find", journal.FindDownloadSetting)
+		// 分录下载
+		journalRoute.GET("/download", journal.SwkDownload)
 	}
 
 	subject := new(webui.Subject)

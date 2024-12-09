@@ -110,12 +110,9 @@ message AddDownloadSettingResponse{
 // 字段规则
 message FieldRule {
 	string download_name = 1;
-	string field_id = 2;
-	string field_name = 3;
-	string field_type = 4;
-	string fixed_value = 5;
-	bool is_fixedvalue = 6;
-	string pit_name = 7;
+	string edit_content = 2;
+	string field_id = 3;
+	string setting_method = 4;
 }
 
 // 查询分录下载设定
