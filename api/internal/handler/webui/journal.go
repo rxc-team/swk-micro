@@ -757,6 +757,11 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 		}
 		headers = append(headers, header)
 		var writer *csv.Writer
+		var delimiter string
+		if downloadInfo.SeparatorChar == "separatorCharTab" {
+			// 如果是Tab，则使用制表符
+			delimiter = "\t"
+		}
 
 		filex.Mkdir("temp/")
 
@@ -781,19 +786,40 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 			return
 		}
 
-		if encoding == "Shift-JIS" {
-			converter := transform.NewWriter(f, japanese.ShiftJIS.NewEncoder())
-			writer = csv.NewWriter(converter)
-		} else {
-			writer = csv.NewWriter(f)
-			// 写入UTF-8 BOM，避免使用Microsoft Excel打开乱码
-			headers[0][0] = "\xEF\xBB\xBF" + headers[0][0]
-		}
+		//是否有存在标题行
+		if downloadInfo.HeaderRow == "exsit" {
+			if encoding == "Shift-JIS" {
+				converter := transform.NewWriter(f, japanese.ShiftJIS.NewEncoder())
+				writer = csv.NewWriter(converter)
+			} else {
+				writer = csv.NewWriter(f)
+				// 写入UTF-8 BOM，避免使用Microsoft Excel打开乱码
+				headers[0][0] = "\xEF\xBB\xBF" + headers[0][0]
+			}
+			if downloadInfo.SeparatorChar == "separatorCharTab" {
+				writer.Comma = rune(delimiter[0])
+			}
+			err = writer.WriteAll(headers)
+			if err != nil {
+				if err.Error() == "encoding: rune not supported by encoding." {
+					path := filex.WriteAndSaveFile(domain, appID, []string{"現在のタイトルには、日本語の[shift-jis]エンコード以外の文字が含まれており、実行を続行できません。"})
+					// 发送消息 获取数据失败，终止任务
+					jobx.ModifyTask(task.ModifyRequest{
+						JobId:       jobID,
+						Message:     err.Error(),
+						CurrentStep: "write-to-file",
+						EndTime:     time.Now().UTC().Format("2006-01-02 15:04:05"),
+						ErrorFile: &task.File{
+							Url:  path.MediaLink,
+							Name: path.Name,
+						},
+						Database: db,
+					}, userID)
 
-		err = writer.WriteAll(headers)
-		if err != nil {
-			if err.Error() == "encoding: rune not supported by encoding." {
-				path := filex.WriteAndSaveFile(domain, appID, []string{"現在のタイトルには、日本語の[shift-jis]エンコード以外の文字が含まれており、実行を続行できません。"})
+					return
+				}
+
+				path := filex.WriteAndSaveFile(domain, appID, []string{err.Error()})
 				// 发送消息 获取数据失败，终止任务
 				jobx.ModifyTask(task.ModifyRequest{
 					JobId:       jobID,
@@ -809,24 +835,9 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 
 				return
 			}
-
-			path := filex.WriteAndSaveFile(domain, appID, []string{err.Error()})
-			// 发送消息 获取数据失败，终止任务
-			jobx.ModifyTask(task.ModifyRequest{
-				JobId:       jobID,
-				Message:     err.Error(),
-				CurrentStep: "write-to-file",
-				EndTime:     time.Now().UTC().Format("2006-01-02 15:04:05"),
-				ErrorFile: &task.File{
-					Url:  path.MediaLink,
-					Name: path.Name,
-				},
-				Database: db,
-			}, userID)
-
-			return
+			writer.Flush() // 此时才会将缓冲区数据写入
 		}
-		writer.Flush() // 此时才会将缓冲区数据写入
+		writer = csv.NewWriter(f)
 
 		var current int = 0
 		var items [][]string
@@ -854,6 +865,9 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 					}, userID)
 
 					// 写入数据
+					if downloadInfo.SeparatorChar == "separatorCharTab" {
+						writer.Comma = rune(delimiter[0])
+					}
 					err = writer.WriteAll(items)
 					if err != nil {
 						if err.Error() == "encoding: rune not supported by encoding." {
@@ -999,7 +1013,9 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 				}, userID)
 
 				// 写入数据
-				// 写入数据
+				if downloadInfo.SeparatorChar == "separatorCharTab" {
+					writer.Comma = rune(delimiter[0])
+				}
 				err = writer.WriteAll(items)
 				if err != nil {
 					if err.Error() == "encoding: rune not supported by encoding." {

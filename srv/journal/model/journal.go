@@ -354,7 +354,7 @@ func AddDownloadSetting(db string, appID string, fd FieldConf) (err error) {
 }
 
 // 查询分录下载设定
-func FindDownloadSetting(db string, appID string) (fd *FieldConf, err error) {
+func FindDownloadSetting(db string, appID string) (fd FieldConf, err error) {
 	client := database.New()
 	c := client.Database(database.GetDBName(db)).Collection("journals_download")
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -363,11 +363,14 @@ func FindDownloadSetting(db string, appID string) (fd *FieldConf, err error) {
 	query := bson.M{
 		"app_id": appID,
 	}
-	var result *FieldConf
+	var result FieldConf
 
 	if err := c.FindOne(ctx, query).Decode(&result); err != nil {
+		if err == mongo.ErrNoDocuments {
+			// 不返回错误
+			return result, nil
+		}
 		utils.ErrorLog("FindDownloadSetting", err.Error())
-		return result, err
 	}
 
 	return result, nil
