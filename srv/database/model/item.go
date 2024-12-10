@@ -200,9 +200,17 @@ func (i *Item) ToProto() *item.Item {
 	items := make(map[string]*item.Value, len(i.ItemMap))
 	for key, it := range i.ItemMap {
 		if key == "sakuseidate" || key == "kakuteidate" {
-			items[key] = &item.Value{
-				DataType: "date",
-				Value:    it.Value.(primitive.DateTime).Time().Format("2006-01-02 15:04:05"),
+			defaultTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
+			if defaultTime.Format("2006-01-02") != it.Value.(primitive.DateTime).Time().Format("2006-01-02") {
+				items[key] = &item.Value{
+					DataType: "date",
+					Value:    it.Value.(primitive.DateTime).Time().Format("2006-01-02 15:04:05"),
+				}
+			} else {
+				items[key] = &item.Value{
+					DataType: "date",
+					Value:    "",
+				}
 			}
 			continue
 		}
