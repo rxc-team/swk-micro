@@ -199,6 +199,13 @@ type AttachParam struct {
 func (i *Item) ToProto() *item.Item {
 	items := make(map[string]*item.Value, len(i.ItemMap))
 	for key, it := range i.ItemMap {
+		if key == "sakuseidate" || key == "kakuteidate" {
+			items[key] = &item.Value{
+				DataType: "date",
+				Value:    it.Value.(primitive.DateTime).Time().Format("2006-01-02 15:04:05"),
+			}
+			continue
+		}
 		dataType := it.DataType
 		items[key] = &item.Value{
 			DataType: dataType,

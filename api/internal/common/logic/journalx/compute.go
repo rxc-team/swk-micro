@@ -912,10 +912,6 @@ func buildObtainData(p InsertParam) (e error) {
 					DataType: "text",
 					Value:    pattern.PatternName,
 				}
-				itemsData["sakuseidate"] = &item.Value{
-					DataType: "date",
-					Value:    time.Now().Format("2006-01-02"),
-				}
 				itemsData["index"] = &item.Value{
 					DataType: "number",
 					Value:    strconv.Itoa(index),

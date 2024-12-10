@@ -676,6 +676,13 @@ func dataExec(ctx context.Context, meta *item.ImportMetaData, fieldMap map[strin
 						}
 						continue
 					}
+					if f.FieldID == "sakuseidate" {
+						it.ItemMap[f.FieldID] = &Value{
+							DataType: "date",
+							Value:    time.Now(),
+						}
+						continue
+					}
 					//  添加空数据
 					addEmptyData(it.ItemMap, f)
 				}
