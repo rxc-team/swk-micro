@@ -53,6 +53,7 @@ type InsertParam struct {
 	dsMap       map[string]string
 	jouData     *journal.Journal
 	asSubMap    map[string]SubData
+	jouDataMap  map[string]*journal.Journal
 }
 
 func genSequenceKey(app string) string {
@@ -527,8 +528,16 @@ func GenAddAndSubData(domain, db, appID, userID, lang string, owners []string) (
 		}
 		handleMonth := cfg.GetSyoriYm()
 
-		// 获取分录数据
-		jouData, err := getJournal(db, appID, "04")
+		// 获取所有分录数据
+		jouDataMap := make(map[string]*journal.Journal)
+
+		journalService := journal.NewJournalService("journal", client.DefaultClient)
+
+		var journalReq journal.JournalsRequest
+		journalReq.Database = db
+		journalReq.AppId = appID
+
+		journalResponse, err := journalService.FindJournals(context.TODO(), &journalReq)
 		if err != nil {
 			path := filex.WriteAndSaveFile(domain, appID, []string{err.Error()})
 			// 发送消息 获取数据失败，终止任务
@@ -544,6 +553,10 @@ func GenAddAndSubData(domain, db, appID, userID, lang string, owners []string) (
 				Database: db,
 			}, userID)
 			return
+		}
+
+		for _, journal := range journalResponse.Journals {
+			jouDataMap[journal.JournalId] = journal
 		}
 
 		// 获取所有分类的科目的数据
@@ -669,8 +682,8 @@ func GenAddAndSubData(domain, db, appID, userID, lang string, owners []string) (
 			userID:      userID,
 			owners:      owners,
 			dsMap:       dsMap,
-			jouData:     jouData,
 			asSubMap:    asSubMap,
+			jouDataMap:  jouDataMap,
 		}
 
 		//  生成数据
@@ -809,7 +822,13 @@ func buildObtainData(p InsertParam) (e error) {
 		var items ImportData
 		index := 1
 		for count, obtainItem := range itemResp.GetItems() {
-			pattern := getPattern("04001", p.jouData)
+			var pattern *journal.Pattern
+			if obtainItem.Items["setteikubun"].GetValue() == "固定資産取得" {
+				pattern = getPattern("04001", p.jouDataMap["04"])
+			}
+			if obtainItem.Items["setteikubun"].GetValue() == "固定資産移動" {
+				pattern = getPattern("05001", p.jouDataMap["05"])
+			}
 			branchCount := 1
 			for line, sub := range pattern.GetSubjects() {
 				expression := formula.NewExpression(sub.AmountField)
