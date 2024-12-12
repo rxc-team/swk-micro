@@ -829,6 +829,28 @@ func buildObtainData(p InsertParam) (e error) {
 			if obtainItem.Items["setteikubun"].GetValue() == "固定資産移動" {
 				pattern = getPattern("05001", p.jouDataMap["05"])
 			}
+			if obtainItem.Items["setteikubun"].GetValue() == "固定資産除却" {
+				pattern = getPattern("06001", p.jouDataMap["06"])
+			}
+			if obtainItem.Items["setteikubun"].GetValue() == "固定資産売却" {
+				baikyakuchoubokagakuValue, err := strconv.ParseFloat(obtainItem.Items["baikyakuchoubokagaku"].GetValue(), 64)
+				if err != nil {
+					loggerx.ErrorLog("getObtainData", err.Error())
+					return err
+				}
+
+				baikyakukagakuValue, err := strconv.ParseFloat(obtainItem.Items["baikyakukagaku"].GetValue(), 64)
+				if err != nil {
+					loggerx.ErrorLog("getObtainData", err.Error())
+					return err
+				}
+
+				if baikyakuchoubokagakuValue-baikyakukagakuValue < 0 {
+					pattern = getPattern("07001", p.jouDataMap["07"])
+				} else {
+					pattern = getPattern("07002", p.jouDataMap["07"])
+				}
+			}
 			branchCount := 1
 			for line, sub := range pattern.GetSubjects() {
 				expression := formula.NewExpression(sub.AmountField)
