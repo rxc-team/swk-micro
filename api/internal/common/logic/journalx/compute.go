@@ -845,7 +845,7 @@ func buildObtainData(p InsertParam) (e error) {
 					return err
 				}
 
-				if baikyakuchoubokagakuValue-baikyakukagakuValue < 0 {
+				if baikyakukagakuValue-baikyakuchoubokagakuValue < 0 {
 					pattern = getPattern("07001", p.jouDataMap["07"])
 				} else {
 					pattern = getPattern("07002", p.jouDataMap["07"])
