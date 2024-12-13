@@ -25,7 +25,6 @@ import (
 	"rxcsoft.cn/pit3/api/internal/common/httpx"
 	"rxcsoft.cn/pit3/api/internal/common/loggerx"
 	"rxcsoft.cn/pit3/api/internal/common/logic/configx"
-	"rxcsoft.cn/pit3/api/internal/common/logic/fieldx"
 	"rxcsoft.cn/pit3/api/internal/common/logic/journalx"
 	"rxcsoft.cn/pit3/api/internal/common/logic/langx"
 	"rxcsoft.cn/pit3/api/internal/common/typesx"
@@ -558,7 +557,6 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 	jobID := "job_" + time.Now().Format("20060102150405")
 	appID := sessionx.GetCurrentApp(c)
 	userID := sessionx.GetAuthUserID(c)
-	roles := sessionx.GetUserRoles(c)
 	lang := sessionx.GetCurrentLanguage(c)
 	domain := sessionx.GetUserDomain(c)
 	db := sessionx.GetUserCustomer(c)
@@ -643,6 +641,33 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 			}
 		}
 
+		journalService := journal.NewJournalService("journal", client.DefaultClient)
+		var req journal.FindDownloadSettingRequest
+
+		// 从共通获取
+		req.AppId = appID
+		req.Database = db
+
+		downloadInfo, err := journalService.FindDownloadSetting(context.TODO(), &req)
+		if err != nil {
+			path := filex.WriteAndSaveFile(domain, appID, []string{err.Error()})
+			// 发送消息 获取数据失败，终止任务
+			jobx.ModifyTask(task.ModifyRequest{
+				JobId:       jobID,
+				Message:     err.Error(),
+				CurrentStep: "build-data",
+				EndTime:     time.Now().UTC().Format("2006-01-02 15:04:05"),
+				ErrorFile: &task.File{
+					Url:  path.MediaLink,
+					Name: path.Name,
+				},
+				Database: db,
+			}, userID)
+
+			return
+		}
+		encoding := downloadInfo.CharEncoding
+
 		dReq := item.DownloadRequest{
 			AppId:         appID,
 			DatastoreId:   datastoreID,
@@ -675,36 +700,8 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 		// 获取当前台账的字段数据
 		var fields []*typesx.DownloadField
 
-		journalService := journal.NewJournalService("journal", client.DefaultClient)
-		var req journal.FindDownloadSettingRequest
-
-		// 从共通获取
-		req.AppId = appID
-		req.Database = db
-
-		downloadInfo, err := journalService.FindDownloadSetting(context.TODO(), &req)
-		if err != nil {
-			path := filex.WriteAndSaveFile(domain, appID, []string{err.Error()})
-			// 发送消息 获取数据失败，终止任务
-			jobx.ModifyTask(task.ModifyRequest{
-				JobId:       jobID,
-				Message:     err.Error(),
-				CurrentStep: "build-data",
-				EndTime:     time.Now().UTC().Format("2006-01-02 15:04:05"),
-				ErrorFile: &task.File{
-					Url:  path.MediaLink,
-					Name: path.Name,
-				},
-				Database: db,
-			}, userID)
-
-			return
-		}
-		encoding := downloadInfo.CharEncoding
-
 		// 获取当前app的语言数据
 		langData := langx.GetLanguageData(db, lang, domain)
-		allFields := fieldx.GetFields(db, datastoreID, appID, roles, false, false)
 
 		for _, rule := range downloadInfo.FieldRule {
 			if rule.SettingMethod == "1" {
@@ -715,21 +712,13 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 					Prefix:    rule.EditContent,
 				})
 			} else {
-				for _, f := range allFields {
-					if rule.FieldId == f.FieldId {
-						fields = append(fields, &typesx.DownloadField{
-							FieldId:       f.FieldId,
-							FieldName:     rule.DownloadName,
-							FieldType:     f.FieldType,
-							IsImage:       f.IsImage,
-							AsTitle:       f.AsTitle,
-							DisplayDigits: f.DisplayDigits,
-							Precision:     f.Precision,
-							Prefix:        f.Prefix,
-							Format:        "",
-						})
-					}
-				}
+				fields = append(fields, &typesx.DownloadField{
+					FieldName: rule.DownloadName,
+					FieldType: rule.FieldType,
+					FieldId:   rule.FieldId,
+					Prefix:    rule.EditContent,
+					Format:    rule.Format,
+				})
 			}
 		}
 
@@ -961,7 +950,6 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 										if err != nil {
 											result = ""
 										} else {
-
 											result = date.Format(fl.Format)
 										}
 									} else {

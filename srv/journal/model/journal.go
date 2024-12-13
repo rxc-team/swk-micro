@@ -70,6 +70,9 @@ type (
 		FieldId       string `json:"field_id" bson:"field_id"`
 		EditContent   string `json:"edit_content" bson:"edit_content"`
 		SettingMethod string `json:"setting_method" bson:"setting_method"`
+		FieldType     string `json:"field_type" bson:"field_type"`
+		DatastoreId   string `json:"datastore_id" bson:"datastore_id"`
+		Format        string `json:"format" bson:"format"`
 	}
 )
 
@@ -152,6 +155,9 @@ func (f *FieldRule) ToProto() *journal.FieldRule {
 		FieldId:       f.FieldId,
 		EditContent:   f.EditContent,
 		SettingMethod: f.SettingMethod,
+		FieldType:     f.FieldType,
+		DatastoreId:   f.DatastoreId,
+		Format:        f.Format,
 	}
 }
 

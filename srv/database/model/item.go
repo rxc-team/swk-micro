@@ -296,6 +296,13 @@ func DownloadItems(db string, params ItemsParam, stream item.ItemService_Downloa
 		return err
 	}
 
+	// 契约台账履历表取得
+	zougenrireki, err := FindDatastoreByKey(db, params.AppID, "zougenrireki")
+	if err != nil {
+		utils.ErrorLog("ModifyContract", err.Error())
+		return err
+	}
+
 	skip := (params.PageIndex - 1) * params.PageSize
 	limit := params.PageSize
 
@@ -337,6 +344,43 @@ func DownloadItems(db string, params ItemsParam, stream item.ItemService_Downloa
 		"label_time":   1,
 		"status":       1,
 	}
+
+	lookup := bson.M{
+		"from": "item_" + zougenrireki.DatastoreID,
+		"let": bson.M{
+			"koushinbangouoya": "$items.koushinbangouoya.value",
+			"koushinbangoueda": "$items.koushinbangoueda.value",
+		},
+		"pipeline": []bson.M{
+			{
+				"$match": bson.M{
+					"$expr": bson.M{
+						"$and": []bson.M{
+							{"$eq": []interface{}{"$items.koushinbangouoya.value", "$$koushinbangouoya"}},
+							{"$eq": []interface{}{"$items.koushinbangoueda.value", "$$koushinbangoueda"}},
+						},
+					},
+				},
+			},
+		},
+		"as": "related_items",
+	}
+
+	pipe = append(pipe, bson.M{
+		"$lookup": lookup,
+	})
+
+	// 使用 $unwind 展开关联结果（如果存在多个结果，可以根据需要调整）
+	unwind := bson.M{
+		"path":                       "$related_items",
+		"preserveNullAndEmptyArrays": true, // 保留原始数据，避免没有匹配项时丢失数据
+	}
+	pipe = append(pipe, bson.M{
+		"$unwind": unwind,
+	})
+
+	// 结果合并
+	project["related_items"] = 1
 
 	// 关联台账
 	for _, relation := range ds.Relations {
@@ -489,9 +533,9 @@ func DownloadItems(db string, params ItemsParam, stream item.ItemService_Downloa
 		project["items."+f.FieldID] = "$items." + f.FieldID
 	}
 
-	pipe = append(pipe, bson.M{
+	/* pipe = append(pipe, bson.M{
 		"$project": project,
-	})
+	}) */
 
 	queryJSON, _ := json.Marshal(pipe)
 	utils.DebugLog("FindItem", fmt.Sprintf("query: [ %s ]", queryJSON))

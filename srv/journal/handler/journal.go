@@ -150,6 +150,9 @@ func (f *Journal) AddDownloadSetting(ctx context.Context, req *journal.AddDownlo
 			FieldId:       r.FieldId,
 			EditContent:   r.EditContent,
 			SettingMethod: r.SettingMethod,
+			FieldType:     r.FieldType,
+			DatastoreId:   r.DatastoreId,
+			Format:        r.Format,
 		}
 		rules = append(rules, rule)
 	}

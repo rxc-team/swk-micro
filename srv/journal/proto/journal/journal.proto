@@ -113,6 +113,9 @@ message FieldRule {
 	string edit_content = 2;
 	string field_id = 3;
 	string setting_method = 4;
+	string field_type=5;
+	string datastore_id=6;
+	string format=7;
 }
 
 // 查询分录下载设定
