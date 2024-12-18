@@ -265,6 +265,13 @@ func (f *Journal) FindSakuseiData(c *gin.Context) {
 		return
 	}
 
+	// 通过apikey获取偿却台账情报
+	repaymentDate, err := getDatastoreInfo(db, appID, "repayment")
+	if err != nil {
+		httpx.GinHTTPError(c, ActionFindSakuseiData, err)
+		return
+	}
+
 	// 获取处理月度
 	cfg, err := configx.GetConfigVal(db, appID)
 	if err != nil {
@@ -289,8 +296,8 @@ func (f *Journal) FindSakuseiData(c *gin.Context) {
 	lastDay := getMonthLastDay(handleDate)
 	defaultTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
 
-	conditions := []*item.Condition{}
-	conditions = append(conditions, &item.Condition{
+	rirekiConditions := []*item.Condition{}
+	rirekiConditions = append(rirekiConditions, &item.Condition{
 		FieldId:     "keijoudate",
 		FieldType:   "date",
 		SearchValue: handleMonth + "-01",
@@ -298,7 +305,7 @@ func (f *Journal) FindSakuseiData(c *gin.Context) {
 		IsDynamic:   true,
 	})
 
-	conditions = append(conditions, &item.Condition{
+	rirekiConditions = append(rirekiConditions, &item.Condition{
 		FieldId:     "keijoudate",
 		FieldType:   "date",
 		SearchValue: handleMonth + "-" + lastDay,
@@ -306,7 +313,7 @@ func (f *Journal) FindSakuseiData(c *gin.Context) {
 		IsDynamic:   true,
 	})
 
-	conditions = append(conditions, &item.Condition{
+	rirekiConditions = append(rirekiConditions, &item.Condition{
 		FieldId:     "sakuseidate",
 		FieldType:   "date",
 		SearchValue: defaultTime.Format(time.RFC3339),
@@ -314,7 +321,7 @@ func (f *Journal) FindSakuseiData(c *gin.Context) {
 		IsDynamic:   true,
 	})
 
-	conditions = append(conditions, &item.Condition{
+	rirekiConditions = append(rirekiConditions, &item.Condition{
 		FieldId:     "kakuteidate",
 		FieldType:   "date",
 		SearchValue: defaultTime.Format(time.RFC3339),
@@ -323,15 +330,63 @@ func (f *Journal) FindSakuseiData(c *gin.Context) {
 	})
 
 	// 获取总的件数
-	cReq := item.CountRequest{
+	rirekiReq := item.CountRequest{
 		AppId:         appID,
 		DatastoreId:   rirekiDate.DatastoreId,
-		ConditionList: conditions,
+		ConditionList: rirekiConditions,
 		ConditionType: "and",
 		Database:      db,
 	}
 
-	countResponse, err := itemService.FindCount(context.TODO(), &cReq, opss)
+	rirekiCountResponse, err := itemService.FindCount(context.TODO(), &rirekiReq, opss)
+	if err != nil {
+		httpx.GinHTTPError(c, ActionFindSakuseiData, err)
+		return
+	}
+
+	repaymentConditions := []*item.Condition{}
+	repaymentConditions = append(repaymentConditions, &item.Condition{
+		FieldId:     "syokyakuymd",
+		FieldType:   "date",
+		SearchValue: handleMonth + "-01",
+		Operator:    ">=",
+		IsDynamic:   true,
+	})
+
+	repaymentConditions = append(repaymentConditions, &item.Condition{
+		FieldId:     "syokyakuymd",
+		FieldType:   "date",
+		SearchValue: handleMonth + "-" + lastDay,
+		Operator:    "<=",
+		IsDynamic:   true,
+	})
+
+	repaymentConditions = append(repaymentConditions, &item.Condition{
+		FieldId:     "sakuseidate",
+		FieldType:   "date",
+		SearchValue: defaultTime.Format(time.RFC3339),
+		Operator:    "<>",
+		IsDynamic:   true,
+	})
+
+	repaymentConditions = append(repaymentConditions, &item.Condition{
+		FieldId:     "kakuteidate",
+		FieldType:   "date",
+		SearchValue: defaultTime.Format(time.RFC3339),
+		Operator:    "=",
+		IsDynamic:   true,
+	})
+
+	// 获取总的件数
+	repaymentReq := item.CountRequest{
+		AppId:         appID,
+		DatastoreId:   repaymentDate.DatastoreId,
+		ConditionList: repaymentConditions,
+		ConditionType: "and",
+		Database:      db,
+	}
+
+	repaymentCountResponse, err := itemService.FindCount(context.TODO(), &repaymentReq, opss)
 	if err != nil {
 		httpx.GinHTTPError(c, ActionFindSakuseiData, err)
 		return
@@ -341,7 +396,10 @@ func (f *Journal) FindSakuseiData(c *gin.Context) {
 	c.JSON(200, httpx.Response{
 		Status:  0,
 		Message: msg.GetMsg("ja-JP", msg.Info, msg.I003, fmt.Sprintf(httpx.Temp, JournalProcessName, ActionJournalCompute)),
-		Data:    countResponse,
+		Data: gin.H{
+			"rirekiTotal":    rirekiCountResponse.GetTotal(),
+			"repaymentTotal": repaymentCountResponse.GetTotal(),
+		},
 	})
 
 }
@@ -400,6 +458,7 @@ func (f *Journal) JournalConfim(c *gin.Context) {
 		return
 	}
 	datastoreIDs = append(datastoreIDs, dsMap["zougenrireki"])
+	datastoreIDs = append(datastoreIDs, dsMap["repayment"])
 	datastoreIDs = append(datastoreIDs, dsMap["shiwake"])
 
 	// 获取处理月度

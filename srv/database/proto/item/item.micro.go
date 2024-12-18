@@ -52,6 +52,7 @@ type ItemService interface {
 	ModifyItem(ctx context.Context, in *ModifyRequest, opts ...client.CallOption) (*ModifyResponse, error)
 	ConfimItem(ctx context.Context, in *JournalRequest, opts ...client.CallOption) (*JournalResponse, error)
 	GenerateItem(ctx context.Context, in *JournalRequest, opts ...client.CallOption) (*JournalResponse, error)
+	GenerateShoukyakuItem(ctx context.Context, in *JournalRequest, opts ...client.CallOption) (*JournalResponse, error)
 	InventoryItem(ctx context.Context, in *InventoryItemRequest, opts ...client.CallOption) (*InventoryItemResponse, error)
 	MutilInventoryItem(ctx context.Context, in *MutilInventoryItemRequest, opts ...client.CallOption) (*MutilInventoryItemResponse, error)
 	ResetInventoryItems(ctx context.Context, in *ResetInventoryItemsRequest, opts ...client.CallOption) (*ResetInventoryItemsResponse, error)
@@ -181,6 +182,16 @@ func (c *itemService) ConfimItem(ctx context.Context, in *JournalRequest, opts .
 
 func (c *itemService) GenerateItem(ctx context.Context, in *JournalRequest, opts ...client.CallOption) (*JournalResponse, error) {
 	req := c.c.NewRequest(c.name, "ItemService.GenerateItem", in)
+	out := new(JournalResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *itemService) GenerateShoukyakuItem(ctx context.Context, in *JournalRequest, opts ...client.CallOption) (*JournalResponse, error) {
+	req := c.c.NewRequest(c.name, "ItemService.GenerateShoukyakuItem", in)
 	out := new(JournalResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -652,6 +663,7 @@ type ItemServiceHandler interface {
 	ModifyItem(context.Context, *ModifyRequest, *ModifyResponse) error
 	ConfimItem(context.Context, *JournalRequest, *JournalResponse) error
 	GenerateItem(context.Context, *JournalRequest, *JournalResponse) error
+	GenerateShoukyakuItem(context.Context, *JournalRequest, *JournalResponse) error
 	InventoryItem(context.Context, *InventoryItemRequest, *InventoryItemResponse) error
 	MutilInventoryItem(context.Context, *MutilInventoryItemRequest, *MutilInventoryItemResponse) error
 	ResetInventoryItems(context.Context, *ResetInventoryItemsRequest, *ResetInventoryItemsResponse) error
@@ -689,6 +701,7 @@ func RegisterItemServiceHandler(s server.Server, hdlr ItemServiceHandler, opts .
 		ModifyItem(ctx context.Context, in *ModifyRequest, out *ModifyResponse) error
 		ConfimItem(ctx context.Context, in *JournalRequest, out *JournalResponse) error
 		GenerateItem(ctx context.Context, in *JournalRequest, out *JournalResponse) error
+		GenerateShoukyakuItem(ctx context.Context, in *JournalRequest, out *JournalResponse) error
 		InventoryItem(ctx context.Context, in *InventoryItemRequest, out *InventoryItemResponse) error
 		MutilInventoryItem(ctx context.Context, in *MutilInventoryItemRequest, out *MutilInventoryItemResponse) error
 		ResetInventoryItems(ctx context.Context, in *ResetInventoryItemsRequest, out *ResetInventoryItemsResponse) error
@@ -760,6 +773,10 @@ func (h *itemServiceHandler) ConfimItem(ctx context.Context, in *JournalRequest,
 
 func (h *itemServiceHandler) GenerateItem(ctx context.Context, in *JournalRequest, out *JournalResponse) error {
 	return h.ItemServiceHandler.GenerateItem(ctx, in, out)
+}
+
+func (h *itemServiceHandler) GenerateShoukyakuItem(ctx context.Context, in *JournalRequest, out *JournalResponse) error {
+	return h.ItemServiceHandler.GenerateShoukyakuItem(ctx, in, out)
 }
 
 func (h *itemServiceHandler) InventoryItem(ctx context.Context, in *InventoryItemRequest, out *InventoryItemResponse) error {

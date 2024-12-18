@@ -16,25 +16,26 @@ type Item struct{}
 
 // log出力使用
 const (
-	ItemProcessName            = "Item"
-	ActionFindItems            = "FindItems"
-	ActionFindItem             = "FindItem"
-	ActionFindRishiritsu       = "FindRishiritsu"
-	ActionFindKaraCount        = "FindKaraCount"
-	ActionAddItem              = "AddItem"
-	ActionMutilAddItem         = "MutilAddItem"
-	ActionImportItem           = "ImportItem"
-	ActionImportCheckItem      = "ImportCheckItem"
-	ActionMappingImport        = "MappingImport"
-	ActionModifyItem           = "ModifyItem"
-	ActionDeleteItem           = "DeleteItem"
-	ActionDeleteDatastoreItems = "DeleteDatastoreItems"
-	ActionDeleteItems          = "DeleteItems"
-	ActionChangeOwners         = "ChangeOwners"
-	ActionChangeItemOwner      = "ChangeItemOwner"
-	ActionChangeStatus         = "ChangeStatus"
-	ActionConfimItem           = "ConfimItem"
-	ActionGenerateItem         = "GenerateItem"
+	ItemProcessName             = "Item"
+	ActionFindItems             = "FindItems"
+	ActionFindItem              = "FindItem"
+	ActionFindRishiritsu        = "FindRishiritsu"
+	ActionFindKaraCount         = "FindKaraCount"
+	ActionAddItem               = "AddItem"
+	ActionMutilAddItem          = "MutilAddItem"
+	ActionImportItem            = "ImportItem"
+	ActionImportCheckItem       = "ImportCheckItem"
+	ActionMappingImport         = "MappingImport"
+	ActionModifyItem            = "ModifyItem"
+	ActionDeleteItem            = "DeleteItem"
+	ActionDeleteDatastoreItems  = "DeleteDatastoreItems"
+	ActionDeleteItems           = "DeleteItems"
+	ActionChangeOwners          = "ChangeOwners"
+	ActionChangeItemOwner       = "ChangeItemOwner"
+	ActionChangeStatus          = "ChangeStatus"
+	ActionConfimItem            = "ConfimItem"
+	ActionGenerateItem          = "GenerateItem"
+	ActionGenerateShoukyakuItem = "GenerateShoukyakuItem"
 )
 
 // FindItems 获取台账下的所有数据
@@ -389,6 +390,20 @@ func (i *Item) GenerateItem(ctx context.Context, req *item.JournalRequest, rsp *
 	}
 
 	utils.InfoLog(ActionGenerateItem, utils.MsgProcessEnded)
+	return nil
+}
+
+// GenerateShoukyakuItem 更新偿还台账数据作成
+func (i *Item) GenerateShoukyakuItem(ctx context.Context, req *item.JournalRequest, rsp *item.JournalResponse) error {
+	utils.InfoLog(ActionGenerateShoukyakuItem, utils.MsgProcessStarted)
+
+	err := model.GenerateShoukyakuItem(req.GetDatabase(), req.GetDatastoreId(), req.GetStartDate(), req.GetLastDate())
+	if err != nil {
+		utils.ErrorLog(ActionGenerateShoukyakuItem, err.Error())
+		return err
+	}
+
+	utils.InfoLog(ActionGenerateShoukyakuItem, utils.MsgProcessEnded)
 	return nil
 }
 

@@ -3762,7 +3762,7 @@ func GenerateItem(db, datastoreID, startDate, lastDate string) (err error) {
 
 	lastDay, err := time.Parse("2006-01-02", lastDate)
 	if err != nil {
-		utils.ErrorLog("Error parsing start date:", err.Error())
+		utils.ErrorLog("Error parsing last date:", err.Error())
 		return
 	}
 
@@ -3794,6 +3794,53 @@ func GenerateItem(db, datastoreID, startDate, lastDate string) (err error) {
 	return
 }
 
+// GenerateShoukyakuItem
+func GenerateShoukyakuItem(db, datastoreID, startDate, lastDate string) (err error) {
+	client := database.New()
+	c := client.Database(database.GetDBName(db)).Collection(GetItemCollectionName(datastoreID))
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+
+	startDay, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		utils.ErrorLog("Error parsing start date:", err.Error())
+		return
+	}
+
+	lastDay, err := time.Parse("2006-01-02", lastDate)
+	if err != nil {
+		utils.ErrorLog("Error parsing last date:", err.Error())
+		return
+	}
+
+	defaultTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
+
+	query := bson.M{
+		"$and": []bson.M{
+			{"items.syokyakuymd.value": bson.M{"$gte": startDay}},
+			{"items.syokyakuymd.value": bson.M{"$lte": lastDay}},
+			{"items.kakuteidate.value": defaultTime},
+		},
+	}
+
+	update := bson.M{"$set": bson.M{
+		"items.sakuseidate.value": time.Now(),
+	}}
+
+	queryJSON, _ := json.Marshal(query)
+	utils.DebugLog("GenerateShoukyakuItem", fmt.Sprintf("query: [ %s ]", queryJSON))
+
+	updateJSON, _ := json.Marshal(update)
+	utils.DebugLog("GenerateShoukyakuItem", fmt.Sprintf("update: [ %s ]", updateJSON))
+
+	_, err = c.UpdateMany(ctx, query, update)
+	if err != nil {
+		utils.ErrorLog("GenerateShoukyakuItem", err.Error())
+		return err
+	}
+	return
+}
+
 // ConfimItem
 func ConfimItem(db, datastoreID, startDate, lastDate string) (err error) {
 	client := database.New()
@@ -3814,9 +3861,19 @@ func ConfimItem(db, datastoreID, startDate, lastDate string) (err error) {
 	}
 
 	query := bson.M{
-		"$and": []bson.M{
-			{"items.keijoudate.value": bson.M{"$gte": startDay}},
-			{"items.keijoudate.value": bson.M{"$lte": lastDay}},
+		"$or": []bson.M{
+			{
+				"$and": []bson.M{
+					{"items.keijoudate.value": bson.M{"$gte": startDay}},
+					{"items.keijoudate.value": bson.M{"$lte": lastDay}},
+				},
+			},
+			{
+				"$and": []bson.M{
+					{"items.syokyakuymd.value": bson.M{"$gte": startDay}},
+					{"items.syokyakuymd.value": bson.M{"$lte": lastDay}},
+				},
+			},
 		},
 	}
 
