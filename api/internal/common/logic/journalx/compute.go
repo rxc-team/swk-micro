@@ -30,6 +30,7 @@ import (
 	"rxcsoft.cn/pit3/srv/global/proto/sequence"
 	"rxcsoft.cn/pit3/srv/journal/proto/journal"
 	"rxcsoft.cn/pit3/srv/journal/proto/subject"
+	"rxcsoft.cn/pit3/srv/manage/proto/app"
 	"rxcsoft.cn/pit3/srv/task/proto/task"
 )
 
@@ -40,20 +41,21 @@ type ImportData []*item.ListItems
 type SubData map[string]string
 
 type InsertParam struct {
-	db          string
-	jobID       string
-	domain      string
-	lang        string
-	shiwakeno   string
-	handleMonth string
-	appID       string
-	datastoreID string
-	userID      string
-	owners      []string
-	dsMap       map[string]string
-	jouData     *journal.Journal
-	asSubMap    map[string]SubData
-	jouDataMap  map[string]*journal.Journal
+	db           string
+	jobID        string
+	domain       string
+	lang         string
+	shiwakeno    string
+	handleMonth  string
+	appID        string
+	datastoreID  string
+	userID       string
+	confimMethod string
+	owners       []string
+	dsMap        map[string]string
+	jouData      *journal.Journal
+	asSubMap     map[string]SubData
+	jouDataMap   map[string]*journal.Journal
 }
 
 func genSequenceKey(app string) string {
@@ -2522,6 +2524,31 @@ func GenRepayData(domain, db, appID, userID, lang string, owners []string) (r *i
 		}
 		handleMonth := cfg.GetSyoriYm()
 
+		// 获取分录确认方式
+		appService := app.NewAppService("manage", client.DefaultClient)
+
+		var req app.FindAppRequest
+		req.AppId = appID
+		req.Database = db
+		appDate, err := appService.FindApp(context.TODO(), &req)
+		if err != nil {
+			path := filex.WriteAndSaveFile(domain, appID, []string{err.Error()})
+			// 发送消息 收集数据情报失败 终止任务
+			jobx.ModifyTask(task.ModifyRequest{
+				JobId:       jobID,
+				Message:     err.Error(),
+				CurrentStep: "collect-data",
+				EndTime:     time.Now().UTC().Format("2006-01-02 15:04:05"),
+				ErrorFile: &task.File{
+					Url:  path.MediaLink,
+					Name: path.Name,
+				},
+				Database: db,
+			}, userID)
+			return
+		}
+		confimMethod := appDate.GetApp().GetConfimMethod()
+
 		// 获取分录数据
 		jouData, err := getJournal(db, appID, "02")
 		if err != nil {
@@ -2591,19 +2618,20 @@ func GenRepayData(domain, db, appID, userID, lang string, owners []string) (r *i
 
 		// 通过偿还数据生成分录data
 		param := InsertParam{
-			db:          db,
-			jobID:       jobID,
-			lang:        lang,
-			domain:      domain,
-			shiwakeno:   shiwakeno,
-			handleMonth: handleMonth,
-			appID:       appID,
-			datastoreID: dsMap["repayment"],
-			userID:      userID,
-			owners:      owners,
-			dsMap:       dsMap,
-			jouData:     jouData,
-			asSubMap:    asSubMap,
+			db:           db,
+			jobID:        jobID,
+			lang:         lang,
+			domain:       domain,
+			shiwakeno:    shiwakeno,
+			handleMonth:  handleMonth,
+			appID:        appID,
+			datastoreID:  dsMap["repayment"],
+			userID:       userID,
+			owners:       owners,
+			dsMap:        dsMap,
+			jouData:      jouData,
+			asSubMap:     asSubMap,
+			confimMethod: confimMethod,
 		}
 
 		//  生成数据
@@ -2660,55 +2688,366 @@ func buildRepaymentData(p InsertParam) (e error) {
 	lastDay := getMonthLastDay(handleDate)
 	defaultTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
 
-	conditions := []*item.Condition{}
-	conditions = append(conditions, &item.Condition{
-		FieldId:     "syokyakuymd",
-		FieldType:   "date",
-		SearchValue: p.handleMonth + "-01",
-		Operator:    ">=",
-		IsDynamic:   true,
-	})
+	if p.confimMethod == "sabun" {
+		conditions := []*item.Condition{}
+		conditions = append(conditions, &item.Condition{
+			FieldId:     "syokyakuymd",
+			FieldType:   "date",
+			SearchValue: p.handleMonth + "-01",
+			Operator:    ">=",
+			IsDynamic:   true,
+		})
 
-	conditions = append(conditions, &item.Condition{
-		FieldId:     "syokyakuymd",
-		FieldType:   "date",
-		SearchValue: p.handleMonth + "-" + lastDay,
-		Operator:    "<=",
-		IsDynamic:   true,
-	})
+		conditions = append(conditions, &item.Condition{
+			FieldId:     "syokyakuymd",
+			FieldType:   "date",
+			SearchValue: p.handleMonth + "-" + lastDay,
+			Operator:    "<=",
+			IsDynamic:   true,
+		})
 
-	conditions = append(conditions, &item.Condition{
-		FieldId:     "kakuteidate",
-		FieldType:   "date",
-		SearchValue: defaultTime.Format(time.RFC3339),
-		Operator:    "=",
-		IsDynamic:   true,
-	})
+		conditions = append(conditions, &item.Condition{
+			FieldId:     "kakuteidate",
+			FieldType:   "date",
+			SearchValue: defaultTime.Format(time.RFC3339),
+			Operator:    "=",
+			IsDynamic:   true,
+		})
 
-	accesskeys := sessionx.GetAccessKeys(p.db, p.userID, p.datastoreID, "R")
+		accesskeys := sessionx.GetAccessKeys(p.db, p.userID, p.datastoreID, "R")
 
-	// 先获取总的件数
-	cReq := item.CountRequest{
-		AppId:         p.appID,
-		DatastoreId:   p.datastoreID,
-		ConditionList: conditions,
-		ConditionType: "and",
-		Owners:        accesskeys,
-		Database:      p.db,
-	}
+		// 先获取总的件数
+		cReq := item.CountRequest{
+			AppId:         p.appID,
+			DatastoreId:   p.datastoreID,
+			ConditionList: conditions,
+			ConditionType: "and",
+			Owners:        accesskeys,
+			Database:      p.db,
+		}
 
-	countResponse, err := itemService.FindCount(context.TODO(), &cReq, opss)
-	if err != nil {
-		loggerx.ErrorLog("getPayData", err.Error())
-		return err
-	}
+		countResponse, err := itemService.FindCount(context.TODO(), &cReq, opss)
+		if err != nil {
+			loggerx.ErrorLog("getPayData", err.Error())
+			return err
+		}
 
-	// 根据总的件数分批下载数据
-	// 每次2000为一组数据
-	total := float64(countResponse.GetTotal())
-	count := math.Ceil(total / 500)
+		// 根据总的件数分批下载数据
+		// 每次2000为一组数据
+		total := float64(countResponse.GetTotal())
+		count := math.Ceil(total / 500)
 
-	for index := int64(0); index < int64(count); index++ {
+		for index := int64(0); index < int64(count); index++ {
+
+			var req item.ItemsRequest
+			var sorts []*item.SortItem
+			sorts = append(sorts, &item.SortItem{
+				SortKey:   "shisanbangouoya.value",
+				SortValue: "ascend",
+			})
+			sorts = append(sorts, &item.SortItem{
+				SortKey:   "shisanbangoueda.value",
+				SortValue: "ascend",
+			})
+			/* sorts = append(sorts, &item.SortItem{
+				SortKey:   "keiyakuno.value",
+				SortValue: "ascend",
+			}) */
+			req.Sorts = sorts
+			req.ConditionList = conditions
+			req.ConditionType = "and"
+			req.DatastoreId = p.datastoreID
+			req.PageIndex = index + 1
+			req.PageSize = 500
+			req.AppId = p.appID
+			req.Owners = accesskeys
+			req.Database = p.db
+			req.IsOrigin = true
+
+			itemResp, err := itemService.FindItems(context.TODO(), &req, opss)
+			if err != nil {
+				loggerx.ErrorLog("getRepaymentData", err.Error())
+				return err
+			}
+
+			/* var data ItemData
+
+			for _, item := range itemResp.GetItems() {
+				itemMap := item.Items
+				data = append(data, itemMap)
+			} */
+
+			// 分录数据编辑
+			var items ImportData
+			index := 1
+			for count, repayItem := range itemResp.GetItems() {
+				// 契约登录的场合
+				pattern := getPattern("02001", p.jouData)
+				/* keiyakuno := repayItem["keiyakuno"].GetValue()
+				keiyakuAccesskeys := sessionx.GetAccessKeys(p.db, p.userID, p.dsMap["keiyakudaicho"], "R")
+				itemMap, err := getKeiyakuData(p.db, p.appID, p.dsMap["keiyakudaicho"], keiyakuno, keiyakuAccesskeys)
+				if err != nil {
+					loggerx.ErrorLog("getRepaymentData", err.Error())
+					return err
+				} */
+
+				branchCount := 1
+				for line, sub := range pattern.GetSubjects() {
+					expression := formula.NewExpression(sub.AmountField)
+					params := getParam(sub.AmountField)
+					for _, pm := range params {
+						it, ok := repayItem.Items[pm]
+						if !ok {
+							it = &item.Value{
+								DataType: "number",
+								Value:    "0",
+							}
+						}
+						val, err := strconv.ParseFloat(it.GetValue(), 64)
+						if err != nil {
+							loggerx.ErrorLog("getRepaymentData", err.Error())
+							return err
+						}
+						expression.AddParameter(pm, val)
+					}
+
+					result, err := expression.Evaluate()
+					if err != nil {
+						loggerx.ErrorLog("getRepaymentData", err.Error())
+						return err
+					}
+
+					fv, err := result.Float64()
+					if err != nil {
+						loggerx.ErrorLog("getRepaymentData", err.Error())
+						return err
+					}
+
+					if fv == 0.0 {
+						continue
+					}
+
+					assetsType := repayItem.Items["bunruicd"].GetValue()
+					subMap := p.asSubMap[assetsType]
+
+					// 创建登录数据
+					itemsData := copyMap(repayItem.Items)
+
+					itemsData["keiyakuno"] = &item.Value{
+						DataType: "lookup",
+						Value:    repayItem.Items["leasekaishacd"].GetValue(),
+					}
+
+					itemsData["shiwakeno"] = &item.Value{
+						DataType: "text",
+						Value:    p.shiwakeno,
+					}
+					itemsData["shiwakeymd"] = &item.Value{
+						DataType: "date",
+						Value:    time.Now().Format("2006-01-02"),
+					}
+					itemsData["shiwakeym"] = &item.Value{
+						DataType: "text",
+						Value:    p.handleMonth,
+					}
+					itemsData["partten"] = &item.Value{
+						DataType: "text",
+						Value:    pattern.PatternId,
+					}
+					itemsData["lineno"] = &item.Value{
+						DataType: "number",
+						Value:    strconv.Itoa(line + 1),
+					}
+					itemsData["taishakukubun"] = &item.Value{
+						DataType: "text",
+						Value:    sub.LendingDivision,
+					}
+					itemsData["kanjokamoku"] = &item.Value{
+						DataType: "text",
+						Value:    subMap[sub.GetSubjectKey()],
+					}
+					itemsData["shiwakekingaku"] = &item.Value{
+						DataType: "number",
+						Value:    result.String(),
+					}
+					itemsData["shiwakeaggno_parent"] = &item.Value{
+						DataType: "text",
+						Value:    strconv.Itoa(count + 1),
+					}
+					itemsData["shiwakeaggno_branch"] = &item.Value{
+						DataType: "text",
+						Value:    strconv.Itoa(branchCount),
+					}
+					itemsData["shiwaketype"] = &item.Value{
+						DataType: "text",
+						Value:    "2",
+					}
+					itemsData["remark"] = &item.Value{
+						DataType: "text",
+						Value:    "償却_" + p.handleMonth,
+					}
+					itemsData["index"] = &item.Value{
+						DataType: "number",
+						Value:    strconv.Itoa(index),
+					}
+
+					sabunConditions := []*item.Condition{}
+					sabunConditions = append(sabunConditions, &item.Condition{
+						FieldId:     "syokyakuymd",
+						FieldType:   "date",
+						SearchValue: p.handleMonth + "-01",
+						Operator:    ">=",
+						IsDynamic:   true,
+					})
+
+					sabunConditions = append(sabunConditions, &item.Condition{
+						FieldId:     "syokyakuymd",
+						FieldType:   "date",
+						SearchValue: p.handleMonth + "-" + lastDay,
+						Operator:    "<=",
+						IsDynamic:   true,
+					})
+
+					sabunConditions = append(sabunConditions, &item.Condition{
+						FieldId:     "shisanbangouoya",
+						FieldType:   "text",
+						SearchValue: repayItem.Items["shisanbangouoya"].GetValue(),
+						Operator:    "=",
+						IsDynamic:   true,
+					})
+
+					sabunConditions = append(sabunConditions, &item.Condition{
+						FieldId:     "shisanbangoueda",
+						FieldType:   "text",
+						SearchValue: repayItem.Items["shisanbangoueda"].GetValue(),
+						Operator:    "=",
+						IsDynamic:   true,
+					})
+
+					sabunConditions = append(sabunConditions, &item.Condition{
+						FieldId:     "kakuteidate",
+						FieldType:   "date",
+						SearchValue: defaultTime.Format(time.RFC3339),
+						Operator:    "<>",
+						IsDynamic:   true,
+					})
+
+					var sabunReq item.ItemsRequest
+					var sabunSorts []*item.SortItem
+					sabunSorts = append(sabunSorts, &item.SortItem{
+						SortKey:   "sakuseidate.value",
+						SortValue: "descend",
+					})
+					sabunReq.Sorts = sabunSorts
+					sabunReq.ConditionList = sabunConditions
+					sabunReq.ConditionType = "and"
+					sabunReq.DatastoreId = p.datastoreID
+					sabunReq.PageSize = 500
+					sabunReq.AppId = p.appID
+					sabunReq.Owners = accesskeys
+					sabunReq.Database = p.db
+					sabunReq.IsOrigin = true
+
+					sabunResp, err := itemService.FindItems(context.TODO(), &sabunReq, opss)
+					if err != nil {
+						loggerx.ErrorLog("getRepaymentData", err.Error())
+						return err
+					}
+
+					if sabunResp.Total > 0 {
+						floatNum, err := strconv.ParseFloat(sabunResp.GetItems()[0].Items["syokyaku"].GetValue(), 64)
+						if err != nil {
+							loggerx.ErrorLog("getRepaymentData", err.Error())
+						}
+
+						itemsData["shiwakekingaku"] = &item.Value{
+							DataType: "number",
+							Value:    fmt.Sprintf("%f", fv-floatNum),
+						}
+					}
+
+					its := &item.ListItems{
+						Items: itemsData,
+					}
+
+					items = append(items, its)
+
+					index++
+					branchCount++
+				}
+			}
+
+			var opss client.CallOption = func(o *client.CallOptions) {
+				o.RequestTimeout = time.Hour * 1
+				o.DialTimeout = time.Hour * 1
+			}
+
+			ct := grpc.NewClient(
+				grpc.MaxSendMsgSize(100*1024*1024), grpc.MaxRecvMsgSize(100*1024*1024),
+			)
+
+			itemService := item.NewItemService("database", ct)
+
+			var delreq item.DeleteItemsRequest
+			delreq.DatastoreId = p.dsMap["shiwake"]
+			delreq.AppId = p.appID
+			delreq.UserId = p.userID
+			delreq.Database = p.db
+			delreq.ConditionType = "and"
+
+			defaultTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
+
+			var conditions []*item.Condition
+			conditions = append(conditions, &item.Condition{
+				FieldId:       "shiwaketype",
+				FieldType:     "text",
+				SearchValue:   "2",
+				Operator:      "=",
+				IsDynamic:     true,
+				ConditionType: "",
+			})
+			conditions = append(conditions, &item.Condition{
+				FieldId:       "kakuteidate",
+				FieldType:     "date",
+				SearchValue:   defaultTime.Format(time.RFC3339),
+				Operator:      "=",
+				IsDynamic:     true,
+				ConditionType: "",
+			})
+			delreq.ConditionList = conditions
+
+			_, err = itemService.DeleteItems(context.TODO(), &delreq, opss)
+			if err != nil {
+				loggerx.ErrorLog("getRepaymentData", err.Error())
+				return err
+			}
+
+			response, err := importData(p, items)
+			if err != nil {
+				loggerx.ErrorLog("getRepaymentData", err.Error())
+				return err
+			}
+			fmt.Printf("%+v", response)
+		}
+	} else {
+		conditions := []*item.Condition{}
+		conditions = append(conditions, &item.Condition{
+			FieldId:     "syokyakuymd",
+			FieldType:   "date",
+			SearchValue: p.handleMonth + "-01",
+			Operator:    ">=",
+			IsDynamic:   true,
+		})
+
+		conditions = append(conditions, &item.Condition{
+			FieldId:     "syokyakuymd",
+			FieldType:   "date",
+			SearchValue: p.handleMonth + "-" + lastDay,
+			Operator:    "<=",
+			IsDynamic:   true,
+		})
+
+		accesskeys := sessionx.GetAccessKeys(p.db, p.userID, p.datastoreID, "R")
 
 		var req item.ItemsRequest
 		var sorts []*item.SortItem
@@ -2720,15 +3059,10 @@ func buildRepaymentData(p InsertParam) (e error) {
 			SortKey:   "shisanbangoueda.value",
 			SortValue: "ascend",
 		})
-		/* sorts = append(sorts, &item.SortItem{
-			SortKey:   "keiyakuno.value",
-			SortValue: "ascend",
-		}) */
 		req.Sorts = sorts
 		req.ConditionList = conditions
 		req.ConditionType = "and"
 		req.DatastoreId = p.datastoreID
-		req.PageIndex = index + 1
 		req.PageSize = 500
 		req.AppId = p.appID
 		req.Owners = accesskeys
@@ -2741,26 +3075,12 @@ func buildRepaymentData(p InsertParam) (e error) {
 			return err
 		}
 
-		/* var data ItemData
-
-		for _, item := range itemResp.GetItems() {
-			itemMap := item.Items
-			data = append(data, itemMap)
-		} */
-
 		// 分录数据编辑
 		var items ImportData
 		index := 1
 		for count, repayItem := range itemResp.GetItems() {
 			// 契约登录的场合
 			pattern := getPattern("02001", p.jouData)
-			/* keiyakuno := repayItem["keiyakuno"].GetValue()
-			keiyakuAccesskeys := sessionx.GetAccessKeys(p.db, p.userID, p.dsMap["keiyakudaicho"], "R")
-			itemMap, err := getKeiyakuData(p.db, p.appID, p.dsMap["keiyakudaicho"], keiyakuno, keiyakuAccesskeys)
-			if err != nil {
-				loggerx.ErrorLog("getRepaymentData", err.Error())
-				return err
-			} */
 
 			branchCount := 1
 			for line, sub := range pattern.GetSubjects() {
@@ -2862,6 +3182,17 @@ func buildRepaymentData(p InsertParam) (e error) {
 					Value:    strconv.Itoa(index),
 				}
 
+				if repayItem.Items["kakuteidate"].GetValue() != "" {
+					itemsData["shiwakekingaku"] = &item.Value{
+						DataType: "number",
+						Value:    fmt.Sprintf("%f", -fv),
+					}
+					itemsData["kakuteidate"] = &item.Value{
+						DataType: "date",
+						Value:    defaultTime.Format(time.RFC3339),
+					}
+				}
+
 				its := &item.ListItems{
 					Items: itemsData,
 				}
@@ -2893,8 +3224,8 @@ func buildRepaymentData(p InsertParam) (e error) {
 
 		defaultTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
 
-		var conditions []*item.Condition
-		conditions = append(conditions, &item.Condition{
+		var delConditions []*item.Condition
+		delConditions = append(delConditions, &item.Condition{
 			FieldId:       "shiwaketype",
 			FieldType:     "text",
 			SearchValue:   "2",
@@ -2902,7 +3233,7 @@ func buildRepaymentData(p InsertParam) (e error) {
 			IsDynamic:     true,
 			ConditionType: "",
 		})
-		conditions = append(conditions, &item.Condition{
+		delConditions = append(delConditions, &item.Condition{
 			FieldId:       "kakuteidate",
 			FieldType:     "date",
 			SearchValue:   defaultTime.Format(time.RFC3339),
@@ -2910,7 +3241,7 @@ func buildRepaymentData(p InsertParam) (e error) {
 			IsDynamic:     true,
 			ConditionType: "",
 		})
-		delreq.ConditionList = conditions
+		delreq.ConditionList = delConditions
 
 		_, err = itemService.DeleteItems(context.TODO(), &delreq, opss)
 		if err != nil {

@@ -97,7 +97,7 @@ func initAuthRouterWeb(router *gin.Engine) {
 		appRoute := v1.Group("/app")
 		// 通过ID查找单个APP记录
 		appRoute.GET("/apps/:a_id", app.FindApp)
-		// 更新月次设定
+		// 更新基本设定
 		appRoute.PUT("/apps/:a_id/swkSetting", app.ModifySwkSetting)
 	}
 

@@ -40,6 +40,7 @@ message App {
 	string app_type = 17;
 	Configs configs = 19; // app配置
 	bool swk_control = 20; 
+	string confim_method = 21;
 }
 // AppConfigs
 message Configs {
@@ -189,6 +190,7 @@ message ModifySwkSettingRequest{
 	string database = 2;
 	string handleMonth = 3;
 	bool swk_control = 4;
+	string confim_method = 5;
 }
 
 message ModifySwkSettingResponse{

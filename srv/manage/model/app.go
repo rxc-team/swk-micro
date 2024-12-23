@@ -47,6 +47,7 @@ type App struct {
 	Remarks      string             `json:"remarks" bson:"remarks"`
 	Configs      Configs            `json:"configs" bson:"configs"`
 	SwkControl   bool               `json:"swk_control" bson:"swk_control"`
+	ConfimMethod string             `json:"confim_method" bson:"confim_method"`
 	CreatedAt    time.Time          `json:"created_at" bson:"created_at"`
 	CreatedBy    string             `json:"created_by" bson:"created_by"`
 	UpdatedAt    time.Time          `json:"updated_at" bson:"updated_at"`
@@ -85,6 +86,7 @@ func (a *App) ToProto() *app.App {
 		FollowApp:    a.FollowApp,
 		Remarks:      a.Remarks,
 		SwkControl:   a.SwkControl,
+		ConfimMethod: a.ConfimMethod,
 		CreatedAt:    a.CreatedAt.String(),
 		CreatedBy:    a.CreatedBy,
 		UpdatedAt:    a.UpdatedAt.String(),
@@ -1211,8 +1213,8 @@ func NextMonth(ctx context.Context, db string, conf Config) (err error) {
 	return nil
 }
 
-// ModifySwkSetting 更新月次设定
-func ModifySwkSetting(ctx context.Context, db string, appID string, handleMonth string, swkControl bool) (err error) {
+// ModifySwkSetting 更新基本设定
+func ModifySwkSetting(ctx context.Context, db string, appID string, handleMonth string, swkControl bool, confimMethod string) (err error) {
 	client := database.New()
 	c := client.Database(database.GetDBName(db)).Collection(AppsCollection)
 
@@ -1224,6 +1226,7 @@ func ModifySwkSetting(ctx context.Context, db string, appID string, handleMonth 
 		"$set": bson.M{
 			"configs.syori_ym": handleMonth,
 			"swk_control":      swkControl,
+			"confim_method":    confimMethod,
 		},
 	}
 

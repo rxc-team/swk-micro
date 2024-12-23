@@ -284,11 +284,11 @@ func (a *App) NextMonth(ctx context.Context, req *app.NextMonthRequest, rsp *app
 	return nil
 }
 
-// ModifySwkSetting 更新月次设定
+// ModifySwkSetting 更新基本设定
 func (a *App) ModifySwkSetting(ctx context.Context, req *app.ModifySwkSettingRequest, rsp *app.ModifySwkSettingResponse) error {
 	utils.InfoLog(ActionModifySwkSetting, utils.MsgProcessStarted)
 
-	err := model.ModifySwkSetting(ctx, req.GetDatabase(), req.GetAppId(), req.GetHandleMonth(), req.GetSwkControl())
+	err := model.ModifySwkSetting(ctx, req.GetDatabase(), req.GetAppId(), req.GetHandleMonth(), req.GetSwkControl(), req.GetConfimMethod())
 	if err != nil {
 		utils.ErrorLog(ActionModifySwkSetting, err.Error())
 		return err

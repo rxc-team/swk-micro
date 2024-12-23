@@ -92,7 +92,7 @@ func (a *App) FindUserApp(c *gin.Context) {
 	})
 }
 
-// ModifySwkSetting 更新月次设定
+// ModifySwkSetting 更新基本设定
 // @Router /apps/{a_id}/swkSetting
 func (a *App) ModifySwkSetting(c *gin.Context) {
 	loggerx.InfoLog(c, ActionModifySwkSetting, loggerx.MsgProcessStarted)
