@@ -5,10 +5,12 @@ import (
 	"errors"
 	"time"
 
+	"github.com/micro/go-micro/v2/client"
 	"go.mongodb.org/mongo-driver/mongo"
 	"rxcsoft.cn/pit3/srv/database/model"
 	"rxcsoft.cn/pit3/srv/database/proto/item"
 	"rxcsoft.cn/pit3/srv/database/utils"
+	"rxcsoft.cn/pit3/srv/journal/proto/journal"
 )
 
 // Item 台账数据
@@ -36,6 +38,7 @@ const (
 	ActionConfimItem            = "ConfimItem"
 	ActionGenerateItem          = "GenerateItem"
 	ActionGenerateShoukyakuItem = "GenerateShoukyakuItem"
+	ActionSwkDownload           = "SwkDownload"
 )
 
 // FindItems 获取台账下的所有数据
@@ -580,5 +583,61 @@ func (i *Item) ChangeStatus(ctx context.Context, req *item.StatusRequest, rsp *i
 	}
 
 	utils.InfoLog(ActionChangeStatus, utils.MsgProcessEnded)
+	return nil
+}
+
+// FindItems 获取台账下的所有数据
+func (i *Item) SwkDownload(ctx context.Context, req *item.DownloadRequest, stream item.ItemService_DownloadStream) error {
+	utils.InfoLog(ActionSwkDownload, utils.MsgProcessStarted)
+
+	var conditions []*model.Condition
+	for _, condition := range req.GetConditionList() {
+		conditions = append(conditions, &model.Condition{
+			FieldID:       condition.GetFieldId(),
+			FieldType:     condition.GetFieldType(),
+			SearchValue:   condition.GetSearchValue(),
+			Operator:      condition.GetOperator(),
+			IsDynamic:     condition.GetIsDynamic(),
+			ConditionType: condition.GetConditionType(),
+		})
+	}
+	var sorts []*model.SortItem
+	for _, sort := range req.GetSorts() {
+		sorts = append(sorts, &model.SortItem{
+			SortKey:   sort.GetSortKey(),
+			SortValue: sort.GetSortValue(),
+		})
+	}
+
+	params := model.ItemsParam{
+		AppID:         req.GetAppId(),
+		DatastoreID:   req.GetDatastoreId(),
+		ConditionType: req.GetConditionType(),
+		ConditionList: conditions,
+		Sorts:         sorts,
+		Owners:        req.GetOwners(),
+	}
+
+	journalService := journal.NewJournalService("journal", client.DefaultClient)
+	var journal journal.FindDownloadSettingRequest
+
+	// 从共通获取
+	journal.AppId = req.GetAppId()
+	journal.Database = req.GetDatabase()
+
+	downloadInfo, jerr := journalService.FindDownloadSetting(context.TODO(), &journal)
+	if jerr != nil {
+		utils.ErrorLog(ActionSwkDownload, jerr.Error())
+		return jerr
+	}
+
+	err := model.SwkDownloadItems(req.GetDatabase(), params, stream, downloadInfo)
+	if err != nil {
+		utils.ErrorLog(ActionSwkDownload, err.Error())
+		return err
+	}
+
+	utils.InfoLog(ActionSwkDownload, utils.MsgProcessEnded)
+
 	return nil
 }

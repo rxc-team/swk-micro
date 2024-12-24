@@ -38,6 +38,7 @@ service ItemService {
 	// single stream
 	rpc Download(DownloadRequest) returns (stream DownloadResponse) {} 
 	rpc FindAndModifyFile(FindRequest) returns (stream FindResponse) {}
+	rpc SwkDownload(DownloadRequest) returns (stream DownloadResponse) {} 
 }
 
 // 条件

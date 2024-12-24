@@ -22,6 +22,7 @@ import (
 
 	"rxcsoft.cn/pit3/srv/database/proto/item"
 	"rxcsoft.cn/pit3/srv/database/utils"
+	"rxcsoft.cn/pit3/srv/journal/proto/journal"
 	"rxcsoft.cn/utils/helpers"
 	database "rxcsoft.cn/utils/mongo"
 )
@@ -296,13 +297,6 @@ func DownloadItems(db string, params ItemsParam, stream item.ItemService_Downloa
 		return err
 	}
 
-	// 契约台账履历表取得
-	zougenrireki, err := FindDatastoreByKey(db, params.AppID, "zougenrireki")
-	if err != nil {
-		utils.ErrorLog("ModifyContract", err.Error())
-		return err
-	}
-
 	skip := (params.PageIndex - 1) * params.PageSize
 	limit := params.PageSize
 
@@ -344,43 +338,6 @@ func DownloadItems(db string, params ItemsParam, stream item.ItemService_Downloa
 		"label_time":   1,
 		"status":       1,
 	}
-
-	lookup := bson.M{
-		"from": "item_" + zougenrireki.DatastoreID,
-		"let": bson.M{
-			"koushinbangouoya": "$items.koushinbangouoya.value",
-			"koushinbangoueda": "$items.koushinbangoueda.value",
-		},
-		"pipeline": []bson.M{
-			{
-				"$match": bson.M{
-					"$expr": bson.M{
-						"$and": []bson.M{
-							{"$eq": []interface{}{"$items.koushinbangouoya.value", "$$koushinbangouoya"}},
-							{"$eq": []interface{}{"$items.koushinbangoueda.value", "$$koushinbangoueda"}},
-						},
-					},
-				},
-			},
-		},
-		"as": "related_items",
-	}
-
-	pipe = append(pipe, bson.M{
-		"$lookup": lookup,
-	})
-
-	// 使用 $unwind 展开关联结果（如果存在多个结果，可以根据需要调整）
-	unwind := bson.M{
-		"path":                       "$related_items",
-		"preserveNullAndEmptyArrays": true, // 保留原始数据，避免没有匹配项时丢失数据
-	}
-	pipe = append(pipe, bson.M{
-		"$unwind": unwind,
-	})
-
-	// 结果合并
-	project["related_items"] = 1
 
 	// 关联台账
 	for _, relation := range ds.Relations {
@@ -533,9 +490,9 @@ func DownloadItems(db string, params ItemsParam, stream item.ItemService_Downloa
 		project["items."+f.FieldID] = "$items." + f.FieldID
 	}
 
-	/* pipe = append(pipe, bson.M{
+	pipe = append(pipe, bson.M{
 		"$project": project,
-	}) */
+	})
 
 	queryJSON, _ := json.Marshal(pipe)
 	utils.DebugLog("FindItem", fmt.Sprintf("query: [ %s ]", queryJSON))
@@ -5117,4 +5074,163 @@ func getMonthLastDay(date time.Time) (day string) {
 	}
 
 	return strconv.Itoa(lastday)
+}
+
+// DownloadItems 下载台账数据
+func SwkDownloadItems(db string, params ItemsParam, stream item.ItemService_DownloadStream, downloadInfo *journal.FindDownloadSettingResponse) error {
+	client := database.New()
+	c := client.Database(database.GetDBName(db)).Collection(GetItemCollectionName(params.DatastoreID))
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+	defer cancel()
+
+	// 默认过滤掉被软删除的数据
+	query := bson.M{
+		"app_id":       params.AppID,
+		"datastore_id": params.DatastoreID,
+	}
+
+	ds, err := getDatastore(db, params.DatastoreID)
+	if err != nil {
+		utils.ErrorLog("SwkDownloadItems", err.Error())
+		return err
+	}
+
+	skip := (params.PageIndex - 1) * params.PageSize
+	limit := params.PageSize
+
+	pipe := []bson.M{
+		{
+			"$match": query,
+		},
+	}
+
+	if skip > 0 {
+		pipe = append(pipe, bson.M{
+			"$skip": skip,
+		})
+	}
+	if limit > 0 {
+		pipe = append(pipe, bson.M{
+			"$limit": limit,
+		})
+	}
+
+	project := bson.M{
+		"_id":          0,
+		"item_id":      1,
+		"app_id":       1,
+		"datastore_id": 1,
+		"owners":       1,
+		"check_type":   1,
+		"check_status": 1,
+		"created_at":   1,
+		"created_by":   1,
+		"updated_at":   1,
+		"updated_by":   1,
+		"checked_at":   1,
+		"checked_by":   1,
+		"label_time":   1,
+		"status":       1,
+	}
+
+	// 关联台账
+	for _, relation := range ds.Relations {
+		let := bson.M{}
+		and := make([]bson.M, 0)
+		for relationKey, localKey := range relation.Fields {
+			let[localKey] = "$items." + localKey + ".value"
+
+			and = append(and, bson.M{
+				"$eq": []interface{}{"$items." + relationKey + ".value", "$$" + localKey},
+			})
+		}
+
+		pp := []bson.M{
+			{
+				"$match": bson.M{
+					"$expr": bson.M{
+						"$and": and,
+					},
+				},
+			},
+		}
+
+		lookup := bson.M{
+			"from":     "item_" + relation.DatastoreId,
+			"let":      let,
+			"pipeline": pp,
+			"as":       relation.RelationId,
+		}
+
+		unwind := bson.M{
+			"path":                       "$" + relation.RelationId,
+			"preserveNullAndEmptyArrays": true,
+		}
+
+		pipe = append(pipe, bson.M{
+			"$lookup": lookup,
+		})
+		pipe = append(pipe, bson.M{
+			"$unwind": unwind,
+		})
+	}
+
+	for _, f := range downloadInfo.FieldRule {
+		if f.SettingMethod != "1" && f.FieldType != "function" {
+			project["items."+f.FieldId] = "$items." + f.FieldId
+		}
+		if f.FieldType == "function" {
+			var formula bson.M
+			err := json.Unmarshal([]byte(f.EditContent), &formula)
+			if err != nil {
+				utils.ErrorLog("DownloadItems", err.Error())
+				return err
+			}
+
+			if len(formula) > 0 {
+				project["items."+f.FieldId+".value"] = formula
+			} else {
+				project["items."+f.FieldId+".value"] = ""
+			}
+
+			// 当前数据本身
+			project["items."+f.FieldId+".data_type"] = f.FieldType
+			continue
+		}
+
+	}
+
+	pipe = append(pipe, bson.M{
+		"$project": project,
+	})
+
+	queryJSON, _ := json.Marshal(pipe)
+	utils.DebugLog("SwkDownloadItems", fmt.Sprintf("query: [ %s ]", queryJSON))
+
+	opt := options.Aggregate()
+	opt.SetAllowDiskUse(true)
+	opt.SetBatchSize(int32(params.PageSize))
+
+	cur, err := c.Aggregate(ctx, pipe, opt)
+	if err != nil {
+		utils.ErrorLog("SwkDownloadItems", err.Error())
+		return err
+	}
+	defer cur.Close(ctx)
+
+	for cur.Next(ctx) {
+		var it Item
+		err := cur.Decode(&it)
+		if err != nil {
+			utils.ErrorLog("SwkDownloadItems", err.Error())
+			return err
+		}
+
+		if err := stream.Send(&item.DownloadResponse{Item: it.ToProto()}); err != nil {
+			utils.ErrorLog("SwkDownloadItems", err.Error())
+			return err
+		}
+	}
+
+	return nil
 }

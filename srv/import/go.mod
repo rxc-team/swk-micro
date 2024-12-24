@@ -13,6 +13,7 @@ replace (
 	rxcsoft.cn/pit3/lib/msg => ../../lib/msg
 	rxcsoft.cn/pit3/srv/database => ../database
 	rxcsoft.cn/pit3/srv/global => ../global
+	rxcsoft.cn/pit3/srv/journal => ../journal
 	rxcsoft.cn/pit3/srv/manage => ../manage
 	rxcsoft.cn/pit3/srv/task => ../task
 	rxcsoft.cn/pit3/srv/workflow => ../workflow

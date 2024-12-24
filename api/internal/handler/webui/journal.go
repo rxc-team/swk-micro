@@ -735,7 +735,7 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 			Database:      db,
 		}
 
-		stream, err := itemService.Download(context.TODO(), &dReq, opss)
+		stream, err := itemService.SwkDownload(context.TODO(), &dReq, opss)
 		if err != nil {
 			if err != nil {
 				path := filex.WriteAndSaveFile(domain, appID, []string{err.Error()})
@@ -1027,6 +1027,8 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 									fileStrList = append(fileStrList, f.Name)
 								}
 								result = strings.Join(fileStrList, ",")
+							case "function":
+								result = value.GetValue()
 							default:
 								break
 							}

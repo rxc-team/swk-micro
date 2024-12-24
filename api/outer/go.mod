@@ -43,6 +43,7 @@ replace (
 	rxcsoft.cn/pit3/srv/database => ../../srv/database
 	rxcsoft.cn/pit3/srv/global => ../../srv/global
 	rxcsoft.cn/pit3/srv/import => ../../srv/import
+	rxcsoft.cn/pit3/srv/journal => ../../srv/journal
 	rxcsoft.cn/pit3/srv/manage => ../../srv/manage
 	rxcsoft.cn/pit3/srv/report => ../../srv/report
 	rxcsoft.cn/pit3/srv/storage => ../../srv/storage

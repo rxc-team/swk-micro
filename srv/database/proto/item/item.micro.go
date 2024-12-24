@@ -76,6 +76,7 @@ type ItemService interface {
 	// single stream
 	Download(ctx context.Context, in *DownloadRequest, opts ...client.CallOption) (ItemService_DownloadService, error)
 	FindAndModifyFile(ctx context.Context, in *FindRequest, opts ...client.CallOption) (ItemService_FindAndModifyFileService, error)
+	SwkDownload(ctx context.Context, in *DownloadRequest, opts ...client.CallOption) (ItemService_DownloadService, error)
 }
 
 type itemService struct {
@@ -564,6 +565,19 @@ func (c *itemService) Download(ctx context.Context, in *DownloadRequest, opts ..
 	return &itemServiceDownload{stream}, nil
 }
 
+func (c *itemService) SwkDownload(ctx context.Context, in *DownloadRequest, opts ...client.CallOption) (ItemService_DownloadService, error) {
+	req := c.c.NewRequest(c.name, "ItemService.SwkDownload", &DownloadRequest{})
+	stream, err := c.c.Stream(ctx, req, opts...)
+	if err != nil {
+		return nil, err
+	}
+	if err := stream.Send(in); err != nil {
+		return nil, err
+	}
+	return &itemServiceDownload{stream}, nil
+}
+
+
 type ItemService_DownloadService interface {
 	Context() context.Context
 	SendMsg(interface{}) error
@@ -687,6 +701,7 @@ type ItemServiceHandler interface {
 	// single stream
 	Download(context.Context, *DownloadRequest, ItemService_DownloadStream) error
 	FindAndModifyFile(context.Context, *FindRequest, ItemService_FindAndModifyFileStream) error
+	SwkDownload(context.Context, *DownloadRequest, ItemService_DownloadStream) error
 }
 
 func RegisterItemServiceHandler(s server.Server, hdlr ItemServiceHandler, opts ...server.HandlerOption) error {
@@ -722,6 +737,7 @@ func RegisterItemServiceHandler(s server.Server, hdlr ItemServiceHandler, opts .
 		ImportCheckItem(ctx context.Context, stream server.Stream) error
 		MappingUpload(ctx context.Context, stream server.Stream) error
 		Download(ctx context.Context, stream server.Stream) error
+		SwkDownload(ctx context.Context, stream server.Stream) error
 		FindAndModifyFile(ctx context.Context, stream server.Stream) error
 	}
 	type ItemService struct {
@@ -1020,6 +1036,14 @@ func (h *itemServiceHandler) Download(ctx context.Context, stream server.Stream)
 		return err
 	}
 	return h.ItemServiceHandler.Download(ctx, m, &itemServiceDownloadStream{stream})
+}
+
+func (h *itemServiceHandler) SwkDownload(ctx context.Context, stream server.Stream) error {
+	m := new(DownloadRequest)
+	if err := stream.Recv(m); err != nil {
+		return err
+	}
+	return h.ItemServiceHandler.SwkDownload(ctx, m, &itemServiceDownloadStream{stream})
 }
 
 type ItemService_DownloadStream interface {

@@ -8,6 +8,7 @@ replace (
 	rxcsoft.cn/pit3/lib/logger => ../../lib/logger
 	rxcsoft.cn/pit3/lib/msg => ../../lib/msg
 	rxcsoft.cn/pit3/srv/global => ../global
+	rxcsoft.cn/pit3/srv/journal => ../journal
 	rxcsoft.cn/pit3/srv/manage => ../manage
 	rxcsoft.cn/utils => ../../../utils
 )
@@ -27,6 +28,7 @@ require (
 	go.mongodb.org/mongo-driver v1.5.2
 	rxcsoft.cn/pit3/lib/logger v0.0.0-00010101000000-000000000000
 	rxcsoft.cn/pit3/srv/global v0.0.0-00010101000000-000000000000
+	rxcsoft.cn/pit3/srv/journal v0.0.0-00010101000000-000000000000
 	rxcsoft.cn/pit3/srv/manage v0.0.0-00010101000000-000000000000
 	rxcsoft.cn/utils v0.0.0-00010101000000-000000000000
 )
