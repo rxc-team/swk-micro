@@ -143,18 +143,55 @@ func (f *Journal) ModifyJournal(ctx context.Context, req *journal.ModifyRequest,
 
 // 添加分录下载设定
 func (f *Journal) AddDownloadSetting(ctx context.Context, req *journal.AddDownloadSettingRequest, rsp *journal.AddDownloadSettingResponse) error {
-	var rules []*model.FieldRule
-	for _, r := range req.GetFieldRule() {
-		rule := &model.FieldRule{
-			DownloadName:  r.DownloadName,
-			FieldId:       r.FieldId,
-			EditContent:   r.EditContent,
-			SettingMethod: r.SettingMethod,
-			FieldType:     r.FieldType,
-			DatastoreId:   r.DatastoreId,
-			Format:        r.Format,
+
+	var fieldRules []*model.FieldRule
+
+	for _, rule := range req.GetFieldRule() {
+		var fieldConditions []*model.FieldCondition
+		for _, condition := range rule.GetFieldConditions() {
+			var fieldGroups []*model.FieldGroup
+			for _, group := range condition.GetFieldGroups() {
+				var fieldCons []*model.FieldCon
+				for _, con := range group.GetFieldCons() {
+					fieldCons = append(fieldCons, &model.FieldCon{
+						ConID:       con.ConId,
+						ConName:     con.ConName,
+						ConField:    con.ConField,
+						ConOperator: con.ConOperator,
+						ConValue:    con.ConValue,
+					})
+				}
+
+				fieldGroups = append(fieldGroups, &model.FieldGroup{
+					GroupID:    group.GroupId,
+					GroupName:  group.GroupName,
+					Type:       group.Type,
+					SwitchType: group.SwitchType,
+					FieldCons:  fieldCons,
+				})
+			}
+
+			fieldConditions = append(fieldConditions, &model.FieldCondition{
+				ConditionID:   condition.ConditionId,
+				ConditionName: condition.ConditionName,
+				ThenValue:     condition.ThenValue,
+				ElseValue:     condition.ElseValue,
+				ThenType:      condition.ThenType,
+				ElseType:      condition.ElseType,
+				FieldGroups:   fieldGroups,
+			})
 		}
-		rules = append(rules, rule)
+
+		fieldRules = append(fieldRules, &model.FieldRule{
+			DownloadName:    rule.DownloadName,
+			FieldId:         rule.FieldId,
+			FieldConditions: fieldConditions,
+			SettingMethod:   rule.SettingMethod,
+			FieldType:       rule.FieldType,
+			DatastoreId:     rule.DatastoreId,
+			Format:          rule.Format,
+			EditContent:     rule.EditContent,
+		})
 	}
 
 	params := model.FieldConf{
@@ -167,7 +204,7 @@ func (f *Journal) AddDownloadSetting(ctx context.Context, req *journal.AddDownlo
 		FixedLength:   req.FixedLength,
 		NumberItems:   req.NumberItems,
 		ValidFlag:     req.ValidFlag,
-		FieldRule:     rules,
+		FieldRule:     fieldRules,
 	}
 
 	err := model.AddDownloadSetting(req.GetDatabase(), req.GetAppId(), params)
@@ -176,10 +213,47 @@ func (f *Journal) AddDownloadSetting(ctx context.Context, req *journal.AddDownlo
 		return err
 	}
 
+	utils.InfoLog(ActionAddDownloadSetting, utils.MsgProcessEnded)
+
 	return nil
+
+	// var rules []*model.FieldRule
+	// for _, r := range req.GetFieldRule() {
+	// 	rule := &model.FieldRule{
+	// 		DownloadName:  r.DownloadName,
+	// 		FieldId:       r.FieldId,
+	// 		EditContent:   r.EditContent,
+	// 		SettingMethod: r.SettingMethod,
+	// 		FieldType:     r.FieldType,
+	// 		DatastoreId:   r.DatastoreId,
+	// 		Format:        r.Format,
+	// 	}
+	// 	rules = append(rules, rule)
+	// }
+
+	// params := model.FieldConf{
+	// 	AppId:         req.AppId,
+	// 	LayoutName:    req.LayoutName,
+	// 	CharEncoding:  req.CharEncoding,
+	// 	HeaderRow:     req.HeaderRow,
+	// 	SeparatorChar: req.SeparatorChar,
+	// 	LineBreaks:    req.LineBreaks,
+	// 	FixedLength:   req.FixedLength,
+	// 	NumberItems:   req.NumberItems,
+	// 	ValidFlag:     req.ValidFlag,
+	// 	FieldRule:     rules,
+	// }
+
+	// err := model.AddDownloadSetting(req.GetDatabase(), req.GetAppId(), params)
+	// if err != nil {
+	// 	utils.ErrorLog(ActionAddDownloadSetting, err.Error())
+	// 	return err
+	// }
+
+	// return nil
 }
 
-// 添加分录下载设定
+// 查找分录下载设定
 func (f *Journal) FindDownloadSetting(ctx context.Context, req *journal.FindDownloadSettingRequest, rsp *journal.FindDownloadSettingResponse) error {
 
 	res, err := model.FindDownloadSetting(req.GetDatabase(), req.GetAppId())
@@ -189,6 +263,23 @@ func (f *Journal) FindDownloadSetting(ctx context.Context, req *journal.FindDown
 	}
 
 	*rsp = *res.ToProto()
+
+	utils.InfoLog(ActionFindDownloadSetting, utils.MsgProcessEnded)
+
+	return nil
+}
+
+// 查找分录下载设定
+func (f *Journal) FindDownloadSettings(ctx context.Context, req *journal.FindDownloadSettingsRequest, rsp *journal.FindDownloadSettingsResponse) error {
+
+	res, err := model.FindDownloadSettings(req.GetDatabase(), req.GetAppId())
+	if err != nil {
+		utils.ErrorLog(ActionFindDownloadSetting, err.Error())
+		return err
+	}
+
+	// *rsp = *res.ToProto()
+	*rsp = *model.ConvertToProto(res)
 
 	utils.InfoLog(ActionFindDownloadSetting, utils.MsgProcessEnded)
 

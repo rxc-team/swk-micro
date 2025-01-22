@@ -5181,7 +5181,7 @@ func SwkDownloadItems(db string, params ItemsParam, stream item.ItemService_Down
 		}
 		if f.FieldType == "function" {
 			var formula bson.M
-			err := json.Unmarshal([]byte(f.EditContent), &formula)
+			err := json.Unmarshal([]byte(""), &formula)
 			if err != nil {
 				utils.ErrorLog("DownloadItems", err.Error())
 				return err

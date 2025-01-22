@@ -9,6 +9,7 @@ service JournalService {
 	rpc ModifyJournal(ModifyRequest) returns (ModifyResponse) {}
 	rpc AddDownloadSetting(AddDownloadSettingRequest) returns (AddDownloadSettingResponse) {}
 	rpc FindDownloadSetting(FindDownloadSettingRequest) returns (FindDownloadSettingResponse) {}
+	rpc FindDownloadSettings(FindDownloadSettingsRequest) returns (FindDownloadSettingsResponse) {}
 }
 
 // 分录
@@ -110,13 +111,44 @@ message AddDownloadSettingResponse{
 // 字段规则
 message FieldRule {
 	string download_name = 1;
-	string edit_content = 2;
+	repeated FieldCondition field_conditions =2;
 	string field_id = 3;
-	string setting_method = 4;
-	string field_type=5;
-	string datastore_id=6;
-	string format=7;
+	string setting_method =4;
+	string field_type =5;
+	string datastore_id =6;
+	string format =7;
+	string edit_content=8;
 }
+
+// 自定义条件
+message FieldCondition {
+	string condition_id =1;   
+	string condition_name =2;  
+	repeated FieldGroup field_groups =3;
+	string then_value =4;
+	string else_value =5;
+	string then_type =6;
+	string else_type =7;
+} 
+
+// 条件组
+message FieldGroup {
+	string group_id =1; // 分组ID
+	string group_name =2; // 分组名称
+	string type =3; //
+	string switch_type =4; //
+	repeated FieldCon field_cons =5; // 小条件
+}
+
+// 小条件	
+message FieldCon	 {
+	string con_id =1; // 小条件ID
+	string con_name =2; // 小条件名称
+	string con_field =3; // 小条件左字段
+	string con_operator =4;  // 小条件比较符
+	string con_value =5; // 小条件右字段
+}
+
 
 // 查询分录下载设定
 message FindDownloadSettingRequest{
@@ -135,4 +167,14 @@ message FindDownloadSettingResponse{
     int64 number_items = 8;
 	string valid_flag = 9;      
     repeated FieldRule field_rule = 10;  
+}
+
+// 查询分录下载设定
+message FindDownloadSettingsRequest{
+	string app_id = 1;
+	string database = 2; // 数据库
+}
+
+message FindDownloadSettingsResponse{                 
+    repeated FindDownloadSettingResponse field_conf = 1;  
 }

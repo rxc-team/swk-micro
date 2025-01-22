@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package condition;
+
+service ConditionService {
+	rpc FindConditions(FindConditionsRequest) returns (FindConditionsResponse) {}
+	rpc AddCondition(AddConditionRequest) returns (AddConditionResponse) {}
+}
+
+// 条件
+message Condition {
+	string app_id =1; // 所属APP
+	string condition_id =2; // 条件ID
+	string condition_name =3; // 条件名称
+	repeated Group groups =4; //
+	string then_value =5;
+	string else_value =6;
+	string created_at =7; // 创建时间
+	string created_by =8; // 创建者
+	string updated_at =9; // 更新时间
+	string updated_by =10; // 更新者
+}
+// 条件组
+message Group {
+	string group_id =1; // 分组ID
+	string group_name =2; // 分组名称
+	string type =3; //
+	string switch_type =4; //
+	repeated Con cons =5; // 小条件
+}
+
+// 小条件	
+message Con	 {
+	string con_id =1; // 小条件ID
+	string con_name =2; // 小条件名称
+	string con_field =3; // 小条件左字段
+	string con_operator =4;  // 小条件比较符
+	string con_value =5; // 小条件右字段
+}
+
+// 查找多个条件
+message FindConditionsRequest{
+	string app_id =1; // 所属APP
+	string database =2; // 数据库
+}
+
+// 查找多个条件
+message FindConditionsResponse{
+	repeated Condition conditions =1;
+}
+
+// 添加单条记录
+message AddConditionRequest{
+	string app_id =1; // 所属APP
+	string database =2; // 数据库
+	string condition_id =3; // 条件ID
+	string condition_name =4; // 条件名称
+	repeated Group groups =5; //
+	string then_value =6;
+	string else_value =7;
+}
+
+// 添加单条记录
+message AddConditionResponse{
+}
+
+
+
+
+
+
+
+

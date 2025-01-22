@@ -558,7 +558,6 @@ func (f *Journal) AddDownloadSetting(c *gin.Context) {
 		httpx.GinHTTPError(c, ActionAddDownloadSetting, err)
 		return
 	}
-
 	// 从共通获取
 	req.AppId = sessionx.GetCurrentApp(c)
 	req.Database = sessionx.GetUserCustomer(c)
@@ -593,6 +592,35 @@ func (f *Journal) FindDownloadSetting(c *gin.Context) {
 	req.Database = sessionx.GetUserCustomer(c)
 
 	response, err := journalService.FindDownloadSetting(context.TODO(), &req)
+	if err != nil {
+		httpx.GinHTTPError(c, ActionFindDownloadSetting, err)
+
+		return
+	}
+	loggerx.SuccessLog(c, ActionFindDownloadSetting, fmt.Sprintf(loggerx.MsgProcesSucceed, ActionFindDownloadSetting))
+
+	loggerx.InfoLog(c, ActionFindDownloadSetting, loggerx.MsgProcessEnded)
+	c.JSON(200, httpx.Response{
+		Status:  0,
+		Message: msg.GetMsg("ja-JP", msg.Info, msg.I004, fmt.Sprintf(httpx.Temp, DatastoreProcessName, ActionFindDownloadSetting)),
+		Data:    response,
+	})
+}
+
+// FindDownloadSetting 查询分录下载设置
+// @Router download/find[GET]
+func (f *Journal) FindDownloadSettings(c *gin.Context) {
+	loggerx.InfoLog(c, ActionFindDownloadSetting, loggerx.MsgProcessStarted)
+
+	journalService := journal.NewJournalService("journal", client.DefaultClient)
+
+	var req journal.FindDownloadSettingsRequest
+
+	// 从共通获取
+	req.AppId = sessionx.GetCurrentApp(c)
+	req.Database = sessionx.GetUserCustomer(c)
+
+	response, err := journalService.FindDownloadSettings(context.TODO(), &req)
 	if err != nil {
 		httpx.GinHTTPError(c, ActionFindDownloadSetting, err)
 
@@ -768,14 +796,14 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 					FieldName: rule.DownloadName,
 					FieldType: "text",
 					FieldId:   "#",
-					Prefix:    rule.EditContent,
+					Prefix:    "",
 				})
 			} else {
 				fields = append(fields, &typesx.DownloadField{
 					FieldName: rule.DownloadName,
 					FieldType: rule.FieldType,
 					FieldId:   rule.FieldId,
-					Prefix:    rule.EditContent,
+					Prefix:    "",
 					Format:    rule.Format,
 				})
 			}

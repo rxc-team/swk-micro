@@ -77,6 +77,8 @@ func initAuthRouterWeb(router *gin.Engine) {
 		journalRoute.POST("/download/setting", journal.AddDownloadSetting)
 		// 查询分录下载设置
 		journalRoute.GET("/download/find", journal.FindDownloadSetting)
+		// 查询分录下载设置
+		journalRoute.GET("/download/findSettings", journal.FindDownloadSettings)
 		// 分录下载
 		journalRoute.GET("/download", journal.SwkDownload)
 	}
@@ -90,6 +92,15 @@ func initAuthRouterWeb(router *gin.Engine) {
 		subjectRoute.POST("/subjects", subject.ImportSubject)
 		// 修改科目记录
 		subjectRoute.PUT("/subjects/:s_key", subject.ModifySubject)
+	}
+
+	condition := new(webui.Condition)
+	{
+		conditionRoute := v1.Group("/condition")
+		// 添加条件
+		conditionRoute.POST("/conditions", condition.AddCondition)
+		// 查找多个条件
+		conditionRoute.GET("/conditions", condition.FindConditions)
 	}
 
 	// app

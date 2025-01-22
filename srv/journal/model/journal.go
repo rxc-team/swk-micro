@@ -66,13 +66,41 @@ type (
 
 	// FieldRule规则
 	FieldRule struct {
-		DownloadName  string `json:"download_name" bson:"download_name"`
-		FieldId       string `json:"field_id" bson:"field_id"`
-		EditContent   string `json:"edit_content" bson:"edit_content"`
-		SettingMethod string `json:"setting_method" bson:"setting_method"`
-		FieldType     string `json:"field_type" bson:"field_type"`
-		DatastoreId   string `json:"datastore_id" bson:"datastore_id"`
-		Format        string `json:"format" bson:"format"`
+		DownloadName    string            `json:"download_name" bson:"download_name"`
+		FieldId         string            `json:"field_id" bson:"field_id"`
+		FieldConditions []*FieldCondition `json:"field_conditions" bson:"field_conditions"`
+		SettingMethod   string            `json:"setting_method" bson:"setting_method"`
+		FieldType       string            `json:"field_type" bson:"field_type"`
+		DatastoreId     string            `json:"datastore_id" bson:"datastore_id"`
+		Format          string            `json:"format" bson:"format"`
+		EditContent     string            `json:"edit_content" bson:"edit_content"`
+	}
+
+	FieldCondition struct {
+		ConditionID   string        `json:"condition_id" bson:"condition_id"`
+		ConditionName string        `json:"condition_name" bson:"condition_name"`
+		FieldGroups   []*FieldGroup `json:"field_groups" bson:"field_groups"`
+		ThenValue     string        `json:"then_value" bson:"then_value"`
+		ElseValue     string        `json:"else_value" bson:"else_value"`
+		ThenType      string        `json:"then_type" bson:"then_type"`
+		ElseType      string        `json:"else_type" bson:"else_type"`
+	}
+
+	// Journal Group
+	FieldGroup struct {
+		GroupID    string      `json:"group_id" bson:"group_id"`
+		GroupName  string      `json:"group_name" bson:"group_name"`
+		Type       string      `json:"type" bson:"type"`
+		SwitchType string      `json:"switch_type" bson:"switch_type"`
+		FieldCons  []*FieldCon `json:"field_cons" bson:"field_cons"`
+	}
+	// Journal Con
+	FieldCon struct {
+		ConID       string `json:"con_id" bson:"con_id"`
+		ConName     string `json:"con_name" bson:"con_name"`
+		ConField    string `json:"con_field" bson:"con_field"`
+		ConOperator string `json:"con_operator" bson:"con_operator"`
+		ConValue    string `json:"con_value" bson:"con_value"`
 	}
 )
 
@@ -126,6 +154,54 @@ func (w *JSubject) ToProto() *journal.Subject {
 	}
 }
 
+// ToProto 转换为proto数据
+func (w *FieldCondition) ToProto() *journal.FieldCondition {
+	var fieldGroups []*journal.FieldGroup
+
+	for _, group := range w.FieldGroups {
+		fieldGroups = append(fieldGroups, group.ToProto())
+	}
+
+	return &journal.FieldCondition{
+		ConditionId:   w.ConditionID,
+		ConditionName: w.ConditionName,
+		FieldGroups:   fieldGroups,
+		ThenValue:     w.ThenValue,
+		ElseValue:     w.ElseValue,
+		ThenType:      w.ThenType,
+		ElseType:      w.ElseType,
+	}
+}
+
+// ToProto 转换为proto数据
+func (w *FieldGroup) ToProto() *journal.FieldGroup {
+
+	var cons []*journal.FieldCon
+
+	for _, con := range w.FieldCons {
+		cons = append(cons, con.ToProto())
+	}
+
+	return &journal.FieldGroup{
+		GroupId:    w.GroupID,
+		GroupName:  w.GroupName,
+		Type:       w.Type,
+		SwitchType: w.SwitchType,
+		FieldCons:  cons,
+	}
+}
+
+// ToProto 转换为proto数据
+func (w *FieldCon) ToProto() *journal.FieldCon {
+	return &journal.FieldCon{
+		ConId:       w.ConID,
+		ConName:     w.ConName,
+		ConField:    w.ConField,
+		ConOperator: w.ConOperator,
+		ConValue:    w.ConValue,
+	}
+}
+
 // ToProto 转换为 proto 数据
 func (m *FieldConf) ToProto() *journal.FindDownloadSettingResponse {
 	// 创建 FieldRule 的 proto 列表
@@ -150,15 +226,33 @@ func (m *FieldConf) ToProto() *journal.FindDownloadSettingResponse {
 
 // ToProto 转换为 proto 数据
 func (f *FieldRule) ToProto() *journal.FieldRule {
-	return &journal.FieldRule{
-		DownloadName:  f.DownloadName,
-		FieldId:       f.FieldId,
-		EditContent:   f.EditContent,
-		SettingMethod: f.SettingMethod,
-		FieldType:     f.FieldType,
-		DatastoreId:   f.DatastoreId,
-		Format:        f.Format,
+	var fieldConditions []*journal.FieldCondition
+	for _, r := range f.FieldConditions {
+		fieldConditions = append(fieldConditions, r.ToProto())
 	}
+
+	return &journal.FieldRule{
+		DownloadName:    f.DownloadName,
+		FieldId:         f.FieldId,
+		FieldConditions: fieldConditions,
+		SettingMethod:   f.SettingMethod,
+		FieldType:       f.FieldType,
+		DatastoreId:     f.DatastoreId,
+		Format:          f.Format,
+		EditContent:     f.EditContent,
+	}
+}
+
+// ConvertToProto 将 []FieldConf 切片转换为 Protobuf 格式的 FindDownloadSettingsResponse
+func ConvertToProto(fieldConfs []FieldConf) *journal.FindDownloadSettingsResponse {
+	protoResponse := &journal.FindDownloadSettingsResponse{}
+
+	// 遍历 FieldConf 切片，并将每个 FieldConf 转换为 Protobuf 格式
+	for _, fc := range fieldConfs {
+		protoResponse.FieldConf = append(protoResponse.FieldConf, fc.ToProto())
+	}
+
+	return protoResponse
 }
 
 // FindJournals 获取APP下的当前分类的分录
@@ -380,4 +474,42 @@ func FindDownloadSetting(db string, appID string) (fd FieldConf, err error) {
 	}
 
 	return result, nil
+}
+
+// 查询所有分录下载设定
+func FindDownloadSettings(db string, appID string) (fd []FieldConf, err error) {
+	client := database.New()
+	c := client.Database(database.GetDBName(db)).Collection("journals_download")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	query := bson.M{
+		"app_id": appID,
+	}
+
+	// 定义一个切片用于存储查询结果
+	var results []FieldConf
+
+	// 使用 Find 查询所有符合条件的文档
+	cursor, err := c.Find(ctx, query)
+	if err != nil {
+		utils.ErrorLog("FindDownloadSetting", err.Error())
+		return nil, err
+	}
+
+	// 确保在函数返回之前关闭游标
+	defer cursor.Close(ctx)
+
+	// 将游标中的所有数据解码到 results 切片中
+	if err := cursor.All(ctx, &results); err != nil {
+		utils.ErrorLog("FindDownloadSetting", err.Error())
+		return nil, err
+	}
+
+	// 如果没有找到任何数据，返回空切片
+	if len(results) == 0 {
+		return nil, nil
+	}
+
+	return results, nil
 }
