@@ -11,11 +11,6 @@ import (
 	database "rxcsoft.cn/utils/mongo"
 )
 
-// const (
-// 	// JournalCollection journal collection
-// 	JournalCollection = "journals"
-// )
-
 type (
 	// Journal 分录
 	Condition struct {
