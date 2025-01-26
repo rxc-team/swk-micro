@@ -196,6 +196,39 @@ type AttachParam struct {
 	Owners  []string
 }
 
+// 定义相关的结构体
+type FieldRule struct {
+	DownloadName    string            `json:"download_name" bson:"download_name"`
+	FieldId         string            `json:"field_id" bson:"field_id"`
+	FieldConditions []*FieldCondition `json:"field_conditions" bson:"field_conditions"`
+	SettingMethod   string            `json:"setting_method" bson:"setting_method"`
+	FieldType       string            `json:"field_type" bson:"field_type"`
+	DatastoreId     string            `json:"datastore_id" bson:"datastore_id"`
+	Format          string            `json:"format" bson:"format"`
+}
+
+type FieldCondition struct {
+	ConditionID   string        `json:"condition_id" bson:"condition_id"`
+	ConditionName string        `json:"condition_name" bson:"condition_name"`
+	FieldGroups   []*FieldGroup `json:"field_groups" bson:"field_groups"`
+	ThenValue     string        `json:"then_value" bson:"then_value"`
+	ElseValue     string        `json:"else_value" bson:"else_value"`
+}
+
+type FieldGroup struct {
+	GroupID    string      `json:"group_id" bson:"group_id"`
+	GroupName  string      `json:"group_name" bson:"group_name"`
+	Type       string      `json:"type" bson:"type"`               // and or
+	SwitchType string      `json:"switch_type" bson:"switch_type"` // and or
+	FieldCons  []*FieldCon `json:"field_cons" bson:"field_cons"`
+}
+
+type FieldCon struct {
+	ConField    string `json:"con_field" bson:"con_field"`
+	ConOperator string `json:"con_operator" bson:"con_operator"`
+	ConValue    string `json:"con_value" bson:"con_value"`
+}
+
 // ToProto 转换为proto数据
 func (i *Item) ToProto() *item.Item {
 	items := make(map[string]*item.Value, len(i.ItemMap))
@@ -5180,20 +5213,20 @@ func SwkDownloadItems(db string, params ItemsParam, stream item.ItemService_Down
 			project["items."+f.FieldId] = "$items." + f.FieldId
 		}
 		if f.FieldType == "function" {
+			// 生成最终的嵌套 JSON
+			finalJson := generateOptimizedJson(f.FieldConditions)
+
+			jsonData, err := json.MarshalIndent(finalJson, "", "  ")
+			if err != nil {
+				log.Fatalf("Error marshaling JSON: %v", err)
+			}
 			var formula bson.M
-			err := json.Unmarshal([]byte(f.EditContent), &formula)
+			err = json.Unmarshal([]byte(string(jsonData)), &formula)
 			if err != nil {
 				utils.ErrorLog("DownloadItems", err.Error())
 				return err
 			}
-
-			if len(formula) > 0 {
-				project["items."+f.FieldId+".value"] = formula
-			} else {
-				project["items."+f.FieldId+".value"] = ""
-			}
-
-			// 当前数据本身
+			project["items."+f.FieldId+".value"] = formula
 			project["items."+f.FieldId+".data_type"] = f.FieldType
 			continue
 		}
@@ -5233,4 +5266,84 @@ func SwkDownloadItems(db string, params ItemsParam, stream item.ItemService_Down
 	}
 
 	return nil
+}
+
+// 构建fieldCondition的条件
+func buildOptimizedCondition(fieldCondition *journal.FieldCondition) map[string]interface{} {
+	var conditions []map[string]interface{}
+
+	// 遍历每个 fieldGroup，生成条件
+	for _, group := range fieldCondition.FieldGroups {
+		var groupConditions []map[string]interface{}
+		for _, fieldCon := range group.FieldCons {
+			// 根据 con_operator 的值判断是 eq 还是 ne
+			var operator string
+			if fieldCon.ConOperator == "{\"$eq\":[\"a\",\"b\"]}" {
+				operator = "$eq"
+			} else if fieldCon.ConOperator == "{\"$ne\":[\"a\",\"b\"]}" {
+				operator = "$ne"
+			}
+
+			// 添加条件到 groupConditions 中
+			groupConditions = append(groupConditions, map[string]interface{}{
+				operator: []interface{}{
+					"$items." + fieldCon.ConField + ".value", // 动态生成字段名
+					fieldCon.ConValue,
+				},
+			})
+		}
+
+		// 用 $and 或 $or 将多个条件组合起来
+		if group.Type == "and" {
+			conditions = append(conditions, map[string]interface{}{"$and": groupConditions})
+		} else if group.Type == "or" {
+			conditions = append(conditions, map[string]interface{}{"$or": groupConditions})
+		}
+	}
+
+	// 返回生成的条件结构
+	return map[string]interface{}{
+		"if":   conditions,                                      // 这里是所有条件的集合，按顺序连接
+		"then": "$items." + fieldCondition.ThenValue + ".value", // 使用动态生成的字段值
+	}
+}
+
+// 生成 JSON 结构
+func generateOptimizedJson(fieldConditions []*journal.FieldCondition) map[string]interface{} {
+	var previousElseValue interface{}
+
+	// 用来保存生成的 branches
+	var branches []map[string]interface{}
+
+	// 遍历所有 fieldConditions，依次生成条件
+	for i := len(fieldConditions) - 1; i >= 0; i-- { // 从后往前处理，确保正确的顺序
+		condition := buildOptimizedCondition(fieldConditions[i])
+
+		// 将前一个条件的 else 作为当前条件的 else
+		if previousElseValue != nil {
+			condition["else"] = previousElseValue
+		} else {
+			// 第一个条件的 else 就是当前的 elseValue
+			condition["else"] = fieldConditions[i].ElseValue
+		}
+
+		// 更新 previousElseValue 为当前条件
+		previousElseValue = condition
+
+		// 将当前条件加入到 branches 中
+		branches = append([]map[string]interface{}{
+			{
+				"case": condition["if"],
+				"then": condition["then"],
+			},
+		}, branches...)
+	}
+
+	// 最终返回根节点的 $switch，指向第一条条件
+	return map[string]interface{}{
+		"$switch": map[string]interface{}{
+			"branches": branches,
+			"default":  "default_value", // 添加默认值字段及elsevalue
+		},
+	}
 }

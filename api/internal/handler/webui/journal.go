@@ -796,7 +796,7 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 					FieldName: rule.DownloadName,
 					FieldType: "text",
 					FieldId:   "#",
-					Prefix:    "",
+					Prefix:    rule.EditContent,
 				})
 			} else {
 				fields = append(fields, &typesx.DownloadField{
