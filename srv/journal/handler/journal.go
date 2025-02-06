@@ -169,16 +169,37 @@ func (f *Journal) AddDownloadSetting(ctx context.Context, req *journal.AddDownlo
 					SwitchType: group.SwitchType,
 					FieldCons:  fieldCons,
 				})
+
+			}
+
+			var thenCustomFields []*model.CustomField
+			for _, customfield := range condition.GetThenCustomFields() {
+				thenCustomFields = append(thenCustomFields, &model.CustomField{
+					CustomFieldType:  customfield.CustomFieldType,
+					CustomFieldValue: customfield.CustomFieldValue,
+				})
+			}
+
+			var elseCustomFields []*model.CustomField
+			for _, customfield := range condition.GetElseCustomFields() {
+				elseCustomFields = append(elseCustomFields, &model.CustomField{
+					CustomFieldType:  customfield.CustomFieldType,
+					CustomFieldValue: customfield.CustomFieldValue,
+				})
 			}
 
 			fieldConditions = append(fieldConditions, &model.FieldCondition{
-				ConditionID:   condition.ConditionId,
-				ConditionName: condition.ConditionName,
-				ThenValue:     condition.ThenValue,
-				ElseValue:     condition.ElseValue,
-				ThenType:      condition.ThenType,
-				ElseType:      condition.ElseType,
-				FieldGroups:   fieldGroups,
+				ConditionID:      condition.ConditionId,
+				ConditionName:    condition.ConditionName,
+				ThenValue:        condition.ThenValue,
+				ElseValue:        condition.ElseValue,
+				ThenType:         condition.ThenType,
+				ElseType:         condition.ElseType,
+				ThenCustomType:   condition.ThenCustomType,
+				ElseCustomType:   condition.ElseCustomType,
+				FieldGroups:      fieldGroups,
+				ThenCustomFields: thenCustomFields,
+				ElseCustomFields: elseCustomFields,
 			})
 		}
 
@@ -191,6 +212,8 @@ func (f *Journal) AddDownloadSetting(ctx context.Context, req *journal.AddDownlo
 			DatastoreId:     rule.DatastoreId,
 			Format:          rule.Format,
 			EditContent:     rule.EditContent,
+			ElseValue:       rule.ElseValue,
+			ElseType:        rule.ElseType,
 		})
 	}
 

@@ -118,6 +118,8 @@ message FieldRule {
 	string datastore_id =6;
 	string format =7;
 	string edit_content=8;
+	string else_value =9;
+	string else_type =10;
 }
 
 // 自定义条件
@@ -129,6 +131,10 @@ message FieldCondition {
 	string else_value =5;
 	string then_type =6;
 	string else_type =7;
+	string then_custom_type =8;
+	string else_custom_type =9;
+	repeated CustomField then_custom_fields =10;
+	repeated CustomField else_custom_fields =11;
 } 
 
 // 条件组
@@ -141,12 +147,18 @@ message FieldGroup {
 }
 
 // 小条件	
-message FieldCon	 {
+message FieldCon {
 	string con_id =1; // 小条件ID
 	string con_name =2; // 小条件名称
 	string con_field =3; // 小条件左字段
 	string con_operator =4;  // 小条件比较符
 	string con_value =5; // 小条件右字段
+}
+
+// 自定义字段
+message CustomField {
+	string custom_field_type =1; // 自定义字段类型
+	string custom_field_value =2; // 自定义字段名称
 }
 
 

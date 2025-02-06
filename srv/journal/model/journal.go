@@ -74,16 +74,22 @@ type (
 		DatastoreId     string            `json:"datastore_id" bson:"datastore_id"`
 		Format          string            `json:"format" bson:"format"`
 		EditContent     string            `json:"edit_content" bson:"edit_content"`
+		ElseValue       string            `json:"else_value" bson:"else_value"`
+		ElseType        string            `json:"else_type" bson:"else_type"`
 	}
 
 	FieldCondition struct {
-		ConditionID   string        `json:"condition_id" bson:"condition_id"`
-		ConditionName string        `json:"condition_name" bson:"condition_name"`
-		FieldGroups   []*FieldGroup `json:"field_groups" bson:"field_groups"`
-		ThenValue     string        `json:"then_value" bson:"then_value"`
-		ElseValue     string        `json:"else_value" bson:"else_value"`
-		ThenType      string        `json:"then_type" bson:"then_type"`
-		ElseType      string        `json:"else_type" bson:"else_type"`
+		ConditionID      string         `json:"condition_id" bson:"condition_id"`
+		ConditionName    string         `json:"condition_name" bson:"condition_name"`
+		FieldGroups      []*FieldGroup  `json:"field_groups" bson:"field_groups"`
+		ThenValue        string         `json:"then_value" bson:"then_value"`
+		ElseValue        string         `json:"else_value" bson:"else_value"`
+		ThenType         string         `json:"then_type" bson:"then_type"`
+		ElseType         string         `json:"else_type" bson:"else_type"`
+		ThenCustomType   string         `json:"then_custom_type" bson:"then_custom_type"`
+		ElseCustomType   string         `json:"else_custom_type" bson:"else_custom_type"`
+		ThenCustomFields []*CustomField `json:"then_custom_fields" bson:"then_custom_fields"`
+		ElseCustomFields []*CustomField `json:"elsen_custom_fields" bson:"else_custom_fields"`
 	}
 
 	// Journal Group
@@ -101,6 +107,12 @@ type (
 		ConField    string `json:"con_field" bson:"con_field"`
 		ConOperator string `json:"con_operator" bson:"con_operator"`
 		ConValue    string `json:"con_value" bson:"con_value"`
+	}
+
+	// CustomField
+	CustomField struct {
+		CustomFieldType  string `json:"custom_field_type" bson:"custom_field_type"`
+		CustomFieldValue string `json:"custom_field_value" bson:"custom_field_value"`
 	}
 )
 
@@ -162,14 +174,30 @@ func (w *FieldCondition) ToProto() *journal.FieldCondition {
 		fieldGroups = append(fieldGroups, group.ToProto())
 	}
 
+	var thenCustomFields []*journal.CustomField
+
+	for _, fields := range w.ThenCustomFields {
+		thenCustomFields = append(thenCustomFields, fields.ToProto())
+	}
+
+	var elseCustomFields []*journal.CustomField
+
+	for _, fields := range w.ElseCustomFields {
+		elseCustomFields = append(elseCustomFields, fields.ToProto())
+	}
+
 	return &journal.FieldCondition{
-		ConditionId:   w.ConditionID,
-		ConditionName: w.ConditionName,
-		FieldGroups:   fieldGroups,
-		ThenValue:     w.ThenValue,
-		ElseValue:     w.ElseValue,
-		ThenType:      w.ThenType,
-		ElseType:      w.ElseType,
+		ConditionId:      w.ConditionID,
+		ConditionName:    w.ConditionName,
+		FieldGroups:      fieldGroups,
+		ThenValue:        w.ThenValue,
+		ElseValue:        w.ElseValue,
+		ThenType:         w.ThenType,
+		ElseType:         w.ElseType,
+		ThenCustomType:   w.ThenCustomType,
+		ElseCustomType:   w.ElseCustomType,
+		ThenCustomFields: thenCustomFields,
+		ElseCustomFields: elseCustomFields,
 	}
 }
 
@@ -199,6 +227,14 @@ func (w *FieldCon) ToProto() *journal.FieldCon {
 		ConField:    w.ConField,
 		ConOperator: w.ConOperator,
 		ConValue:    w.ConValue,
+	}
+}
+
+// ToProto 转换为proto数据
+func (w *CustomField) ToProto() *journal.CustomField {
+	return &journal.CustomField{
+		CustomFieldType:  w.CustomFieldType,
+		CustomFieldValue: w.CustomFieldValue,
 	}
 }
 
@@ -240,6 +276,8 @@ func (f *FieldRule) ToProto() *journal.FieldRule {
 		DatastoreId:     f.DatastoreId,
 		Format:          f.Format,
 		EditContent:     f.EditContent,
+		ElseValue:       f.ElseValue,
+		ElseType:        f.ElseType,
 	}
 }
 
