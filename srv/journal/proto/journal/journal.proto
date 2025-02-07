@@ -9,6 +9,8 @@ service JournalService {
 	rpc ModifyJournal(ModifyRequest) returns (ModifyResponse) {}
 	rpc AddDownloadSetting(AddDownloadSettingRequest) returns (AddDownloadSettingResponse) {}
 	rpc FindDownloadSetting(FindDownloadSettingRequest) returns (FindDownloadSettingResponse) {}
+	rpc AddSelectJournals(AddSelectJournalsRequest) returns (AddSelectJournalsResponse) {}
+	rpc FindSelectJournals(JournalsRequest) returns (JournalsResponse) {}
 }
 
 // 分录
@@ -136,3 +138,15 @@ message FindDownloadSettingResponse{
 	string valid_flag = 9;      
     repeated FieldRule field_rule = 10;  
 }
+
+// 添加选择分录
+message AddSelectJournalsRequest{
+	string app_id = 1;
+	string database = 2; // 数据库
+	repeated string selected_journal = 3; 
+}
+
+message AddSelectJournalsResponse{                 
+    
+}
+

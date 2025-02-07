@@ -54,6 +54,8 @@ const (
 	ActionAddDownloadSetting  = "AddDownloadSetting"
 	ActionFindDownloadSetting = "FindDownloadSetting"
 	ActionSwkDownload         = "SwkDownload"
+	ActionAddSelectJournals   = "AddSelectJournals"
+	ActionFindSelectJournals  = "FindSelectJournals"
 )
 
 // FindJournals 获取当前用户的所有分录
@@ -1253,6 +1255,63 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 		Status:  0,
 		Message: msg.GetMsg("ja-JP", msg.Info, msg.I004, fmt.Sprintf(httpx.Temp, MappingProcessName, ActionSwkDownload)),
 		Data:    gin.H{},
+	})
+}
+
+// AddSelectJournals 添加选择的分录
+// @Router add/journals[post]
+func (f *Journal) AddSelectJournals(c *gin.Context) {
+	loggerx.InfoLog(c, ActionAddSelectJournals, loggerx.MsgProcessStarted)
+
+	journalService := journal.NewJournalService("journal", client.DefaultClient)
+
+	var req journal.AddSelectJournalsRequest
+	// 从body中获取
+	if err := c.BindJSON(&req); err != nil {
+		httpx.GinHTTPError(c, ActionAddSelectJournals, err)
+		return
+	}
+	// 从共通获取
+	req.AppId = sessionx.GetCurrentApp(c)
+	req.Database = sessionx.GetUserCustomer(c)
+	response, err := journalService.AddSelectJournals(context.TODO(), &req)
+	if err != nil {
+		httpx.GinHTTPError(c, ActionAddSelectJournals, err)
+
+		return
+	}
+	loggerx.SuccessLog(c, ActionAddSelectJournals, fmt.Sprintf(loggerx.MsgProcesSucceed, ActionAddSelectJournals))
+
+	loggerx.InfoLog(c, ActionAddSelectJournals, loggerx.MsgProcessEnded)
+	c.JSON(200, httpx.Response{
+		Status:  0,
+		Message: msg.GetMsg("ja-JP", msg.Info, msg.I004, fmt.Sprintf(httpx.Temp, DatastoreProcessName, ActionAddSelectJournals)),
+		Data:    response,
+	})
+}
+
+// FindJournals 获取当前用户选择的分录
+// @Router select/journals [get]
+func (f *Journal) FindSelectJournals(c *gin.Context) {
+	loggerx.InfoLog(c, ActionFindSelectJournals, loggerx.MsgProcessStarted)
+
+	journalService := journal.NewJournalService("journal", client.DefaultClient)
+
+	var req journal.JournalsRequest
+	req.Database = sessionx.GetUserCustomer(c)
+	req.AppId = sessionx.GetCurrentApp(c)
+
+	response, err := journalService.FindSelectJournals(context.TODO(), &req)
+	if err != nil {
+		httpx.GinHTTPError(c, ActionFindSelectJournals, err)
+		return
+	}
+
+	loggerx.InfoLog(c, ActionFindSelectJournals, loggerx.MsgProcessEnded)
+	c.JSON(200, httpx.Response{
+		Status:  0,
+		Message: msg.GetMsg("ja-JP", msg.Info, msg.I003, fmt.Sprintf(httpx.Temp, JournalProcessName, ActionFindSelectJournals)),
+		Data:    response.GetJournals(),
 	})
 }
 
