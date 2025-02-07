@@ -37,6 +37,7 @@ type (
 	Pattern struct {
 		PatternID   string      `json:"pattern_id" bson:"pattern_id"`
 		PatternName string      `json:"pattern_name" bson:"pattern_name"`
+		JournalType string      `json:"journal_type" bson:"journal_type"`
 		Subjects    []*JSubject `json:"subjects" bson:"subjects"`
 	}
 	// Journal JSubject
@@ -109,6 +110,7 @@ func (w *Pattern) ToProto() *journal.Pattern {
 	return &journal.Pattern{
 		PatternId:   w.PatternID,
 		PatternName: w.PatternName,
+		JournalType: w.JournalType,
 		Subjects:    subjects,
 	}
 }

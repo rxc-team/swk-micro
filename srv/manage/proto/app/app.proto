@@ -41,6 +41,7 @@ message App {
 	Configs configs = 19; // app配置
 	bool swk_control = 20; 
 	string confim_method = 21;
+	string journal_structure = 22;
 }
 // AppConfigs
 message Configs {
@@ -191,6 +192,7 @@ message ModifySwkSettingRequest{
 	string handleMonth = 3;
 	bool swk_control = 4;
 	string confim_method = 5;
+	string journal_structure = 6;
 }
 
 message ModifySwkSettingResponse{

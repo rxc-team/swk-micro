@@ -28,6 +28,7 @@ message Journal {
 message Pattern {
 	string pattern_id =1; // 会计处理分类ID
 	string pattern_name =2; // 会计处理名称
+	string journal_type =4; // 分录结构
 	repeated Subject subjects =3; // 出力科目
 }
 
