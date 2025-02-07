@@ -5303,7 +5303,7 @@ func buildOptimizedCondition(fieldCondition *journal.FieldCondition) map[string]
 
 	// 返回生成的条件结构
 	return map[string]interface{}{
-		"if":   conditions,                                      // 这里是所有条件的集合，按顺序连接
+		"if":   map[string]interface{}{"$and": conditions},      // 这里是所有条件的集合，按顺序连接，最外层包裹一层and符合case语法
 		"then": "$items." + fieldCondition.ThenValue + ".value", // 使用动态生成的字段值
 	}
 }
