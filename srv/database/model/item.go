@@ -5299,12 +5299,49 @@ func buildOptimizedCondition(fieldCondition *journal.FieldCondition) map[string]
 		} else if group.Type == "or" {
 			conditions = append(conditions, map[string]interface{}{"$or": groupConditions})
 		}
+
+	}
+
+	var thenValue interface{}
+	if fieldCondition.ThenType == "field" {
+		thenValue = "$items." + fieldCondition.ThenValue + ".value"
+	} else if fieldCondition.ThenType == "value" {
+		thenValue = fieldCondition.ThenValue
+	} else if fieldCondition.ThenType == "custom" {
+		// 获得Then自定义字段相关数据
+		thenCustomFields := fieldCondition.ThenCustomFields
+		thenCustomType := fieldCondition.ThenCustomType
+
+		// 自定义类型
+		var customThenFields []interface{}
+		var operator string
+		for _, field := range thenCustomFields {
+
+			// 判断运算符
+			if thenCustomType == "plus" {
+				operator = "$add"
+			} else if thenCustomType == "concat" {
+				operator = "$concat"
+			}
+
+			// 自定义字段类型处理
+			if field.CustomFieldType == "field" {
+				customThenFields = append(customThenFields, "$items."+field.CustomFieldValue+".value")
+			} else if field.CustomFieldType == "value" {
+				customThenFields = append(customThenFields, field.CustomFieldValue)
+			}
+
+			// 自定义字段拼接
+			thenValue = bson.M{
+				operator: customThenFields,
+			}
+		}
 	}
 
 	// 返回生成的条件结构
 	return map[string]interface{}{
-		"if":   map[string]interface{}{"$and": conditions},      // 这里是所有条件的集合，按顺序连接，最外层包裹一层and符合case语法
-		"then": "$items." + fieldCondition.ThenValue + ".value", // 使用动态生成的字段值
+		"if":   map[string]interface{}{"$and": conditions}, // 这里是所有条件的集合，按顺序连接，最外层包裹一层and符合case语法
+		"then": thenValue,                                  // 使用动态生成的字段值
 	}
 }
 
@@ -5339,11 +5376,61 @@ func generateOptimizedJson(fieldConditions []*journal.FieldCondition) map[string
 		}, branches...)
 	}
 
+	// 自定义条件default部分处理
+	defaultValue := buildDefaultValue(fieldConditions)
+
 	// 最终返回根节点的 $switch，指向第一条条件
 	return map[string]interface{}{
 		"$switch": map[string]interface{}{
 			"branches": branches,
-			"default":  "default_value", // 添加默认值字段及elsevalue
+			"default":  defaultValue, // 添加默认值字段及defaultValue
 		},
 	}
+}
+
+// 自定义条件default部分处理
+func buildDefaultValue(fieldConditions []*journal.FieldCondition) interface{} {
+	// 获得Else相关数据
+	var defaultValue interface{}
+	defaultValueType := fieldConditions[len(fieldConditions)-1].ElseType
+	defaultCustomFields := fieldConditions[len(fieldConditions)-1].ElseCustomFields
+	defaultCustomType := fieldConditions[len(fieldConditions)-1].ElseCustomType
+
+	// 根据类型进行default值的处理
+	if defaultValueType == "field" {
+		// 字段类型
+		defaultValue = "$items." + fieldConditions[len(fieldConditions)-1].ElseValue + ".value"
+	} else if defaultValueType == "value" {
+		// 值类型
+		defaultValue = fieldConditions[len(fieldConditions)-1].ElseValue
+	} else if defaultValueType == "custom" {
+		// 自定义类型
+		var customDefaultFields []interface{}
+		var operator string
+		for _, field := range defaultCustomFields {
+
+			// 判断运算符
+			if defaultCustomType == "plus" {
+				operator = "$add"
+			} else if defaultCustomType == "concat" {
+				operator = "$concat"
+			}
+
+			// 自定义字段类型处理
+			if field.CustomFieldType == "field" {
+				customDefaultFields = append(customDefaultFields, "$items."+field.CustomFieldValue+".value")
+			} else if field.CustomFieldType == "value" {
+				customDefaultFields = append(customDefaultFields, field.CustomFieldValue)
+			}
+		}
+
+		// 自定义字段拼接
+		customDefaultValue := bson.M{
+			operator: customDefaultFields,
+		}
+
+		return customDefaultValue
+
+	}
+	return defaultValue
 }
