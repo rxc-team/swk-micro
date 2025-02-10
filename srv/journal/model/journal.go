@@ -66,30 +66,33 @@ type (
 
 	// FieldRule规则
 	FieldRule struct {
-		DownloadName    string            `json:"download_name" bson:"download_name"`
-		FieldId         string            `json:"field_id" bson:"field_id"`
-		FieldConditions []*FieldCondition `json:"field_conditions" bson:"field_conditions"`
-		SettingMethod   string            `json:"setting_method" bson:"setting_method"`
-		FieldType       string            `json:"field_type" bson:"field_type"`
-		DatastoreId     string            `json:"datastore_id" bson:"datastore_id"`
-		Format          string            `json:"format" bson:"format"`
-		EditContent     string            `json:"edit_content" bson:"edit_content"`
-		ElseValue       string            `json:"else_value" bson:"else_value"`
-		ElseType        string            `json:"else_type" bson:"else_type"`
+		DownloadName      string            `json:"download_name" bson:"download_name"`
+		FieldId           string            `json:"field_id" bson:"field_id"`
+		FieldConditions   []*FieldCondition `json:"field_conditions" bson:"field_conditions"`
+		SettingMethod     string            `json:"setting_method" bson:"setting_method"`
+		FieldType         string            `json:"field_type" bson:"field_type"`
+		DatastoreId       string            `json:"datastore_id" bson:"datastore_id"`
+		Format            string            `json:"format" bson:"format"`
+		EditContent       string            `json:"edit_content" bson:"edit_content"`
+		ElseValue         string            `json:"else_value" bson:"else_value"`
+		ElseType          string            `json:"else_type" bson:"else_type"`
+		ElseValueDataType string            `json:"else_value_data_type" bson:"else_value_data_type"`
 	}
 
 	FieldCondition struct {
-		ConditionID      string         `json:"condition_id" bson:"condition_id"`
-		ConditionName    string         `json:"condition_name" bson:"condition_name"`
-		FieldGroups      []*FieldGroup  `json:"field_groups" bson:"field_groups"`
-		ThenValue        string         `json:"then_value" bson:"then_value"`
-		ElseValue        string         `json:"else_value" bson:"else_value"`
-		ThenType         string         `json:"then_type" bson:"then_type"`
-		ElseType         string         `json:"else_type" bson:"else_type"`
-		ThenCustomType   string         `json:"then_custom_type" bson:"then_custom_type"`
-		ElseCustomType   string         `json:"else_custom_type" bson:"else_custom_type"`
-		ThenCustomFields []*CustomField `json:"then_custom_fields" bson:"then_custom_fields"`
-		ElseCustomFields []*CustomField `json:"elsen_custom_fields" bson:"else_custom_fields"`
+		ConditionID       string         `json:"condition_id" bson:"condition_id"`
+		ConditionName     string         `json:"condition_name" bson:"condition_name"`
+		FieldGroups       []*FieldGroup  `json:"field_groups" bson:"field_groups"`
+		ThenValue         string         `json:"then_value" bson:"then_value"`
+		ElseValue         string         `json:"else_value" bson:"else_value"`
+		ThenType          string         `json:"then_type" bson:"then_type"`
+		ElseType          string         `json:"else_type" bson:"else_type"`
+		ThenCustomType    string         `json:"then_custom_type" bson:"then_custom_type"`
+		ElseCustomType    string         `json:"else_custom_type" bson:"else_custom_type"`
+		ThenCustomFields  []*CustomField `json:"then_custom_fields" bson:"then_custom_fields"`
+		ElseCustomFields  []*CustomField `json:"elsen_custom_fields" bson:"else_custom_fields"`
+		ThenValueDataType string         `json:"then_value_data_type" bson:"then_value_data_type"`
+		ElseValueDataType string         `json:"else_value_data_type" bson:"else_value_data_type"`
 	}
 
 	// Journal Group
@@ -107,12 +110,14 @@ type (
 		ConField    string `json:"con_field" bson:"con_field"`
 		ConOperator string `json:"con_operator" bson:"con_operator"`
 		ConValue    string `json:"con_value" bson:"con_value"`
+		ConDataType string `json:"con_data_type" bson:"con_data_type"`
 	}
 
 	// CustomField
 	CustomField struct {
-		CustomFieldType  string `json:"custom_field_type" bson:"custom_field_type"`
-		CustomFieldValue string `json:"custom_field_value" bson:"custom_field_value"`
+		CustomFieldType     string `json:"custom_field_type" bson:"custom_field_type"`
+		CustomFieldValue    string `json:"custom_field_value" bson:"custom_field_value"`
+		CustomFieldDataType string `json:"custom_field_data_type" bson:"custom_field_data_type"`
 	}
 )
 
@@ -187,17 +192,19 @@ func (w *FieldCondition) ToProto() *journal.FieldCondition {
 	}
 
 	return &journal.FieldCondition{
-		ConditionId:      w.ConditionID,
-		ConditionName:    w.ConditionName,
-		FieldGroups:      fieldGroups,
-		ThenValue:        w.ThenValue,
-		ElseValue:        w.ElseValue,
-		ThenType:         w.ThenType,
-		ElseType:         w.ElseType,
-		ThenCustomType:   w.ThenCustomType,
-		ElseCustomType:   w.ElseCustomType,
-		ThenCustomFields: thenCustomFields,
-		ElseCustomFields: elseCustomFields,
+		ConditionId:       w.ConditionID,
+		ConditionName:     w.ConditionName,
+		FieldGroups:       fieldGroups,
+		ThenValue:         w.ThenValue,
+		ElseValue:         w.ElseValue,
+		ThenType:          w.ThenType,
+		ElseType:          w.ElseType,
+		ThenCustomType:    w.ThenCustomType,
+		ElseCustomType:    w.ElseCustomType,
+		ThenCustomFields:  thenCustomFields,
+		ElseCustomFields:  elseCustomFields,
+		ThenValueDataType: w.ThenValueDataType,
+		ElseValueDataType: w.ElseValueDataType,
 	}
 }
 
@@ -227,14 +234,16 @@ func (w *FieldCon) ToProto() *journal.FieldCon {
 		ConField:    w.ConField,
 		ConOperator: w.ConOperator,
 		ConValue:    w.ConValue,
+		ConDataType: w.ConDataType,
 	}
 }
 
 // ToProto 转换为proto数据
 func (w *CustomField) ToProto() *journal.CustomField {
 	return &journal.CustomField{
-		CustomFieldType:  w.CustomFieldType,
-		CustomFieldValue: w.CustomFieldValue,
+		CustomFieldType:     w.CustomFieldType,
+		CustomFieldValue:    w.CustomFieldValue,
+		CustomFieldDataType: w.CustomFieldDataType,
 	}
 }
 
@@ -268,16 +277,17 @@ func (f *FieldRule) ToProto() *journal.FieldRule {
 	}
 
 	return &journal.FieldRule{
-		DownloadName:    f.DownloadName,
-		FieldId:         f.FieldId,
-		FieldConditions: fieldConditions,
-		SettingMethod:   f.SettingMethod,
-		FieldType:       f.FieldType,
-		DatastoreId:     f.DatastoreId,
-		Format:          f.Format,
-		EditContent:     f.EditContent,
-		ElseValue:       f.ElseValue,
-		ElseType:        f.ElseType,
+		DownloadName:      f.DownloadName,
+		FieldId:           f.FieldId,
+		FieldConditions:   fieldConditions,
+		SettingMethod:     f.SettingMethod,
+		FieldType:         f.FieldType,
+		DatastoreId:       f.DatastoreId,
+		Format:            f.Format,
+		EditContent:       f.EditContent,
+		ElseValue:         f.ElseValue,
+		ElseType:          f.ElseType,
+		ElseValueDataType: f.ElseValueDataType,
 	}
 }
 

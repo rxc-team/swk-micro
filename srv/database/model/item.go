@@ -5278,17 +5278,22 @@ func buildOptimizedCondition(fieldCondition *journal.FieldCondition) map[string]
 		for _, fieldCon := range group.FieldCons {
 			// 根据 con_operator 的值判断是 eq 还是 ne
 			var operator string
-			if fieldCon.ConOperator == "{\"$eq\":[\"a\",\"b\"]}" {
+			if fieldCon.ConOperator == "eq" {
 				operator = "$eq"
-			} else if fieldCon.ConOperator == "{\"$ne\":[\"a\",\"b\"]}" {
+			} else if fieldCon.ConOperator == "ne" {
 				operator = "$ne"
 			}
+
+			// 根据数据类型进行转换
+			conValue := fieldCon.ConValue
+			conDateType := fieldCon.ConDataType
+			convertValue := convertDateType(conValue, conDateType)
 
 			// 添加条件到 groupConditions 中
 			groupConditions = append(groupConditions, map[string]interface{}{
 				operator: []interface{}{
 					"$items." + fieldCon.ConField + ".value", // 动态生成字段名
-					fieldCon.ConValue,
+					convertValue,
 				},
 			})
 		}
@@ -5318,7 +5323,7 @@ func buildOptimizedCondition(fieldCondition *journal.FieldCondition) map[string]
 		for _, field := range thenCustomFields {
 
 			// 判断运算符
-			if thenCustomType == "plus" {
+			if thenCustomType == "add" {
 				operator = "$add"
 			} else if thenCustomType == "concat" {
 				operator = "$concat"
@@ -5328,7 +5333,11 @@ func buildOptimizedCondition(fieldCondition *journal.FieldCondition) map[string]
 			if field.CustomFieldType == "field" {
 				customThenFields = append(customThenFields, "$items."+field.CustomFieldValue+".value")
 			} else if field.CustomFieldType == "value" {
-				customThenFields = append(customThenFields, field.CustomFieldValue)
+				// 自定义字段数据类型处理
+				customFieldValue := field.CustomFieldValue
+				customFieldDataType := field.CustomFieldDataType
+				convertedValue := convertDateType(customFieldValue, customFieldDataType)
+				customThenFields = append(customThenFields, convertedValue)
 			}
 
 			// 自定义字段拼接
@@ -5410,7 +5419,7 @@ func buildDefaultValue(fieldConditions []*journal.FieldCondition) interface{} {
 		for _, field := range defaultCustomFields {
 
 			// 判断运算符
-			if defaultCustomType == "plus" {
+			if defaultCustomType == "add" {
 				operator = "$add"
 			} else if defaultCustomType == "concat" {
 				operator = "$concat"
@@ -5420,7 +5429,11 @@ func buildDefaultValue(fieldConditions []*journal.FieldCondition) interface{} {
 			if field.CustomFieldType == "field" {
 				customDefaultFields = append(customDefaultFields, "$items."+field.CustomFieldValue+".value")
 			} else if field.CustomFieldType == "value" {
-				customDefaultFields = append(customDefaultFields, field.CustomFieldValue)
+				// 自定义字段数据类型处理
+				customFieldValue := field.CustomFieldValue
+				customFieldDataType := field.CustomFieldDataType
+				convertedValue := convertDateType(customFieldValue, customFieldDataType)
+				customDefaultFields = append(customDefaultFields, convertedValue)
 			}
 		}
 
@@ -5433,4 +5446,31 @@ func buildDefaultValue(fieldConditions []*journal.FieldCondition) interface{} {
 
 	}
 	return defaultValue
+}
+
+// 字段类型转换
+func convertDateType(value string, dataType string) (v interface{}) {
+	switch dataType {
+	case "text", "textarea":
+		return value
+	case "number":
+		result, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return 0
+		}
+		return result
+	case "date":
+		zone := time.Time{}
+		if len(value) == 0 {
+			return zone
+		}
+		date, err := time.Parse("2006-01-02", value)
+		if err != nil {
+			return zone
+		}
+		return date
+	case "time":
+		return value
+	}
+	return 0
 }

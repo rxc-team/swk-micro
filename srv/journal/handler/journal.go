@@ -159,6 +159,7 @@ func (f *Journal) AddDownloadSetting(ctx context.Context, req *journal.AddDownlo
 						ConField:    con.ConField,
 						ConOperator: con.ConOperator,
 						ConValue:    con.ConValue,
+						ConDataType: con.ConDataType,
 					})
 				}
 
@@ -175,45 +176,50 @@ func (f *Journal) AddDownloadSetting(ctx context.Context, req *journal.AddDownlo
 			var thenCustomFields []*model.CustomField
 			for _, customfield := range condition.GetThenCustomFields() {
 				thenCustomFields = append(thenCustomFields, &model.CustomField{
-					CustomFieldType:  customfield.CustomFieldType,
-					CustomFieldValue: customfield.CustomFieldValue,
+					CustomFieldType:     customfield.CustomFieldType,
+					CustomFieldValue:    customfield.CustomFieldValue,
+					CustomFieldDataType: customfield.CustomFieldDataType,
 				})
 			}
 
 			var elseCustomFields []*model.CustomField
 			for _, customfield := range condition.GetElseCustomFields() {
 				elseCustomFields = append(elseCustomFields, &model.CustomField{
-					CustomFieldType:  customfield.CustomFieldType,
-					CustomFieldValue: customfield.CustomFieldValue,
+					CustomFieldType:     customfield.CustomFieldType,
+					CustomFieldValue:    customfield.CustomFieldValue,
+					CustomFieldDataType: customfield.CustomFieldDataType,
 				})
 			}
 
 			fieldConditions = append(fieldConditions, &model.FieldCondition{
-				ConditionID:      condition.ConditionId,
-				ConditionName:    condition.ConditionName,
-				ThenValue:        condition.ThenValue,
-				ElseValue:        condition.ElseValue,
-				ThenType:         condition.ThenType,
-				ElseType:         condition.ElseType,
-				ThenCustomType:   condition.ThenCustomType,
-				ElseCustomType:   condition.ElseCustomType,
-				FieldGroups:      fieldGroups,
-				ThenCustomFields: thenCustomFields,
-				ElseCustomFields: elseCustomFields,
+				ConditionID:       condition.ConditionId,
+				ConditionName:     condition.ConditionName,
+				ThenValue:         condition.ThenValue,
+				ElseValue:         condition.ElseValue,
+				ThenType:          condition.ThenType,
+				ElseType:          condition.ElseType,
+				ThenCustomType:    condition.ThenCustomType,
+				ElseCustomType:    condition.ElseCustomType,
+				FieldGroups:       fieldGroups,
+				ThenCustomFields:  thenCustomFields,
+				ElseCustomFields:  elseCustomFields,
+				ThenValueDataType: condition.ThenValueDataType,
+				ElseValueDataType: condition.ElseValueDataType,
 			})
 		}
 
 		fieldRules = append(fieldRules, &model.FieldRule{
-			DownloadName:    rule.DownloadName,
-			FieldId:         rule.FieldId,
-			FieldConditions: fieldConditions,
-			SettingMethod:   rule.SettingMethod,
-			FieldType:       rule.FieldType,
-			DatastoreId:     rule.DatastoreId,
-			Format:          rule.Format,
-			EditContent:     rule.EditContent,
-			ElseValue:       rule.ElseValue,
-			ElseType:        rule.ElseType,
+			DownloadName:      rule.DownloadName,
+			FieldId:           rule.FieldId,
+			FieldConditions:   fieldConditions,
+			SettingMethod:     rule.SettingMethod,
+			FieldType:         rule.FieldType,
+			DatastoreId:       rule.DatastoreId,
+			Format:            rule.Format,
+			EditContent:       rule.EditContent,
+			ElseValue:         rule.ElseValue,
+			ElseType:          rule.ElseType,
+			ElseValueDataType: rule.ElseValueDataType,
 		})
 	}
 
@@ -239,41 +245,6 @@ func (f *Journal) AddDownloadSetting(ctx context.Context, req *journal.AddDownlo
 	utils.InfoLog(ActionAddDownloadSetting, utils.MsgProcessEnded)
 
 	return nil
-
-	// var rules []*model.FieldRule
-	// for _, r := range req.GetFieldRule() {
-	// 	rule := &model.FieldRule{
-	// 		DownloadName:  r.DownloadName,
-	// 		FieldId:       r.FieldId,
-	// 		EditContent:   r.EditContent,
-	// 		SettingMethod: r.SettingMethod,
-	// 		FieldType:     r.FieldType,
-	// 		DatastoreId:   r.DatastoreId,
-	// 		Format:        r.Format,
-	// 	}
-	// 	rules = append(rules, rule)
-	// }
-
-	// params := model.FieldConf{
-	// 	AppId:         req.AppId,
-	// 	LayoutName:    req.LayoutName,
-	// 	CharEncoding:  req.CharEncoding,
-	// 	HeaderRow:     req.HeaderRow,
-	// 	SeparatorChar: req.SeparatorChar,
-	// 	LineBreaks:    req.LineBreaks,
-	// 	FixedLength:   req.FixedLength,
-	// 	NumberItems:   req.NumberItems,
-	// 	ValidFlag:     req.ValidFlag,
-	// 	FieldRule:     rules,
-	// }
-
-	// err := model.AddDownloadSetting(req.GetDatabase(), req.GetAppId(), params)
-	// if err != nil {
-	// 	utils.ErrorLog(ActionAddDownloadSetting, err.Error())
-	// 	return err
-	// }
-
-	// return nil
 }
 
 // 查找分录下载设定

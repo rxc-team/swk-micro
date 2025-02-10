@@ -120,6 +120,7 @@ message FieldRule {
 	string edit_content=8;
 	string else_value =9;
 	string else_type =10;
+	string else_value_data_type =11;
 }
 
 // 自定义条件
@@ -135,6 +136,8 @@ message FieldCondition {
 	string else_custom_type =9;
 	repeated CustomField then_custom_fields =10;
 	repeated CustomField else_custom_fields =11;
+	string then_value_data_type =12;
+	string else_value_data_type =13;
 } 
 
 // 条件组
@@ -153,12 +156,14 @@ message FieldCon {
 	string con_field =3; // 小条件左字段
 	string con_operator =4;  // 小条件比较符
 	string con_value =5; // 小条件右字段
+	string con_data_type =6; // 小条件数据类型
 }
 
 // 自定义字段
 message CustomField {
 	string custom_field_type =1; // 自定义字段类型
 	string custom_field_value =2; // 自定义字段名称
+	string custom_field_data_type =3; // 自定义字段数据类型
 }
 
 
