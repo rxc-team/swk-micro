@@ -32,29 +32,29 @@ type Config struct {
 
 // App 应用程序
 type App struct {
-	ID               primitive.ObjectID `json:"id" bson:"_id"`
-	AppID            string             `json:"app_id" bson:"app_id"`
-	AppName          string             `json:"app_name" bson:"app_name"`
-	AppType          string             `json:"app_type" bson:"app_type"`
-	DisplayOrder     int64              `json:"display_order" bson:"display_order"`
-	TemplateID       string             `json:"template_id" bson:"template_id"`
-	Domain           string             `json:"domain" bson:"domain"`
-	IsTrial          bool               `json:"is_trial" bson:"is_trial"`
-	StartTime        string             `json:"start_time" bson:"start_time"`
-	EndTime          string             `json:"end_time" bson:"end_time"`
-	CopyFrom         string             `json:"copy_from" bson:"copy_from"`
-	FollowApp        string             `json:"follow_app" bson:"follow_app"`
-	Remarks          string             `json:"remarks" bson:"remarks"`
-	Configs          Configs            `json:"configs" bson:"configs"`
-	SwkControl       bool               `json:"swk_control" bson:"swk_control"`
-	ConfimMethod     string             `json:"confim_method" bson:"confim_method"`
-	JournalStructure string             `json:"journal_structure" bson:"journal_structure"`
-	CreatedAt        time.Time          `json:"created_at" bson:"created_at"`
-	CreatedBy        string             `json:"created_by" bson:"created_by"`
-	UpdatedAt        time.Time          `json:"updated_at" bson:"updated_at"`
-	UpdatedBy        string             `json:"updated_by" bson:"updated_by"`
-	DeletedAt        time.Time          `json:"deleted_at" bson:"deleted_at"`
-	DeletedBy        string             `json:"deleted_by" bson:"deleted_by"`
+	ID           primitive.ObjectID `json:"id" bson:"_id"`
+	AppID        string             `json:"app_id" bson:"app_id"`
+	AppName      string             `json:"app_name" bson:"app_name"`
+	AppType      string             `json:"app_type" bson:"app_type"`
+	DisplayOrder int64              `json:"display_order" bson:"display_order"`
+	TemplateID   string             `json:"template_id" bson:"template_id"`
+	Domain       string             `json:"domain" bson:"domain"`
+	IsTrial      bool               `json:"is_trial" bson:"is_trial"`
+	StartTime    string             `json:"start_time" bson:"start_time"`
+	EndTime      string             `json:"end_time" bson:"end_time"`
+	CopyFrom     string             `json:"copy_from" bson:"copy_from"`
+	FollowApp    string             `json:"follow_app" bson:"follow_app"`
+	Remarks      string             `json:"remarks" bson:"remarks"`
+	Configs      Configs            `json:"configs" bson:"configs"`
+	SwkControl   bool               `json:"swk_control" bson:"swk_control"`
+	ConfimMethod string             `json:"confim_method" bson:"confim_method"`
+	JournalType  string             `json:"journal_type" bson:"journal_type"`
+	CreatedAt    time.Time          `json:"created_at" bson:"created_at"`
+	CreatedBy    string             `json:"created_by" bson:"created_by"`
+	UpdatedAt    time.Time          `json:"updated_at" bson:"updated_at"`
+	UpdatedBy    string             `json:"updated_by" bson:"updated_by"`
+	DeletedAt    time.Time          `json:"deleted_at" bson:"deleted_at"`
+	DeletedBy    string             `json:"deleted_by" bson:"deleted_by"`
 }
 type Configs struct {
 	Special         string `json:"special" bson:"special"`
@@ -74,27 +74,27 @@ type Max struct {
 // ToProto 转换为proto数据
 func (a *App) ToProto() *app.App {
 	apps := app.App{
-		AppId:            a.AppID,
-		AppName:          a.AppName,
-		AppType:          a.AppType,
-		DisplayOrder:     a.DisplayOrder,
-		TemplateId:       a.TemplateID,
-		Domain:           a.Domain,
-		IsTrial:          a.IsTrial,
-		StartTime:        a.StartTime,
-		EndTime:          a.EndTime,
-		CopyFrom:         a.CopyFrom,
-		FollowApp:        a.FollowApp,
-		Remarks:          a.Remarks,
-		SwkControl:       a.SwkControl,
-		ConfimMethod:     a.ConfimMethod,
-		JournalStructure: a.JournalStructure,
-		CreatedAt:        a.CreatedAt.String(),
-		CreatedBy:        a.CreatedBy,
-		UpdatedAt:        a.UpdatedAt.String(),
-		UpdatedBy:        a.UpdatedBy,
-		DeletedAt:        a.DeletedAt.String(),
-		DeletedBy:        a.DeletedBy,
+		AppId:        a.AppID,
+		AppName:      a.AppName,
+		AppType:      a.AppType,
+		DisplayOrder: a.DisplayOrder,
+		TemplateId:   a.TemplateID,
+		Domain:       a.Domain,
+		IsTrial:      a.IsTrial,
+		StartTime:    a.StartTime,
+		EndTime:      a.EndTime,
+		CopyFrom:     a.CopyFrom,
+		FollowApp:    a.FollowApp,
+		Remarks:      a.Remarks,
+		SwkControl:   a.SwkControl,
+		ConfimMethod: a.ConfimMethod,
+		JournalType:  a.JournalType,
+		CreatedAt:    a.CreatedAt.String(),
+		CreatedBy:    a.CreatedBy,
+		UpdatedAt:    a.UpdatedAt.String(),
+		UpdatedBy:    a.UpdatedBy,
+		DeletedAt:    a.DeletedAt.String(),
+		DeletedBy:    a.DeletedBy,
 	}
 	config := app.Configs{
 		Special:         a.Configs.Special,
@@ -1216,7 +1216,7 @@ func NextMonth(ctx context.Context, db string, conf Config) (err error) {
 }
 
 // ModifySwkSetting 更新基本设定
-func ModifySwkSetting(ctx context.Context, db string, appID string, handleMonth string, swkControl bool, confimMethod string, journalStructure string) (err error) {
+func ModifySwkSetting(ctx context.Context, db string, appID string, handleMonth string, swkControl bool, confimMethod string, journalType string) (err error) {
 	client := database.New()
 	c := client.Database(database.GetDBName(db)).Collection(AppsCollection)
 
@@ -1226,10 +1226,10 @@ func ModifySwkSetting(ctx context.Context, db string, appID string, handleMonth 
 
 	update := bson.M{
 		"$set": bson.M{
-			"configs.syori_ym":  handleMonth,
-			"swk_control":       swkControl,
-			"confim_method":     confimMethod,
-			"journal_structure": journalStructure,
+			"configs.syori_ym": handleMonth,
+			"swk_control":      swkControl,
+			"confim_method":    confimMethod,
+			"journal_type":     journalType,
 		},
 	}
 

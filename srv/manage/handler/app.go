@@ -288,7 +288,7 @@ func (a *App) NextMonth(ctx context.Context, req *app.NextMonthRequest, rsp *app
 func (a *App) ModifySwkSetting(ctx context.Context, req *app.ModifySwkSettingRequest, rsp *app.ModifySwkSettingResponse) error {
 	utils.InfoLog(ActionModifySwkSetting, utils.MsgProcessStarted)
 
-	err := model.ModifySwkSetting(ctx, req.GetDatabase(), req.GetAppId(), req.GetHandleMonth(), req.GetSwkControl(), req.GetConfimMethod(), req.GetJournalStructure())
+	err := model.ModifySwkSetting(ctx, req.GetDatabase(), req.GetAppId(), req.GetHandleMonth(), req.GetSwkControl(), req.GetConfimMethod(), req.GetJournalType())
 	if err != nil {
 		utils.ErrorLog(ActionModifySwkSetting, err.Error())
 		return err
