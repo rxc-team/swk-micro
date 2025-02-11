@@ -5287,7 +5287,7 @@ func buildOptimizedCondition(fieldCondition *journal.FieldCondition) map[string]
 			// 根据数据类型进行转换
 			conValue := fieldCon.ConValue
 			conDateType := fieldCon.ConDataType
-			convertValue := convertDateType(conValue, conDateType)
+			convertValue := convertDataType(conValue, conDateType)
 
 			// 添加条件到 groupConditions 中
 			groupConditions = append(groupConditions, map[string]interface{}{
@@ -5309,7 +5309,8 @@ func buildOptimizedCondition(fieldCondition *journal.FieldCondition) map[string]
 
 	var thenValue interface{}
 	if fieldCondition.ThenType == "field" {
-		thenValue = "$items." + fieldCondition.ThenValue + ".value"
+		convertedValue := convertDateType(fieldCondition.ThenValue, fieldCondition.ThenValueDataType)
+		thenValue = convertedValue
 	} else if fieldCondition.ThenType == "value" {
 		thenValue = fieldCondition.ThenValue
 	} else if fieldCondition.ThenType == "custom" {
@@ -5329,14 +5330,15 @@ func buildOptimizedCondition(fieldCondition *journal.FieldCondition) map[string]
 				operator = "$concat"
 			}
 
+			customFieldValue := field.CustomFieldValue
+			customFieldDataType := field.CustomFieldDataType
 			// 自定义字段类型处理
 			if field.CustomFieldType == "field" {
-				customThenFields = append(customThenFields, "$items."+field.CustomFieldValue+".value")
+				convertedValue := convertDateType(customFieldValue, customFieldDataType)
+				customThenFields = append(customThenFields, convertedValue)
 			} else if field.CustomFieldType == "value" {
 				// 自定义字段数据类型处理
-				customFieldValue := field.CustomFieldValue
-				customFieldDataType := field.CustomFieldDataType
-				convertedValue := convertDateType(customFieldValue, customFieldDataType)
+				convertedValue := convertDataType(customFieldValue, customFieldDataType)
 				customThenFields = append(customThenFields, convertedValue)
 			}
 
@@ -5408,7 +5410,8 @@ func buildDefaultValue(fieldConditions []*journal.FieldCondition) interface{} {
 	// 根据类型进行default值的处理
 	if defaultValueType == "field" {
 		// 字段类型
-		defaultValue = "$items." + fieldConditions[len(fieldConditions)-1].ElseValue + ".value"
+		convertedValue := convertDateType(fieldConditions[len(fieldConditions)-1].ElseValue, fieldConditions[len(fieldConditions)-1].ElseValueDataType)
+		defaultValue = convertedValue
 	} else if defaultValueType == "value" {
 		// 值类型
 		defaultValue = fieldConditions[len(fieldConditions)-1].ElseValue
@@ -5425,14 +5428,15 @@ func buildDefaultValue(fieldConditions []*journal.FieldCondition) interface{} {
 				operator = "$concat"
 			}
 
+			customFieldValue := field.CustomFieldValue
+			customFieldDataType := field.CustomFieldDataType
 			// 自定义字段类型处理
 			if field.CustomFieldType == "field" {
-				customDefaultFields = append(customDefaultFields, "$items."+field.CustomFieldValue+".value")
+				convertedValue := convertDateType(customFieldValue, customFieldDataType)
+				customDefaultFields = append(customDefaultFields, convertedValue)
 			} else if field.CustomFieldType == "value" {
 				// 自定义字段数据类型处理
-				customFieldValue := field.CustomFieldValue
-				customFieldDataType := field.CustomFieldDataType
-				convertedValue := convertDateType(customFieldValue, customFieldDataType)
+				convertedValue := convertDataType(customFieldValue, customFieldDataType)
 				customDefaultFields = append(customDefaultFields, convertedValue)
 			}
 		}
@@ -5449,7 +5453,7 @@ func buildDefaultValue(fieldConditions []*journal.FieldCondition) interface{} {
 }
 
 // 字段类型转换
-func convertDateType(value string, dataType string) (v interface{}) {
+func convertDataType(value string, dataType string) (v interface{}) {
 	switch dataType {
 	case "text", "textarea":
 		return value
@@ -5473,4 +5477,17 @@ func convertDateType(value string, dataType string) (v interface{}) {
 		return value
 	}
 	return 0
+}
+
+// 日期类型的相关处理
+func convertDateType(value string, dataType string) (v interface{}) {
+	if dataType == "date" {
+		return map[string]interface{}{
+			"$dateToString": map[string]interface{}{
+				"format": "%Y-%m-%d",
+				"date":   "$items." + value + ".value", // 添加默认值字段及defaultValue
+			},
+		}
+	}
+	return "$items." + value + ".value"
 }
