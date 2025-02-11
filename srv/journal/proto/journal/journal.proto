@@ -10,6 +10,8 @@ service JournalService {
 	rpc AddDownloadSetting(AddDownloadSettingRequest) returns (AddDownloadSettingResponse) {}
 	rpc FindDownloadSetting(FindDownloadSettingRequest) returns (FindDownloadSettingResponse) {}
 	rpc FindDownloadSettings(FindDownloadSettingsRequest) returns (FindDownloadSettingsResponse) {}
+	rpc AddSelectJournals(AddSelectJournalsRequest) returns (AddSelectJournalsResponse) {}
+	rpc FindSelectJournals(JournalsRequest) returns (JournalsResponse) {}
 }
 
 // 分录
@@ -28,6 +30,7 @@ message Pattern {
 	string pattern_id =1; // 会计处理分类ID
 	string pattern_name =2; // 会计处理名称
 	repeated Subject subjects =3; // 出力科目
+	string journal_type =4; // 分录结构
 }
 
 // 分录subject	
@@ -194,4 +197,14 @@ message FindDownloadSettingsRequest{
 
 message FindDownloadSettingsResponse{                 
     repeated FindDownloadSettingResponse field_conf = 1;  
+}
+
+// 添加选择分录
+message AddSelectJournalsRequest{
+	string app_id = 1;
+	string database = 2; // 数据库
+	repeated string selected_journal = 3; 
+}
+ 
+message AddSelectJournalsResponse{                 
 }

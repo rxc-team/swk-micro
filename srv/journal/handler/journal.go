@@ -23,6 +23,8 @@ const (
 	ActionDeleteJournal       = "DeleteJournal"
 	ActionAddDownloadSetting  = "AddDownloadSetting"
 	ActionFindDownloadSetting = "FindDownloadSetting"
+	ActionAddSelectJournals   = "AddSelectJournals"
+	ActionFindSelectJournals  = "FindSelectJournals"
 )
 
 // FindJournals 获取多个仕訳
@@ -277,5 +279,40 @@ func (f *Journal) FindDownloadSettings(ctx context.Context, req *journal.FindDow
 
 	utils.InfoLog(ActionFindDownloadSetting, utils.MsgProcessEnded)
 
+	return nil
+}
+
+// 添加选择分录
+func (f *Journal) AddSelectJournals(ctx context.Context, req *journal.AddSelectJournalsRequest, rsp *journal.AddSelectJournalsResponse) error {
+
+	err := model.AddSelectJournals(req.GetSelectedJournal(), req.GetDatabase(), req.GetAppId())
+	if err != nil {
+		utils.ErrorLog(ActionFindDownloadSetting, err.Error())
+		return err
+	}
+
+	utils.InfoLog(ActionFindDownloadSetting, utils.MsgProcessEnded)
+
+	return nil
+}
+
+// FindSelectJournals 获取选择的仕訳
+func (f *Journal) FindSelectJournals(ctx context.Context, req *journal.JournalsRequest, rsp *journal.JournalsResponse) error {
+	utils.InfoLog(ActionFindSelectJournals, utils.MsgProcessStarted)
+
+	journals, err := model.FindSelectJournals(req.GetDatabase(), req.GetAppId())
+	if err != nil {
+		utils.ErrorLog(ActionFindSelectJournals, err.Error())
+		return err
+	}
+
+	res := &journal.JournalsResponse{}
+	for _, t := range journals {
+		res.Journals = append(res.Journals, t.ToProto())
+	}
+
+	*rsp = *res
+
+	utils.InfoLog(ActionFindSelectJournals, utils.MsgProcessEnded)
 	return nil
 }

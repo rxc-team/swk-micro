@@ -37,6 +37,7 @@ type (
 	Pattern struct {
 		PatternID   string      `json:"pattern_id" bson:"pattern_id"`
 		PatternName string      `json:"pattern_name" bson:"pattern_name"`
+		JournalType string      `json:"journal_type" bson:"journal_type"`
 		Subjects    []*JSubject `json:"subjects" bson:"subjects"`
 	}
 	// Journal JSubject
@@ -154,6 +155,7 @@ func (w *Pattern) ToProto() *journal.Pattern {
 	return &journal.Pattern{
 		PatternId:   w.PatternID,
 		PatternName: w.PatternName,
+		JournalType: w.JournalType,
 		Subjects:    subjects,
 	}
 }
@@ -560,4 +562,94 @@ func FindDownloadSettings(db string, appID string) (fd []FieldConf, err error) {
 	}
 
 	return results, nil
+}
+
+// 添加选择分录
+func AddSelectJournals(journal_ids []string, db string, appID string) (err error) {
+	client := database.New()
+	c := client.Database(database.GetDBName(db)).Collection("journals")
+	ct := client.Database(database.GetDBName(db)).Collection("journals_select")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// 查询条件，匹配journal_ids和app_id
+
+	filter := bson.M{
+		"journal_id": bson.M{"$in": journal_ids},
+		"app_id":     appID,
+	}
+
+	_, err = ct.DeleteMany(ctx, bson.M{})
+	if err != nil {
+		if err.Error() != "ns not found" {
+			utils.ErrorLog("AddSelectJournals", err.Error())
+			return err
+		}
+	}
+
+	cursor, err := c.Find(ctx, filter)
+	if err != nil {
+		utils.ErrorLog("AddSelectJournals", err.Error())
+		return err
+	}
+	defer cursor.Close(ctx)
+
+	var journals []interface{}
+	for cursor.Next(ctx) {
+		var journal bson.M
+		err := cursor.Decode(&journal)
+		if err != nil {
+			utils.ErrorLog("AddSelectJournals", err.Error())
+			return err
+		}
+		journals = append(journals, journal)
+	}
+
+	// 检查是否找到任何符合条件的文档
+	if len(journals) > 0 {
+		// 将查询到的数据插入到tpl_journals集合
+		_, err := ct.InsertMany(ctx, journals)
+		if err != nil {
+			utils.ErrorLog("AddSelectJournals", err.Error())
+			return err
+		}
+	} else {
+		utils.ErrorLog("AddSelectJournals", err.Error())
+		return err
+	}
+
+	return
+}
+
+// FindJournals 获取APP下的当前分类的分录
+func FindSelectJournals(db, appId string) (items []Journal, err error) {
+	client := database.New()
+	c := client.Database(database.GetDBName(db)).Collection("journals_select")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	query := bson.M{
+		"app_id": appId,
+	}
+
+	var result []Journal
+
+	opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}})
+	journals, err := c.Find(ctx, query, opts)
+	if err != nil {
+		utils.ErrorLog("error FindJournals", err.Error())
+		return nil, err
+	}
+	defer journals.Close(ctx)
+	for journals.Next(ctx) {
+		var exp Journal
+		err := journals.Decode(&exp)
+		if err != nil {
+			utils.ErrorLog("error FindJournals", err.Error())
+			return nil, err
+		}
+		result = append(result, exp)
+	}
+
+	return result, nil
 }

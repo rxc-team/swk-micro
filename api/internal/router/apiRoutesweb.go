@@ -65,6 +65,10 @@ func initAuthRouterWeb(router *gin.Engine) {
 		journalRoute.GET("/journals", journal.FindJournals)
 		// 导入分录记录
 		journalRoute.POST("/journals", journal.ImportJournal)
+		// 添加选择分录
+		journalRoute.POST("add/journals", journal.AddSelectJournals)
+		// 查找选择分录
+		journalRoute.GET("select/journals", journal.FindSelectJournals)
 		// 计算分录
 		journalRoute.GET("/compute/journals", journal.JournalCompute)
 		// 查找分录作成数据

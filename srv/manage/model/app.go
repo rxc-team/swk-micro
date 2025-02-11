@@ -48,6 +48,7 @@ type App struct {
 	Configs      Configs            `json:"configs" bson:"configs"`
 	SwkControl   bool               `json:"swk_control" bson:"swk_control"`
 	ConfimMethod string             `json:"confim_method" bson:"confim_method"`
+	JournalType  string             `json:"journal_type" bson:"journal_type"`
 	CreatedAt    time.Time          `json:"created_at" bson:"created_at"`
 	CreatedBy    string             `json:"created_by" bson:"created_by"`
 	UpdatedAt    time.Time          `json:"updated_at" bson:"updated_at"`
@@ -87,6 +88,7 @@ func (a *App) ToProto() *app.App {
 		Remarks:      a.Remarks,
 		SwkControl:   a.SwkControl,
 		ConfimMethod: a.ConfimMethod,
+		JournalType:  a.JournalType,
 		CreatedAt:    a.CreatedAt.String(),
 		CreatedBy:    a.CreatedBy,
 		UpdatedAt:    a.UpdatedAt.String(),
@@ -1214,7 +1216,7 @@ func NextMonth(ctx context.Context, db string, conf Config) (err error) {
 }
 
 // ModifySwkSetting 更新基本设定
-func ModifySwkSetting(ctx context.Context, db string, appID string, handleMonth string, swkControl bool, confimMethod string) (err error) {
+func ModifySwkSetting(ctx context.Context, db string, appID string, handleMonth string, swkControl bool, confimMethod string, journalType string) (err error) {
 	client := database.New()
 	c := client.Database(database.GetDBName(db)).Collection(AppsCollection)
 
@@ -1227,6 +1229,7 @@ func ModifySwkSetting(ctx context.Context, db string, appID string, handleMonth 
 			"configs.syori_ym": handleMonth,
 			"swk_control":      swkControl,
 			"confim_method":    confimMethod,
+			"journal_type":     journalType,
 		},
 	}
 
