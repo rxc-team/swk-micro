@@ -3388,10 +3388,9 @@ func buildRepaymentData(p InsertParam) (e error) {
 				}
 			}
 
-			// 创建登录数据
-			araigaeItemsData := copyMap(setResp.GetItems()[0].Items)
-
 			if setResp.Total > 0 && p.confimMethod == "araigae" {
+				// 创建登录数据
+				araigaeItemsData := copyMap(setResp.GetItems()[0].Items)
 				branchCount := 1
 				for line, sub := range pattern.GetSubjects() {
 					expression := formula.NewExpression(sub.AmountField)
