@@ -51,6 +51,7 @@ type InsertParam struct {
 	datastoreID  string
 	userID       string
 	confimMethod string
+	journalType  string
 	owners       []string
 	dsMap        map[string]string
 	jouData      *journal.Journal
@@ -530,6 +531,31 @@ func GenAddAndSubData(domain, db, appID, userID, lang string, owners []string) (
 		}
 		handleMonth := cfg.GetSyoriYm()
 
+		// 获取分录确认方式和结构体种类
+		appService := app.NewAppService("manage", client.DefaultClient)
+
+		var req app.FindAppRequest
+		req.AppId = appID
+		req.Database = db
+		appDate, err := appService.FindApp(context.TODO(), &req)
+		if err != nil {
+			path := filex.WriteAndSaveFile(domain, appID, []string{err.Error()})
+			// 发送消息 收集数据情报失败 终止任务
+			jobx.ModifyTask(task.ModifyRequest{
+				JobId:       jobID,
+				Message:     err.Error(),
+				CurrentStep: "collect-data",
+				EndTime:     time.Now().UTC().Format("2006-01-02 15:04:05"),
+				ErrorFile: &task.File{
+					Url:  path.MediaLink,
+					Name: path.Name,
+				},
+				Database: db,
+			}, userID)
+			return
+		}
+		journalType := appDate.GetApp().GetJournalType()
+
 		// 获取所有分录数据
 		jouDataMap := make(map[string]*journal.Journal)
 
@@ -686,6 +712,7 @@ func GenAddAndSubData(domain, db, appID, userID, lang string, owners []string) (
 			dsMap:       dsMap,
 			asSubMap:    asSubMap,
 			jouDataMap:  jouDataMap,
+			journalType: journalType,
 		}
 
 		//  生成数据
@@ -825,14 +852,28 @@ func buildObtainData(p InsertParam) (e error) {
 		index := 1
 		for count, obtainItem := range itemResp.GetItems() {
 			var pattern *journal.Pattern
+			fmt.Println(obtainItem.Items["setteikubun"].GetValue())
+			fmt.Println(p.journalType)
 			if obtainItem.Items["setteikubun"].GetValue() == "固定資産取得" {
-				pattern = getPattern("04001", p.jouDataMap["04"])
+				if p.journalType == "primary" {
+					pattern = getPattern("04001", p.jouDataMap["04"])
+				} else {
+					pattern = getPattern("040001", p.jouDataMap["04"])
+				}
 			}
 			if obtainItem.Items["setteikubun"].GetValue() == "固定資産移動" {
-				pattern = getPattern("05001", p.jouDataMap["05"])
+				if p.journalType == "primary" {
+					pattern = getPattern("05001", p.jouDataMap["05"])
+				} else {
+					pattern = getPattern("050001", p.jouDataMap["05"])
+				}
 			}
 			if obtainItem.Items["setteikubun"].GetValue() == "固定資産除却" {
-				pattern = getPattern("06001", p.jouDataMap["06"])
+				if p.journalType == "primary" {
+					pattern = getPattern("06001", p.jouDataMap["06"])
+				} else {
+					pattern = getPattern("060001", p.jouDataMap["06"])
+				}
 			}
 			if obtainItem.Items["setteikubun"].GetValue() == "固定資産売却" {
 				baikyakuchoubokagakuValue, err := strconv.ParseFloat(obtainItem.Items["baikyakuchoubokagaku"].GetValue(), 64)
@@ -848,11 +889,22 @@ func buildObtainData(p InsertParam) (e error) {
 				}
 
 				if baikyakukagakuValue-baikyakuchoubokagakuValue < 0 {
-					pattern = getPattern("07001", p.jouDataMap["07"])
+					if p.journalType == "primary" {
+						pattern = getPattern("07001", p.jouDataMap["07"])
+					} else {
+						pattern = getPattern("070001", p.jouDataMap["07"])
+					}
 				} else {
-					pattern = getPattern("07002", p.jouDataMap["07"])
+					if p.journalType == "primary" {
+						pattern = getPattern("07002", p.jouDataMap["07"])
+					} else {
+						pattern = getPattern("070002", p.jouDataMap["07"])
+					}
 				}
 			}
+
+			// 创建登录数据
+			itemsData := copyMap(obtainItem.Items)
 			branchCount := 1
 			for line, sub := range pattern.GetSubjects() {
 				expression := formula.NewExpression(sub.AmountField)
@@ -892,82 +944,194 @@ func buildObtainData(p InsertParam) (e error) {
 				assetsType := obtainItem.Items["bunruicd"].GetValue()
 				subMap := p.asSubMap[assetsType]
 
-				// 创建登录数据
-				itemsData := copyMap(obtainItem.Items)
+				if p.journalType == "primary" {
+					itemsData = copyMap(obtainItem.Items)
 
-				itemsData["keiyakuno"] = &item.Value{
-					DataType: "lookup",
-					Value:    obtainItem.Items["kaishacd"].GetValue(),
-				}
-				itemsData["koushinbangouoya"] = &item.Value{
-					DataType: "text",
-					Value:    obtainItem.Items["koushinbangouoya"].GetValue(),
-				}
-				itemsData["koushinbangoueda"] = &item.Value{
-					DataType: "text",
-					Value:    obtainItem.Items["koushinbangoueda"].GetValue(),
-				}
-				itemsData["shiwakeno"] = &item.Value{
-					DataType: "text",
-					Value:    p.shiwakeno,
-				}
-				itemsData["shiwakeymd"] = &item.Value{
-					DataType: "date",
-					Value:    time.Now().Format("2006-01-02"),
-				}
-				itemsData["shiwakeym"] = &item.Value{
-					DataType: "text",
-					Value:    p.handleMonth,
-				}
-				itemsData["partten"] = &item.Value{
-					DataType: "text",
-					Value:    pattern.PatternId,
-				}
-				itemsData["lineno"] = &item.Value{
-					DataType: "number",
-					Value:    strconv.Itoa(line + 1),
-				}
-				itemsData["taishakukubun"] = &item.Value{
-					DataType: "text",
-					Value:    sub.LendingDivision,
-				}
-				itemsData["kanjokamoku"] = &item.Value{
-					DataType: "text",
-					Value:    subMap[sub.GetSubjectKey()],
-				}
-				itemsData["shiwakekingaku"] = &item.Value{
-					DataType: "number",
-					Value:    result.String(),
-				}
-				itemsData["shiwakeaggno_parent"] = &item.Value{
-					DataType: "text",
-					Value:    strconv.Itoa(count + 1),
-				}
-				itemsData["shiwakeaggno_branch"] = &item.Value{
-					DataType: "text",
-					Value:    strconv.Itoa(branchCount),
-				}
-				itemsData["shiwaketype"] = &item.Value{
-					DataType: "text",
-					Value:    "1",
-				}
-				itemsData["remark"] = &item.Value{
-					DataType: "text",
-					Value:    pattern.PatternName,
-				}
-				itemsData["index"] = &item.Value{
-					DataType: "number",
-					Value:    strconv.Itoa(index),
-				}
+					itemsData["keiyakuno"] = &item.Value{
+						DataType: "lookup",
+						Value:    obtainItem.Items["kaishacd"].GetValue(),
+					}
+					itemsData["koushinbangouoya"] = &item.Value{
+						DataType: "text",
+						Value:    obtainItem.Items["koushinbangouoya"].GetValue(),
+					}
+					itemsData["koushinbangoueda"] = &item.Value{
+						DataType: "text",
+						Value:    obtainItem.Items["koushinbangoueda"].GetValue(),
+					}
+					itemsData["shiwakeno"] = &item.Value{
+						DataType: "text",
+						Value:    p.shiwakeno,
+					}
+					itemsData["shiwakeymd"] = &item.Value{
+						DataType: "date",
+						Value:    time.Now().Format("2006-01-02"),
+					}
+					itemsData["shiwakeym"] = &item.Value{
+						DataType: "text",
+						Value:    p.handleMonth,
+					}
+					itemsData["partten"] = &item.Value{
+						DataType: "text",
+						Value:    pattern.PatternId,
+					}
+					itemsData["lineno"] = &item.Value{
+						DataType: "number",
+						Value:    strconv.Itoa(line + 1),
+					}
+					itemsData["taishakukubun"] = &item.Value{
+						DataType: "text",
+						Value:    sub.LendingDivision,
+					}
+					itemsData["kanjokamoku"] = &item.Value{
+						DataType: "text",
+						Value:    subMap[sub.GetSubjectKey()],
+					}
+					itemsData["shiwakekingaku"] = &item.Value{
+						DataType: "number",
+						Value:    result.String(),
+					}
+					itemsData["shiwakeaggno_parent"] = &item.Value{
+						DataType: "text",
+						Value:    strconv.Itoa(count + 1),
+					}
+					itemsData["shiwakeaggno_branch"] = &item.Value{
+						DataType: "text",
+						Value:    strconv.Itoa(branchCount),
+					}
+					itemsData["shiwaketype"] = &item.Value{
+						DataType: "text",
+						Value:    "1",
+					}
+					itemsData["remark"] = &item.Value{
+						DataType: "text",
+						Value:    pattern.PatternName,
+					}
+					itemsData["index"] = &item.Value{
+						DataType: "number",
+						Value:    strconv.Itoa(index),
+					}
 
-				its := &item.ListItems{
-					Items: itemsData,
+					its := &item.ListItems{
+						Items: itemsData,
+					}
+
+					items = append(items, its)
+
+					index++
+					branchCount++
+				} else {
+					if line%2 == 0 {
+						itemsData = copyMap(obtainItem.Items)
+
+						itemsData["keiyakuno"] = &item.Value{
+							DataType: "lookup",
+							Value:    obtainItem.Items["kaishacd"].GetValue(),
+						}
+						itemsData["koushinbangouoya"] = &item.Value{
+							DataType: "text",
+							Value:    obtainItem.Items["koushinbangouoya"].GetValue(),
+						}
+						itemsData["koushinbangoueda"] = &item.Value{
+							DataType: "text",
+							Value:    obtainItem.Items["koushinbangoueda"].GetValue(),
+						}
+						itemsData["shiwakeno"] = &item.Value{
+							DataType: "text",
+							Value:    p.shiwakeno,
+						}
+						itemsData["shiwakeymd"] = &item.Value{
+							DataType: "date",
+							Value:    time.Now().Format("2006-01-02"),
+						}
+						itemsData["shiwakeym"] = &item.Value{
+							DataType: "text",
+							Value:    p.handleMonth,
+						}
+						itemsData["partten"] = &item.Value{
+							DataType: "text",
+							Value:    pattern.PatternId,
+						}
+						itemsData["lineno"] = &item.Value{
+							DataType: "number",
+							Value:    strconv.Itoa(line + 1),
+						}
+						if sub.LendingDivision == "1" {
+							itemsData["shiwakekamokukarikata"] = &item.Value{
+								DataType: "text",
+								Value:    sub.DefaultName,
+							}
+							itemsData["kanjokamokukarikata"] = &item.Value{
+								DataType: "text",
+								Value:    subMap[sub.GetSubjectKey()],
+							}
+						} else {
+							itemsData["shiwakekamokukashikata"] = &item.Value{
+								DataType: "text",
+								Value:    sub.DefaultName,
+							}
+							itemsData["kanjokamokukashikata"] = &item.Value{
+								DataType: "text",
+								Value:    subMap[sub.GetSubjectKey()],
+							}
+						}
+						itemsData["shiwakekingaku"] = &item.Value{
+							DataType: "number",
+							Value:    result.String(),
+						}
+						itemsData["shiwakeaggno_parent"] = &item.Value{
+							DataType: "text",
+							Value:    strconv.Itoa(count + 1),
+						}
+						itemsData["shiwakeaggno_branch"] = &item.Value{
+							DataType: "text",
+							Value:    strconv.Itoa(branchCount),
+						}
+						itemsData["shiwaketype"] = &item.Value{
+							DataType: "text",
+							Value:    "1",
+						}
+						itemsData["remark"] = &item.Value{
+							DataType: "text",
+							Value:    pattern.PatternName,
+						}
+						itemsData["index"] = &item.Value{
+							DataType: "number",
+							Value:    strconv.Itoa(index),
+						}
+					} else {
+						if itemsData != nil {
+							if sub.LendingDivision == "1" {
+								itemsData["shiwakekamokukarikata"] = &item.Value{
+									DataType: "text",
+									Value:    sub.DefaultName,
+								}
+								itemsData["kanjokamokukarikata"] = &item.Value{
+									DataType: "text",
+									Value:    subMap[sub.GetSubjectKey()],
+								}
+							} else {
+								itemsData["shiwakekamokukashikata"] = &item.Value{
+									DataType: "text",
+									Value:    sub.DefaultName,
+								}
+								itemsData["kanjokamokukashikata"] = &item.Value{
+									DataType: "text",
+									Value:    subMap[sub.GetSubjectKey()],
+								}
+							}
+
+							its := &item.ListItems{
+								Items: itemsData,
+							}
+
+							items = append(items, its)
+						}
+					}
+
+					index++
+					branchCount++
 				}
-
-				items = append(items, its)
-
-				index++
-				branchCount++
 			}
 		}
 
@@ -2054,6 +2218,31 @@ func GenPayData(domain, db, appID, userID, lang string, owners []string) (r *ite
 		}
 		handleMonth := cfg.GetSyoriYm()
 
+		// 获取分录确认方式和结构体种类
+		appService := app.NewAppService("manage", client.DefaultClient)
+
+		var req app.FindAppRequest
+		req.AppId = appID
+		req.Database = db
+		appDate, err := appService.FindApp(context.TODO(), &req)
+		if err != nil {
+			path := filex.WriteAndSaveFile(domain, appID, []string{err.Error()})
+			// 发送消息 收集数据情报失败 终止任务
+			jobx.ModifyTask(task.ModifyRequest{
+				JobId:       jobID,
+				Message:     err.Error(),
+				CurrentStep: "collect-data",
+				EndTime:     time.Now().UTC().Format("2006-01-02 15:04:05"),
+				ErrorFile: &task.File{
+					Url:  path.MediaLink,
+					Name: path.Name,
+				},
+				Database: db,
+			}, userID)
+			return
+		}
+		journalType := appDate.GetApp().GetJournalType()
+
 		// 获取分录数据
 		jouData, err := getJournal(db, appID, "03")
 		if err != nil {
@@ -2136,6 +2325,7 @@ func GenPayData(domain, db, appID, userID, lang string, owners []string) (r *ite
 			dsMap:       dsMap,
 			jouData:     jouData,
 			asSubMap:    asSubMap,
+			journalType: journalType,
 		}
 
 		err = buildPayData(param)
@@ -2266,8 +2456,12 @@ func buildPayData(p InsertParam) (e error) {
 		var items ImportData
 		index := 1
 		for count, payItem := range data {
-			// 契约登录的场合
-			pattern := getPattern("03001", p.jouData)
+			var pattern *journal.Pattern
+			if p.journalType == "primary" {
+				pattern = getPattern("03001", p.jouData)
+			} else {
+				pattern = getPattern("030001", p.jouData)
+			}
 			keiyakuno := payItem["keiyakuno"].GetValue()
 			keiyakuAccesskeys := sessionx.GetAccessKeys(p.db, p.userID, p.dsMap["keiyakudaicho"], "R")
 			itemMap, err := getKeiyakuData(p.db, p.appID, p.dsMap["keiyakudaicho"], keiyakuno, keiyakuAccesskeys)
@@ -2276,6 +2470,8 @@ func buildPayData(p InsertParam) (e error) {
 				return err
 			}
 
+			// 创建登录数据
+			var itemsData map[string]*item.Value
 			branchCount := 1
 			for line, sub := range pattern.GetSubjects() {
 				expression := formula.NewExpression(sub.AmountField)
@@ -2315,75 +2511,181 @@ func buildPayData(p InsertParam) (e error) {
 				assetsType := itemMap["bunruicd"].GetValue()
 				subMap := p.asSubMap[assetsType]
 
-				// 创建登录数据
-				itemsData := copyMap(itemMap)
+				if p.journalType == "primary" {
+					itemsData = copyMap(itemMap)
 
-				itemsData["keiyakuno"] = &item.Value{
-					DataType: "lookup",
-					Value:    keiyakuno,
+					itemsData["keiyakuno"] = &item.Value{
+						DataType: "lookup",
+						Value:    keiyakuno,
+					}
+
+					itemsData["shiwakeno"] = &item.Value{
+						DataType: "text",
+						Value:    p.shiwakeno,
+					}
+					itemsData["shiwakeymd"] = &item.Value{
+						DataType: "date",
+						Value:    time.Now().Format("2006-01-02"),
+					}
+					itemsData["shiwakeym"] = &item.Value{
+						DataType: "text",
+						Value:    p.handleMonth,
+					}
+					itemsData["partten"] = &item.Value{
+						DataType: "text",
+						Value:    pattern.PatternId,
+					}
+					itemsData["lineno"] = &item.Value{
+						DataType: "number",
+						Value:    strconv.Itoa(line + 1),
+					}
+					itemsData["taishakukubun"] = &item.Value{
+						DataType: "text",
+						Value:    sub.LendingDivision,
+					}
+					itemsData["kanjokamoku"] = &item.Value{
+						DataType: "text",
+						Value:    subMap[sub.GetSubjectKey()],
+					}
+					itemsData["shiwakekingaku"] = &item.Value{
+						DataType: "number",
+						Value:    result.String(),
+					}
+					itemsData["shiwakeaggno_parent"] = &item.Value{
+						DataType: "text",
+						Value:    strconv.Itoa(count + 1),
+					}
+					itemsData["shiwakeaggno_branch"] = &item.Value{
+						DataType: "text",
+						Value:    strconv.Itoa(branchCount),
+					}
+					itemsData["shiwaketype"] = &item.Value{
+						DataType: "text",
+						Value:    "3",
+					}
+					itemsData["remark"] = &item.Value{
+						DataType: "text",
+						Value:    "支払_" + p.handleMonth,
+					}
+					itemsData["index"] = &item.Value{
+						DataType: "number",
+						Value:    strconv.Itoa(index),
+					}
+
+					its := &item.ListItems{
+						Items: itemsData,
+					}
+
+					items = append(items, its)
+
+					index++
+					branchCount++
+				} else {
+					if line%2 == 0 {
+						itemsData = copyMap(itemMap)
+
+						itemsData["keiyakuno"] = &item.Value{
+							DataType: "lookup",
+							Value:    keiyakuno,
+						}
+
+						itemsData["shiwakeno"] = &item.Value{
+							DataType: "text",
+							Value:    p.shiwakeno,
+						}
+						itemsData["shiwakeymd"] = &item.Value{
+							DataType: "date",
+							Value:    time.Now().Format("2006-01-02"),
+						}
+						itemsData["shiwakeym"] = &item.Value{
+							DataType: "text",
+							Value:    p.handleMonth,
+						}
+						itemsData["partten"] = &item.Value{
+							DataType: "text",
+							Value:    pattern.PatternId,
+						}
+						itemsData["lineno"] = &item.Value{
+							DataType: "number",
+							Value:    strconv.Itoa(line + 1),
+						}
+						if sub.LendingDivision == "1" {
+							itemsData["shiwakekamokukarikata"] = &item.Value{
+								DataType: "text",
+								Value:    sub.DefaultName,
+							}
+							itemsData["kanjokamokukarikata"] = &item.Value{
+								DataType: "text",
+								Value:    subMap[sub.GetSubjectKey()],
+							}
+						} else {
+							itemsData["shiwakekamokukashikata"] = &item.Value{
+								DataType: "text",
+								Value:    sub.DefaultName,
+							}
+							itemsData["kanjokamokukashikata"] = &item.Value{
+								DataType: "text",
+								Value:    subMap[sub.GetSubjectKey()],
+							}
+						}
+						itemsData["shiwakekingaku"] = &item.Value{
+							DataType: "number",
+							Value:    result.String(),
+						}
+						itemsData["shiwakeaggno_parent"] = &item.Value{
+							DataType: "text",
+							Value:    strconv.Itoa(count + 1),
+						}
+						itemsData["shiwakeaggno_branch"] = &item.Value{
+							DataType: "text",
+							Value:    strconv.Itoa(branchCount),
+						}
+						itemsData["shiwaketype"] = &item.Value{
+							DataType: "text",
+							Value:    "3",
+						}
+						itemsData["remark"] = &item.Value{
+							DataType: "text",
+							Value:    "支払_" + p.handleMonth,
+						}
+						itemsData["index"] = &item.Value{
+							DataType: "number",
+							Value:    strconv.Itoa(index),
+						}
+					} else {
+						if itemsData != nil {
+							if sub.LendingDivision == "1" {
+								itemsData["shiwakekamokukarikata"] = &item.Value{
+									DataType: "text",
+									Value:    sub.DefaultName,
+								}
+								itemsData["kanjokamokukarikata"] = &item.Value{
+									DataType: "text",
+									Value:    subMap[sub.GetSubjectKey()],
+								}
+							} else {
+								itemsData["shiwakekamokukashikata"] = &item.Value{
+									DataType: "text",
+									Value:    sub.DefaultName,
+								}
+								itemsData["kanjokamokukashikata"] = &item.Value{
+									DataType: "text",
+									Value:    subMap[sub.GetSubjectKey()],
+								}
+							}
+
+							its := &item.ListItems{
+								Items: itemsData,
+							}
+
+							items = append(items, its)
+						}
+					}
+
+					index++
+					branchCount++
 				}
 
-				itemsData["shiwakeno"] = &item.Value{
-					DataType: "text",
-					Value:    p.shiwakeno,
-				}
-				itemsData["shiwakeymd"] = &item.Value{
-					DataType: "date",
-					Value:    time.Now().Format("2006-01-02"),
-				}
-				itemsData["shiwakeym"] = &item.Value{
-					DataType: "text",
-					Value:    p.handleMonth,
-				}
-				itemsData["partten"] = &item.Value{
-					DataType: "text",
-					Value:    pattern.PatternId,
-				}
-				itemsData["lineno"] = &item.Value{
-					DataType: "number",
-					Value:    strconv.Itoa(line + 1),
-				}
-				itemsData["taishakukubun"] = &item.Value{
-					DataType: "text",
-					Value:    sub.LendingDivision,
-				}
-				itemsData["kanjokamoku"] = &item.Value{
-					DataType: "text",
-					Value:    subMap[sub.GetSubjectKey()],
-				}
-				itemsData["shiwakekingaku"] = &item.Value{
-					DataType: "number",
-					Value:    result.String(),
-				}
-				itemsData["shiwakeaggno_parent"] = &item.Value{
-					DataType: "text",
-					Value:    strconv.Itoa(count + 1),
-				}
-				itemsData["shiwakeaggno_branch"] = &item.Value{
-					DataType: "text",
-					Value:    strconv.Itoa(branchCount),
-				}
-				itemsData["shiwaketype"] = &item.Value{
-					DataType: "text",
-					Value:    "3",
-				}
-				itemsData["remark"] = &item.Value{
-					DataType: "text",
-					Value:    "支払_" + p.handleMonth,
-				}
-				itemsData["index"] = &item.Value{
-					DataType: "number",
-					Value:    strconv.Itoa(index),
-				}
-
-				its := &item.ListItems{
-					Items: itemsData,
-				}
-
-				items = append(items, its)
-
-				index++
-				branchCount++
 			}
 		}
 
@@ -2524,7 +2826,7 @@ func GenRepayData(domain, db, appID, userID, lang string, owners []string) (r *i
 		}
 		handleMonth := cfg.GetSyoriYm()
 
-		// 获取分录确认方式
+		// 获取分录确认方式和结构体种类
 		appService := app.NewAppService("manage", client.DefaultClient)
 
 		var req app.FindAppRequest
@@ -2548,6 +2850,7 @@ func GenRepayData(domain, db, appID, userID, lang string, owners []string) (r *i
 			return
 		}
 		confimMethod := appDate.GetApp().GetConfimMethod()
+		journalType := appDate.GetApp().GetJournalType()
 
 		// 获取分录数据
 		jouData, err := getJournal(db, appID, "02")
@@ -2632,6 +2935,7 @@ func GenRepayData(domain, db, appID, userID, lang string, owners []string) (r *i
 			jouData:      jouData,
 			asSubMap:     asSubMap,
 			confimMethod: confimMethod,
+			journalType:  journalType,
 		}
 
 		//  生成数据
@@ -2833,8 +3137,18 @@ func buildRepaymentData(p InsertParam) (e error) {
 				return err
 			}
 
-			pattern := getPattern("02001", p.jouData)
+			var pattern *journal.Pattern
+			if p.journalType == "primary" {
+				pattern = getPattern("02001", p.jouData)
+			} else {
+				pattern = getPattern("020001", p.jouData)
+			}
+
 			branchCount := 1
+
+			// 创建登录数据
+			itemsData := copyMap(repayItem.Items)
+
 			for line, sub := range pattern.GetSubjects() {
 				expression := formula.NewExpression(sub.AmountField)
 				params := getParam(sub.AmountField)
@@ -2873,88 +3187,209 @@ func buildRepaymentData(p InsertParam) (e error) {
 				assetsType := repayItem.Items["bunruicd"].GetValue()
 				subMap := p.asSubMap[assetsType]
 
-				// 创建登录数据
-				itemsData := copyMap(repayItem.Items)
+				if p.journalType == "primary" {
+					itemsData = copyMap(repayItem.Items)
 
-				itemsData["keiyakuno"] = &item.Value{
-					DataType: "lookup",
-					Value:    repayItem.Items["leasekaishacd"].GetValue(),
-				}
-
-				itemsData["shiwakeno"] = &item.Value{
-					DataType: "text",
-					Value:    p.shiwakeno,
-				}
-				itemsData["shiwakeymd"] = &item.Value{
-					DataType: "date",
-					Value:    time.Now().Format("2006-01-02"),
-				}
-				itemsData["shiwakeym"] = &item.Value{
-					DataType: "text",
-					Value:    p.handleMonth,
-				}
-				itemsData["partten"] = &item.Value{
-					DataType: "text",
-					Value:    pattern.PatternId,
-				}
-				itemsData["lineno"] = &item.Value{
-					DataType: "number",
-					Value:    strconv.Itoa(line + 1),
-				}
-				itemsData["taishakukubun"] = &item.Value{
-					DataType: "text",
-					Value:    sub.LendingDivision,
-				}
-				itemsData["kanjokamoku"] = &item.Value{
-					DataType: "text",
-					Value:    subMap[sub.GetSubjectKey()],
-				}
-				itemsData["shiwakekingaku"] = &item.Value{
-					DataType: "number",
-					Value:    result.String(),
-				}
-				itemsData["shiwakeaggno_parent"] = &item.Value{
-					DataType: "text",
-					Value:    strconv.Itoa(count + 1),
-				}
-				itemsData["shiwakeaggno_branch"] = &item.Value{
-					DataType: "text",
-					Value:    strconv.Itoa(branchCount),
-				}
-				itemsData["shiwaketype"] = &item.Value{
-					DataType: "text",
-					Value:    "2",
-				}
-				itemsData["remark"] = &item.Value{
-					DataType: "text",
-					Value:    "償却_" + p.handleMonth,
-				}
-				itemsData["index"] = &item.Value{
-					DataType: "number",
-					Value:    strconv.Itoa(index),
-				}
-
-				if setResp.Total > 0 && p.confimMethod == "sabun" {
-					floatNum, err := strconv.ParseFloat(setResp.GetItems()[0].Items["syokyaku"].GetValue(), 64)
-					if err != nil {
-						loggerx.ErrorLog("getRepaymentData", err.Error())
+					itemsData["keiyakuno"] = &item.Value{
+						DataType: "lookup",
+						Value:    repayItem.Items["leasekaishacd"].GetValue(),
 					}
 
+					itemsData["shiwakeno"] = &item.Value{
+						DataType: "text",
+						Value:    p.shiwakeno,
+					}
+					itemsData["shiwakeymd"] = &item.Value{
+						DataType: "date",
+						Value:    time.Now().Format("2006-01-02"),
+					}
+					itemsData["shiwakeym"] = &item.Value{
+						DataType: "text",
+						Value:    p.handleMonth,
+					}
+					itemsData["partten"] = &item.Value{
+						DataType: "text",
+						Value:    pattern.PatternId,
+					}
+					itemsData["lineno"] = &item.Value{
+						DataType: "number",
+						Value:    strconv.Itoa(line + 1),
+					}
+					itemsData["taishakukubun"] = &item.Value{
+						DataType: "text",
+						Value:    sub.LendingDivision,
+					}
+					itemsData["kanjokamoku"] = &item.Value{
+						DataType: "text",
+						Value:    subMap[sub.GetSubjectKey()],
+					}
 					itemsData["shiwakekingaku"] = &item.Value{
 						DataType: "number",
-						Value:    fmt.Sprintf("%f", fv-floatNum),
+						Value:    result.String(),
 					}
+					itemsData["shiwakeaggno_parent"] = &item.Value{
+						DataType: "text",
+						Value:    strconv.Itoa(count + 1),
+					}
+					itemsData["shiwakeaggno_branch"] = &item.Value{
+						DataType: "text",
+						Value:    strconv.Itoa(branchCount),
+					}
+					itemsData["shiwaketype"] = &item.Value{
+						DataType: "text",
+						Value:    "2",
+					}
+					itemsData["remark"] = &item.Value{
+						DataType: "text",
+						Value:    "償却_" + p.handleMonth,
+					}
+					itemsData["index"] = &item.Value{
+						DataType: "number",
+						Value:    strconv.Itoa(index),
+					}
+
+					if setResp.Total > 0 && p.confimMethod == "sabun" {
+						floatNum, err := strconv.ParseFloat(setResp.GetItems()[0].Items["syokyaku"].GetValue(), 64)
+						if err != nil {
+							loggerx.ErrorLog("getRepaymentData", err.Error())
+						}
+
+						itemsData["shiwakekingaku"] = &item.Value{
+							DataType: "number",
+							Value:    fmt.Sprintf("%f", fv-floatNum),
+						}
+					}
+
+					its := &item.ListItems{
+						Items: itemsData,
+					}
+
+					items = append(items, its)
+
+					index++
+					branchCount++
+				} else {
+					if line%2 == 0 {
+						itemsData = copyMap(repayItem.Items)
+
+						itemsData["keiyakuno"] = &item.Value{
+							DataType: "lookup",
+							Value:    repayItem.Items["leasekaishacd"].GetValue(),
+						}
+
+						itemsData["shiwakeno"] = &item.Value{
+							DataType: "text",
+							Value:    p.shiwakeno,
+						}
+						itemsData["shiwakeymd"] = &item.Value{
+							DataType: "date",
+							Value:    time.Now().Format("2006-01-02"),
+						}
+						itemsData["shiwakeym"] = &item.Value{
+							DataType: "text",
+							Value:    p.handleMonth,
+						}
+						itemsData["partten"] = &item.Value{
+							DataType: "text",
+							Value:    pattern.PatternId,
+						}
+						itemsData["lineno"] = &item.Value{
+							DataType: "number",
+							Value:    strconv.Itoa(line + 1),
+						}
+						if sub.LendingDivision == "1" {
+							itemsData["shiwakekamokukarikata"] = &item.Value{
+								DataType: "text",
+								Value:    sub.DefaultName,
+							}
+							itemsData["kanjokamokukarikata"] = &item.Value{
+								DataType: "text",
+								Value:    subMap[sub.GetSubjectKey()],
+							}
+						} else {
+							itemsData["shiwakekamokukashikata"] = &item.Value{
+								DataType: "text",
+								Value:    sub.DefaultName,
+							}
+							itemsData["kanjokamokukashikata"] = &item.Value{
+								DataType: "text",
+								Value:    subMap[sub.GetSubjectKey()],
+							}
+						}
+						itemsData["shiwakekingaku"] = &item.Value{
+							DataType: "number",
+							Value:    result.String(),
+						}
+						itemsData["shiwakeaggno_parent"] = &item.Value{
+							DataType: "text",
+							Value:    strconv.Itoa(count + 1),
+						}
+						itemsData["shiwakeaggno_branch"] = &item.Value{
+							DataType: "text",
+							Value:    strconv.Itoa(branchCount),
+						}
+						itemsData["shiwaketype"] = &item.Value{
+							DataType: "text",
+							Value:    "2",
+						}
+						itemsData["remark"] = &item.Value{
+							DataType: "text",
+							Value:    "償却_" + p.handleMonth,
+						}
+						itemsData["index"] = &item.Value{
+							DataType: "number",
+							Value:    strconv.Itoa(index),
+						}
+
+						if setResp.Total > 0 && p.confimMethod == "sabun" {
+							floatNum, err := strconv.ParseFloat(setResp.GetItems()[0].Items["syokyaku"].GetValue(), 64)
+							if err != nil {
+								loggerx.ErrorLog("getRepaymentData", err.Error())
+							}
+
+							itemsData["shiwakekingaku"] = &item.Value{
+								DataType: "number",
+								Value:    fmt.Sprintf("%f", fv-floatNum),
+							}
+						}
+
+					} else {
+						if itemsData != nil {
+							if sub.LendingDivision == "1" {
+								itemsData["shiwakekamokukarikata"] = &item.Value{
+									DataType: "text",
+									Value:    sub.DefaultName,
+								}
+								itemsData["kanjokamokukarikata"] = &item.Value{
+									DataType: "text",
+									Value:    subMap[sub.GetSubjectKey()],
+								}
+							} else {
+								itemsData["shiwakekamokukashikata"] = &item.Value{
+									DataType: "text",
+									Value:    sub.DefaultName,
+								}
+								itemsData["kanjokamokukashikata"] = &item.Value{
+									DataType: "text",
+									Value:    subMap[sub.GetSubjectKey()],
+								}
+							}
+
+							its := &item.ListItems{
+								Items: itemsData,
+							}
+
+							items = append(items, its)
+						}
+					}
+
+					index++
+					branchCount++
 				}
-
-				its := &item.ListItems{
-					Items: itemsData,
-				}
-
-				items = append(items, its)
-
-				index++
-				branchCount++
 			}
+
+			// 创建登录数据
+			araigaeItemsData := copyMap(setResp.GetItems()[0].Items)
 
 			if setResp.Total > 0 && p.confimMethod == "araigae" {
 				branchCount := 1
@@ -2996,79 +3431,188 @@ func buildRepaymentData(p InsertParam) (e error) {
 					assetsType := setResp.GetItems()[0].Items["bunruicd"].GetValue()
 					subMap := p.asSubMap[assetsType]
 
-					// 创建登录数据
-					itemsData := copyMap(setResp.GetItems()[0].Items)
+					if p.journalType == "primary" {
+						araigaeItemsData = copyMap(setResp.GetItems()[0].Items)
 
-					itemsData["keiyakuno"] = &item.Value{
-						DataType: "lookup",
-						Value:    setResp.GetItems()[0].Items["leasekaishacd"].GetValue(),
-					}
+						araigaeItemsData["keiyakuno"] = &item.Value{
+							DataType: "lookup",
+							Value:    setResp.GetItems()[0].Items["leasekaishacd"].GetValue(),
+						}
 
-					itemsData["shiwakeno"] = &item.Value{
-						DataType: "text",
-						Value:    p.shiwakeno,
-					}
-					itemsData["shiwakeymd"] = &item.Value{
-						DataType: "date",
-						Value:    time.Now().Format("2006-01-02"),
-					}
-					itemsData["shiwakeym"] = &item.Value{
-						DataType: "text",
-						Value:    p.handleMonth,
-					}
-					itemsData["partten"] = &item.Value{
-						DataType: "text",
-						Value:    pattern.PatternId,
-					}
-					itemsData["lineno"] = &item.Value{
-						DataType: "number",
-						Value:    strconv.Itoa(line + 1),
-					}
-					itemsData["taishakukubun"] = &item.Value{
-						DataType: "text",
-						Value:    sub.LendingDivision,
-					}
-					itemsData["kanjokamoku"] = &item.Value{
-						DataType: "text",
-						Value:    subMap[sub.GetSubjectKey()],
-					}
-					itemsData["shiwakekingaku"] = &item.Value{
-						DataType: "number",
-						Value:    fmt.Sprintf("%f", -fv),
-					}
-					itemsData["shiwakeaggno_parent"] = &item.Value{
-						DataType: "text",
-						Value:    strconv.Itoa(count + 1),
-					}
-					itemsData["shiwakeaggno_branch"] = &item.Value{
-						DataType: "text",
-						Value:    strconv.Itoa(branchCount),
-					}
-					itemsData["shiwaketype"] = &item.Value{
-						DataType: "text",
-						Value:    "2",
-					}
-					itemsData["remark"] = &item.Value{
-						DataType: "text",
-						Value:    "償却_" + p.handleMonth,
-					}
-					itemsData["index"] = &item.Value{
-						DataType: "number",
-						Value:    strconv.Itoa(index),
-					}
-					itemsData["kakuteidate"] = &item.Value{
-						DataType: "date",
-						Value:    defaultTime.Format(time.RFC3339),
-					}
+						araigaeItemsData["shiwakeno"] = &item.Value{
+							DataType: "text",
+							Value:    p.shiwakeno,
+						}
+						araigaeItemsData["shiwakeymd"] = &item.Value{
+							DataType: "date",
+							Value:    time.Now().Format("2006-01-02"),
+						}
+						araigaeItemsData["shiwakeym"] = &item.Value{
+							DataType: "text",
+							Value:    p.handleMonth,
+						}
+						araigaeItemsData["partten"] = &item.Value{
+							DataType: "text",
+							Value:    pattern.PatternId,
+						}
+						araigaeItemsData["lineno"] = &item.Value{
+							DataType: "number",
+							Value:    strconv.Itoa(line + 1),
+						}
+						araigaeItemsData["taishakukubun"] = &item.Value{
+							DataType: "text",
+							Value:    sub.LendingDivision,
+						}
+						araigaeItemsData["kanjokamoku"] = &item.Value{
+							DataType: "text",
+							Value:    subMap[sub.GetSubjectKey()],
+						}
+						araigaeItemsData["shiwakekingaku"] = &item.Value{
+							DataType: "number",
+							Value:    fmt.Sprintf("%f", -fv),
+						}
+						araigaeItemsData["shiwakeaggno_parent"] = &item.Value{
+							DataType: "text",
+							Value:    strconv.Itoa(count + 1),
+						}
+						araigaeItemsData["shiwakeaggno_branch"] = &item.Value{
+							DataType: "text",
+							Value:    strconv.Itoa(branchCount),
+						}
+						araigaeItemsData["shiwaketype"] = &item.Value{
+							DataType: "text",
+							Value:    "2",
+						}
+						araigaeItemsData["remark"] = &item.Value{
+							DataType: "text",
+							Value:    "償却_" + p.handleMonth,
+						}
+						araigaeItemsData["index"] = &item.Value{
+							DataType: "number",
+							Value:    strconv.Itoa(index),
+						}
+						araigaeItemsData["kakuteidate"] = &item.Value{
+							DataType: "date",
+							Value:    defaultTime.Format(time.RFC3339),
+						}
 
-					its := &item.ListItems{
-						Items: itemsData,
+						its := &item.ListItems{
+							Items: araigaeItemsData,
+						}
+
+						items = append(items, its)
+
+						index++
+						branchCount++
+					} else {
+						if line%2 == 0 {
+							araigaeItemsData = copyMap(setResp.GetItems()[0].Items)
+
+							araigaeItemsData["keiyakuno"] = &item.Value{
+								DataType: "lookup",
+								Value:    setResp.GetItems()[0].Items["leasekaishacd"].GetValue(),
+							}
+
+							araigaeItemsData["shiwakeno"] = &item.Value{
+								DataType: "text",
+								Value:    p.shiwakeno,
+							}
+							araigaeItemsData["shiwakeymd"] = &item.Value{
+								DataType: "date",
+								Value:    time.Now().Format("2006-01-02"),
+							}
+							araigaeItemsData["shiwakeym"] = &item.Value{
+								DataType: "text",
+								Value:    p.handleMonth,
+							}
+							araigaeItemsData["partten"] = &item.Value{
+								DataType: "text",
+								Value:    pattern.PatternId,
+							}
+							araigaeItemsData["lineno"] = &item.Value{
+								DataType: "number",
+								Value:    strconv.Itoa(line + 1),
+							}
+							if sub.LendingDivision == "1" {
+								araigaeItemsData["shiwakekamokukarikata"] = &item.Value{
+									DataType: "text",
+									Value:    sub.DefaultName,
+								}
+								araigaeItemsData["kanjokamokukarikata"] = &item.Value{
+									DataType: "text",
+									Value:    subMap[sub.GetSubjectKey()],
+								}
+							} else {
+								araigaeItemsData["shiwakekamokukashikata"] = &item.Value{
+									DataType: "text",
+									Value:    sub.DefaultName,
+								}
+								araigaeItemsData["kanjokamokukashikata"] = &item.Value{
+									DataType: "text",
+									Value:    subMap[sub.GetSubjectKey()],
+								}
+							}
+							araigaeItemsData["shiwakekingaku"] = &item.Value{
+								DataType: "number",
+								Value:    fmt.Sprintf("%f", -fv),
+							}
+							araigaeItemsData["shiwakeaggno_parent"] = &item.Value{
+								DataType: "text",
+								Value:    strconv.Itoa(count + 1),
+							}
+							araigaeItemsData["shiwakeaggno_branch"] = &item.Value{
+								DataType: "text",
+								Value:    strconv.Itoa(branchCount),
+							}
+							araigaeItemsData["shiwaketype"] = &item.Value{
+								DataType: "text",
+								Value:    "2",
+							}
+							araigaeItemsData["remark"] = &item.Value{
+								DataType: "text",
+								Value:    "償却_" + p.handleMonth,
+							}
+							araigaeItemsData["index"] = &item.Value{
+								DataType: "number",
+								Value:    strconv.Itoa(index),
+							}
+							araigaeItemsData["kakuteidate"] = &item.Value{
+								DataType: "date",
+								Value:    defaultTime.Format(time.RFC3339),
+							}
+						} else {
+							if araigaeItemsData != nil {
+								if sub.LendingDivision == "1" {
+									araigaeItemsData["shiwakekamokukarikata"] = &item.Value{
+										DataType: "text",
+										Value:    sub.DefaultName,
+									}
+									araigaeItemsData["kanjokamokukarikata"] = &item.Value{
+										DataType: "text",
+										Value:    subMap[sub.GetSubjectKey()],
+									}
+								} else {
+									araigaeItemsData["shiwakekamokukashikata"] = &item.Value{
+										DataType: "text",
+										Value:    sub.DefaultName,
+									}
+									araigaeItemsData["kanjokamokukashikata"] = &item.Value{
+										DataType: "text",
+										Value:    subMap[sub.GetSubjectKey()],
+									}
+								}
+
+								its := &item.ListItems{
+									Items: araigaeItemsData,
+								}
+
+								items = append(items, its)
+							}
+						}
+
+						index++
+						branchCount++
 					}
-
-					items = append(items, its)
-
-					index++
-					branchCount++
 				}
 
 			}
