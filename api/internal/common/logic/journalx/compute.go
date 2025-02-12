@@ -1057,20 +1057,20 @@ func buildObtainData(p InsertParam) (e error) {
 							Value:    strconv.Itoa(line + 1),
 						}
 						if sub.LendingDivision == "1" {
-							itemsData["shiwakekamokukarikata"] = &item.Value{
+							itemsData["kanjokamokucdkarikata"] = &item.Value{
 								DataType: "text",
-								Value:    sub.DefaultName,
+								Value:    sub.GetSubjectKey(),
 							}
-							itemsData["kanjokamokukarikata"] = &item.Value{
+							itemsData["kanjokamokunamekarikata"] = &item.Value{
 								DataType: "text",
 								Value:    subMap[sub.GetSubjectKey()],
 							}
 						} else {
-							itemsData["shiwakekamokukashikata"] = &item.Value{
+							itemsData["kanjokamokucdkashikata"] = &item.Value{
 								DataType: "text",
-								Value:    sub.DefaultName,
+								Value:    sub.GetSubjectKey(),
 							}
-							itemsData["kanjokamokukashikata"] = &item.Value{
+							itemsData["kanjokamokunamekashikata"] = &item.Value{
 								DataType: "text",
 								Value:    subMap[sub.GetSubjectKey()],
 							}
@@ -1102,20 +1102,20 @@ func buildObtainData(p InsertParam) (e error) {
 					} else {
 						if itemsData != nil {
 							if sub.LendingDivision == "1" {
-								itemsData["shiwakekamokukarikata"] = &item.Value{
+								itemsData["kanjokamokucdkarikata"] = &item.Value{
 									DataType: "text",
-									Value:    sub.DefaultName,
+									Value:    sub.GetSubjectKey(),
 								}
-								itemsData["kanjokamokukarikata"] = &item.Value{
+								itemsData["kanjokamokunamekarikata"] = &item.Value{
 									DataType: "text",
 									Value:    subMap[sub.GetSubjectKey()],
 								}
 							} else {
-								itemsData["shiwakekamokukashikata"] = &item.Value{
+								itemsData["kanjokamokucdkashikata"] = &item.Value{
 									DataType: "text",
-									Value:    sub.DefaultName,
+									Value:    sub.GetSubjectKey(),
 								}
-								itemsData["kanjokamokukashikata"] = &item.Value{
+								itemsData["kanjokamokunamekashikata"] = &item.Value{
 									DataType: "text",
 									Value:    subMap[sub.GetSubjectKey()],
 								}
@@ -2610,20 +2610,20 @@ func buildPayData(p InsertParam) (e error) {
 							Value:    strconv.Itoa(line + 1),
 						}
 						if sub.LendingDivision == "1" {
-							itemsData["shiwakekamokukarikata"] = &item.Value{
+							itemsData["kanjokamokucdkarikata"] = &item.Value{
 								DataType: "text",
-								Value:    sub.DefaultName,
+								Value:    sub.GetSubjectKey(),
 							}
-							itemsData["kanjokamokukarikata"] = &item.Value{
+							itemsData["kanjokamokunamekarikata"] = &item.Value{
 								DataType: "text",
 								Value:    subMap[sub.GetSubjectKey()],
 							}
 						} else {
-							itemsData["shiwakekamokukashikata"] = &item.Value{
+							itemsData["kanjokamokucdkashikata"] = &item.Value{
 								DataType: "text",
-								Value:    sub.DefaultName,
+								Value:    sub.GetSubjectKey(),
 							}
-							itemsData["kanjokamokukashikata"] = &item.Value{
+							itemsData["kanjokamokunamekashikata"] = &item.Value{
 								DataType: "text",
 								Value:    subMap[sub.GetSubjectKey()],
 							}
@@ -2655,20 +2655,20 @@ func buildPayData(p InsertParam) (e error) {
 					} else {
 						if itemsData != nil {
 							if sub.LendingDivision == "1" {
-								itemsData["shiwakekamokukarikata"] = &item.Value{
+								itemsData["kanjokamokucdkarikata"] = &item.Value{
 									DataType: "text",
-									Value:    sub.DefaultName,
+									Value:    sub.GetSubjectKey(),
 								}
-								itemsData["kanjokamokukarikata"] = &item.Value{
+								itemsData["kanjokamokunamekarikata"] = &item.Value{
 									DataType: "text",
 									Value:    subMap[sub.GetSubjectKey()],
 								}
 							} else {
-								itemsData["shiwakekamokukashikata"] = &item.Value{
+								itemsData["kanjokamokucdkashikata"] = &item.Value{
 									DataType: "text",
-									Value:    sub.DefaultName,
+									Value:    sub.GetSubjectKey(),
 								}
-								itemsData["kanjokamokukashikata"] = &item.Value{
+								itemsData["kanjokamokunamekashikata"] = &item.Value{
 									DataType: "text",
 									Value:    subMap[sub.GetSubjectKey()],
 								}
@@ -3298,20 +3298,20 @@ func buildRepaymentData(p InsertParam) (e error) {
 							Value:    strconv.Itoa(line + 1),
 						}
 						if sub.LendingDivision == "1" {
-							itemsData["shiwakekamokukarikata"] = &item.Value{
+							itemsData["kanjokamokucdkarikata"] = &item.Value{
 								DataType: "text",
-								Value:    sub.DefaultName,
+								Value:    sub.GetSubjectKey(),
 							}
-							itemsData["kanjokamokukarikata"] = &item.Value{
+							itemsData["kanjokamokunamekarikata"] = &item.Value{
 								DataType: "text",
 								Value:    subMap[sub.GetSubjectKey()],
 							}
 						} else {
-							itemsData["shiwakekamokukashikata"] = &item.Value{
+							itemsData["kanjokamokucdkashikata"] = &item.Value{
 								DataType: "text",
-								Value:    sub.DefaultName,
+								Value:    sub.GetSubjectKey(),
 							}
-							itemsData["kanjokamokukashikata"] = &item.Value{
+							itemsData["kanjokamokunamekashikata"] = &item.Value{
 								DataType: "text",
 								Value:    subMap[sub.GetSubjectKey()],
 							}
@@ -3356,20 +3356,20 @@ func buildRepaymentData(p InsertParam) (e error) {
 					} else {
 						if itemsData != nil {
 							if sub.LendingDivision == "1" {
-								itemsData["shiwakekamokukarikata"] = &item.Value{
+								itemsData["kanjokamokucdkarikata"] = &item.Value{
 									DataType: "text",
-									Value:    sub.DefaultName,
+									Value:    sub.GetSubjectKey(),
 								}
-								itemsData["kanjokamokukarikata"] = &item.Value{
+								itemsData["kanjokamokunamekarikata"] = &item.Value{
 									DataType: "text",
 									Value:    subMap[sub.GetSubjectKey()],
 								}
 							} else {
-								itemsData["shiwakekamokukashikata"] = &item.Value{
+								itemsData["kanjokamokucdkashikata"] = &item.Value{
 									DataType: "text",
-									Value:    sub.DefaultName,
+									Value:    sub.GetSubjectKey(),
 								}
-								itemsData["kanjokamokukashikata"] = &item.Value{
+								itemsData["kanjokamokunamekashikata"] = &item.Value{
 									DataType: "text",
 									Value:    subMap[sub.GetSubjectKey()],
 								}
