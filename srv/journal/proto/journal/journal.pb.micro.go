@@ -51,6 +51,9 @@ type JournalService interface {
 	FindDownloadSettings(ctx context.Context, in *FindDownloadSettingsRequest, opts ...client.CallOption) (*FindDownloadSettingsResponse, error)
 	AddSelectJournals(ctx context.Context, in *AddSelectJournalsRequest, opts ...client.CallOption) (*AddSelectJournalsResponse, error)
 	FindSelectJournals(ctx context.Context, in *JournalsRequest, opts ...client.CallOption) (*JournalsResponse, error)
+	FindConditionTemplates(ctx context.Context, in *FindConditionTemplatesRequest, opts ...client.CallOption) (*FindConditionTemplatesResponse, error)
+	AddConditionTemplate(ctx context.Context, in *AddConditionTemplateRequest, opts ...client.CallOption) (*AddConditionTemplateResponse, error)
+	DeleteConditionTemplate(ctx context.Context, in *DeleteConditionTemplateRequest, opts ...client.CallOption) (*DeleteConditionTemplateResponse, error)
 }
 
 type journalService struct {
@@ -155,6 +158,36 @@ func (c *journalService) FindSelectJournals(ctx context.Context, in *JournalsReq
 	return out, nil
 }
 
+func (c *journalService) FindConditionTemplates(ctx context.Context, in *FindConditionTemplatesRequest, opts ...client.CallOption) (*FindConditionTemplatesResponse, error) {
+	req := c.c.NewRequest(c.name, "JournalService.FindConditionTemplates", in)
+	out := new(FindConditionTemplatesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *journalService) AddConditionTemplate(ctx context.Context, in *AddConditionTemplateRequest, opts ...client.CallOption) (*AddConditionTemplateResponse, error) {
+	req := c.c.NewRequest(c.name, "JournalService.AddConditionTemplate", in)
+	out := new(AddConditionTemplateResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *journalService) DeleteConditionTemplate(ctx context.Context, in *DeleteConditionTemplateRequest, opts ...client.CallOption) (*DeleteConditionTemplateResponse, error) {
+	req := c.c.NewRequest(c.name, "JournalService.DeleteConditionTemplate", in)
+	out := new(DeleteConditionTemplateResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for JournalService service
 
 type JournalServiceHandler interface {
@@ -167,6 +200,9 @@ type JournalServiceHandler interface {
 	FindDownloadSettings(context.Context, *FindDownloadSettingsRequest, *FindDownloadSettingsResponse) error
 	AddSelectJournals(context.Context, *AddSelectJournalsRequest, *AddSelectJournalsResponse) error
 	FindSelectJournals(context.Context, *JournalsRequest, *JournalsResponse) error
+	FindConditionTemplates(context.Context, *FindConditionTemplatesRequest, *FindConditionTemplatesResponse) error
+	AddConditionTemplate(context.Context, *AddConditionTemplateRequest, *AddConditionTemplateResponse) error
+	DeleteConditionTemplate(context.Context, *DeleteConditionTemplateRequest, *DeleteConditionTemplateResponse) error
 }
 
 func RegisterJournalServiceHandler(s server.Server, hdlr JournalServiceHandler, opts ...server.HandlerOption) error {
@@ -180,6 +216,9 @@ func RegisterJournalServiceHandler(s server.Server, hdlr JournalServiceHandler, 
 		FindDownloadSettings(ctx context.Context, in *FindDownloadSettingsRequest, out *FindDownloadSettingsResponse) error
 		AddSelectJournals(ctx context.Context, in *AddSelectJournalsRequest, out *AddSelectJournalsResponse) error
 		FindSelectJournals(ctx context.Context, in *JournalsRequest, out *JournalsResponse) error
+		FindConditionTemplates(ctx context.Context, in *FindConditionTemplatesRequest, out *FindConditionTemplatesResponse) error
+		AddConditionTemplate(ctx context.Context, in *AddConditionTemplateRequest, out *AddConditionTemplateResponse) error
+		DeleteConditionTemplate(ctx context.Context, in *DeleteConditionTemplateRequest, out *DeleteConditionTemplateResponse) error
 	}
 	type JournalService struct {
 		journalService
@@ -226,4 +265,16 @@ func (h *journalServiceHandler) AddSelectJournals(ctx context.Context, in *AddSe
 
 func (h *journalServiceHandler) FindSelectJournals(ctx context.Context, in *JournalsRequest, out *JournalsResponse) error {
 	return h.JournalServiceHandler.FindSelectJournals(ctx, in, out)
+}
+
+func (h *journalServiceHandler) FindConditionTemplates(ctx context.Context, in *FindConditionTemplatesRequest, out *FindConditionTemplatesResponse) error {
+	return h.JournalServiceHandler.FindConditionTemplates(ctx, in, out)
+}
+
+func (h *journalServiceHandler) AddConditionTemplate(ctx context.Context, in *AddConditionTemplateRequest, out *AddConditionTemplateResponse) error {
+	return h.JournalServiceHandler.AddConditionTemplate(ctx, in, out)
+}
+
+func (h *journalServiceHandler) DeleteConditionTemplate(ctx context.Context, in *DeleteConditionTemplateRequest, out *DeleteConditionTemplateResponse) error {
+	return h.JournalServiceHandler.DeleteConditionTemplate(ctx, in, out)
 }

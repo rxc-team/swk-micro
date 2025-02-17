@@ -120,6 +120,15 @@ type (
 		CustomFieldValue    string `json:"custom_field_value" bson:"custom_field_value"`
 		CustomFieldDataType string `json:"custom_field_data_type" bson:"custom_field_data_type"`
 	}
+
+	ConditionTemplate struct {
+		TemplateId     string         `json:"template_id" bson:"template_id"`
+		TemplateName   string         `json:"template_name" bson:"template_name"`
+		FieldCondition FieldCondition `json:"field_condition" bson:"field_condition"`
+		CreatedAt      time.Time      `json:"created_at" bson:"created_at"`
+		CreatedBy      string         `json:"created_by" bson:"created_by"`
+		AppID          string         `json:"app_id" bson:"app_id"`
+	}
 )
 
 // ToProto 转换为proto数据
@@ -293,6 +302,19 @@ func (f *FieldRule) ToProto() *journal.FieldRule {
 	}
 }
 
+// ToProto 转换为proto数据
+func (w *ConditionTemplate) ToProto() *journal.ConditionTemplate {
+
+	return &journal.ConditionTemplate{
+		TemplateId:     w.TemplateId,
+		TemplateName:   w.TemplateName,
+		FieldCondition: w.FieldCondition.ToProto(),
+		CreatedAt:      w.CreatedAt.String(),
+		CreatedBy:      w.CreatedBy,
+		AppId:          w.AppID,
+	}
+}
+
 // ConvertToProto 将 []FieldConf 切片转换为 Protobuf 格式的 FindDownloadSettingsResponse
 func ConvertToProto(fieldConfs []FieldConf) *journal.FindDownloadSettingsResponse {
 	protoResponse := &journal.FindDownloadSettingsResponse{}
@@ -300,6 +322,18 @@ func ConvertToProto(fieldConfs []FieldConf) *journal.FindDownloadSettingsRespons
 	// 遍历 FieldConf 切片，并将每个 FieldConf 转换为 Protobuf 格式
 	for _, fc := range fieldConfs {
 		protoResponse.FieldConf = append(protoResponse.FieldConf, fc.ToProto())
+	}
+
+	return protoResponse
+}
+
+// ToProto 将 []ConditionTemplate 切片转换为 Protobuf 格式的 FindConditionTemplatesResponse
+func ToProto(cts []ConditionTemplate) *journal.FindConditionTemplatesResponse {
+	protoResponse := &journal.FindConditionTemplatesResponse{}
+
+	// 遍历 FieldConf 切片，并将每个 FieldConf 转换为 Protobuf 格式
+	for _, fc := range cts {
+		protoResponse.ConditionTemplates = append(protoResponse.ConditionTemplates, fc.ToProto())
 	}
 
 	return protoResponse
@@ -652,4 +686,88 @@ func FindSelectJournals(db, appId string) (items []Journal, err error) {
 	}
 
 	return result, nil
+}
+
+// 查询所有自定义条件模板
+func FindConditionTemplates(db string, appID string) (fd []ConditionTemplate, err error) {
+	client := database.New()
+	c := client.Database(database.GetDBName(db)).Collection("condition_templates")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	query := bson.M{
+		"app_id": appID,
+	}
+
+	// 定义一个切片用于存储查询结果
+	var results []ConditionTemplate
+
+	// 使用 Find 查询所有符合条件的文档
+	cursor, err := c.Find(ctx, query)
+
+	if err != nil {
+		utils.ErrorLog("FindConditionTemplates", err.Error())
+		return nil, err
+	}
+
+	// 确保在函数返回之前关闭游标
+	defer cursor.Close(ctx)
+
+	// 将游标中的所有数据解码到 results 切片中
+	for cursor.Next(ctx) {
+		var item ConditionTemplate
+		if err := cursor.Decode(&item); err != nil {
+			return nil, fmt.Errorf("failed to decode document: %v", err)
+		}
+		results = append(results, item)
+	}
+
+	// 如果没有找到任何数据，返回空切片
+	if len(results) == 0 {
+		return nil, nil
+	}
+
+	return results, nil
+}
+
+// 添加条件模板
+func AddConditionTemplate(db string, appID string, ct ConditionTemplate) (err error) {
+	client := database.New()
+	c := client.Database(database.GetDBName(db)).Collection("condition_templates")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err != nil {
+		utils.ErrorLog("AddConditionTemplate", err.Error())
+		return err
+	}
+
+	if _, err = c.InsertOne(ctx, ct); err != nil {
+		utils.ErrorLog("AddConditionTemplate", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// 删除条件模板
+func DeleteConditionTemplate(db string, appID string, templateID string) (err error) {
+	client := database.New()
+	c := client.Database(database.GetDBName(db)).Collection("condition_templates")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	query := bson.M{
+		"app_id":      appID,
+		"template_id": templateID,
+	}
+
+	_, err = c.DeleteOne(ctx, query)
+
+	if err != nil {
+		utils.ErrorLog("DeleteConditionTemplate", err.Error())
+		return err
+	}
+
+	return nil
 }

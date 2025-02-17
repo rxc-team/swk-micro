@@ -16,15 +16,18 @@ type Journal struct{}
 const (
 	JournalProcessName = "Journal"
 
-	ActionFindJournals        = "FindJournals"
-	ActionFindJournal         = "FindJournal"
-	ActionImportJournal       = "ImportJournal"
-	ActionModifyJournal       = "ModifyJournal"
-	ActionDeleteJournal       = "DeleteJournal"
-	ActionAddDownloadSetting  = "AddDownloadSetting"
-	ActionFindDownloadSetting = "FindDownloadSetting"
-	ActionAddSelectJournals   = "AddSelectJournals"
-	ActionFindSelectJournals  = "FindSelectJournals"
+	ActionFindJournals            = "FindJournals"
+	ActionFindJournal             = "FindJournal"
+	ActionImportJournal           = "ImportJournal"
+	ActionModifyJournal           = "ModifyJournal"
+	ActionDeleteJournal           = "DeleteJournal"
+	ActionAddDownloadSetting      = "AddDownloadSetting"
+	ActionFindDownloadSetting     = "FindDownloadSetting"
+	ActionAddSelectJournals       = "AddSelectJournals"
+	ActionFindSelectJournals      = "FindSelectJournals"
+	ActionFindConditionTemplates  = "FindConditionTemplates"
+	ActionAddConditionTemplate    = "AddConditionTemplate"
+	ActionDeleteConditionTemplate = "DeleteConditionTemplate"
 )
 
 // FindJournals 获取多个仕訳
@@ -314,5 +317,117 @@ func (f *Journal) FindSelectJournals(ctx context.Context, req *journal.JournalsR
 	*rsp = *res
 
 	utils.InfoLog(ActionFindSelectJournals, utils.MsgProcessEnded)
+	return nil
+}
+
+// 查找所有自定义条件
+func (f *Journal) FindConditionTemplates(ctx context.Context, req *journal.FindConditionTemplatesRequest, rsp *journal.FindConditionTemplatesResponse) error {
+	res, err := model.FindConditionTemplates(req.GetDatabase(), req.GetAppId())
+
+	if err != nil {
+		utils.ErrorLog(ActionFindConditionTemplates, err.Error())
+		return err
+	}
+
+	// *rsp = *res.ToProto(res)
+	*rsp = *model.ToProto(res)
+
+	utils.InfoLog(ActionFindConditionTemplates, utils.MsgProcessEnded)
+
+	return nil
+}
+
+// 添加自定义条件模板
+func (f *Journal) AddConditionTemplate(ctx context.Context, req *journal.AddConditionTemplateRequest, rsp *journal.AddConditionTemplateResponse) error {
+
+	fieldCondition := req.GetConditionTemplate().GetFieldCondition()
+	var groups []*model.FieldGroup
+	for _, g := range fieldCondition.GetFieldGroups() {
+		var cons []*model.FieldCon
+		for _, con := range g.GetFieldCons() {
+			cons = append(cons, &model.FieldCon{
+				ConID:       con.ConId,
+				ConName:     con.ConName,
+				ConField:    con.ConField,
+				ConOperator: con.ConOperator,
+				ConValue:    con.ConValue,
+				ConDataType: con.ConDataType,
+			})
+		}
+
+		groups = append(groups, &model.FieldGroup{
+			GroupID:    g.GroupId,
+			GroupName:  g.GroupName,
+			Type:       g.Type,
+			SwitchType: g.SwitchType,
+			FieldCons:  cons,
+		})
+	}
+
+	var thenCustomFields []*model.CustomField
+	for _, customfield := range req.GetConditionTemplate().GetFieldCondition().GetThenCustomFields() {
+		thenCustomFields = append(thenCustomFields, &model.CustomField{
+			CustomFieldType:     customfield.CustomFieldType,
+			CustomFieldValue:    customfield.CustomFieldValue,
+			CustomFieldDataType: customfield.CustomFieldDataType,
+		})
+	}
+
+	var elseCustomFields []*model.CustomField
+	for _, customfield := range req.GetConditionTemplate().GetFieldCondition().GetElseCustomFields() {
+		elseCustomFields = append(elseCustomFields, &model.CustomField{
+			CustomFieldType:     customfield.CustomFieldType,
+			CustomFieldValue:    customfield.CustomFieldValue,
+			CustomFieldDataType: customfield.CustomFieldDataType,
+		})
+	}
+
+	fc := model.FieldCondition{
+		ConditionID:       req.GetConditionTemplate().GetFieldCondition().GetConditionId(),
+		ConditionName:     req.GetConditionTemplate().GetFieldCondition().GetConditionName(),
+		ThenValue:         req.GetConditionTemplate().GetFieldCondition().GetThenValue(),
+		ElseValue:         req.GetConditionTemplate().GetFieldCondition().GetElseValue(),
+		ThenType:          req.GetConditionTemplate().GetFieldCondition().GetThenType(),
+		ElseType:          req.GetConditionTemplate().GetFieldCondition().GetElseType(),
+		ThenCustomType:    req.GetConditionTemplate().GetFieldCondition().GetThenCustomType(),
+		ElseCustomType:    req.GetConditionTemplate().GetFieldCondition().GetElseCustomType(),
+		FieldGroups:       groups,
+		ThenCustomFields:  thenCustomFields,
+		ElseCustomFields:  elseCustomFields,
+		ThenValueDataType: req.GetConditionTemplate().GetFieldCondition().GetThenValueDataType(),
+		ElseValueDataType: req.GetConditionTemplate().GetFieldCondition().GetElseValueDataType(),
+	}
+
+	params := model.ConditionTemplate{
+		TemplateId:     req.GetConditionTemplate().GetTemplateId(),
+		TemplateName:   req.GetConditionTemplate().GetTemplateName(),
+		FieldCondition: fc,
+		CreatedAt:      time.Now(),
+		CreatedBy:      req.GetWriter(),
+		AppID:          req.GetAppId(),
+	}
+
+	err := model.AddConditionTemplate(req.GetDatabase(), req.GetAppId(), params)
+	if err != nil {
+		utils.ErrorLog(ActionAddConditionTemplate, err.Error())
+		return err
+	}
+
+	utils.InfoLog(ActionAddConditionTemplate, utils.MsgProcessEnded)
+
+	return nil
+}
+
+// 删除自定义条件模板
+func (f *Journal) DeleteConditionTemplate(ctx context.Context, req *journal.DeleteConditionTemplateRequest, rsp *journal.DeleteConditionTemplateResponse) error {
+	err := model.DeleteConditionTemplate(req.GetDatabase(), req.GetAppId(), req.GetTemplateId())
+
+	if err != nil {
+		utils.ErrorLog(ActionDeleteConditionTemplate, err.Error())
+		return err
+	}
+
+	utils.InfoLog(ActionDeleteConditionTemplate, utils.MsgProcessEnded)
+
 	return nil
 }

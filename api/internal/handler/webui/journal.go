@@ -43,19 +43,22 @@ type Journal struct{}
 
 // log出力使用
 const (
-	JournalProcessName        = "Journal"
-	ActionFindJournals        = "FindJournals"
-	ActionFindJournal         = "FindJournal"
-	ActionJournalCompute      = "JournalCompute"
-	ActionImportJournal       = "ImportJournal"
-	ActionModifyJournal       = "ModifyJournal"
-	ActionJournalConfim       = "JournalConfim"
-	ActionFindSakuseiData     = "FindSakuseiData"
-	ActionAddDownloadSetting  = "AddDownloadSetting"
-	ActionFindDownloadSetting = "FindDownloadSetting"
-	ActionSwkDownload         = "SwkDownload"
-	ActionAddSelectJournals   = "AddSelectJournals"
-	ActionFindSelectJournals  = "FindSelectJournals"
+	JournalProcessName            = "Journal"
+	ActionFindJournals            = "FindJournals"
+	ActionFindJournal             = "FindJournal"
+	ActionJournalCompute          = "JournalCompute"
+	ActionImportJournal           = "ImportJournal"
+	ActionModifyJournal           = "ModifyJournal"
+	ActionJournalConfim           = "JournalConfim"
+	ActionFindSakuseiData         = "FindSakuseiData"
+	ActionAddDownloadSetting      = "AddDownloadSetting"
+	ActionFindDownloadSetting     = "FindDownloadSetting"
+	ActionSwkDownload             = "SwkDownload"
+	ActionAddSelectJournals       = "AddSelectJournals"
+	ActionFindSelectJournals      = "FindSelectJournals"
+	ActionFindConditionTemplates  = "FindConditionTemplates"
+	ActionAddConditionTemplate    = "AddConditionTemplate"
+	ActionDeleteConditionTemplate = "DeleteConditionTemplate"
 )
 
 // FindJournals 获取当前用户的所有分录
@@ -1022,8 +1025,29 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 						if value, ok := itemMap[fl.FieldId]; ok {
 							result := ""
 							switch value.DataType {
-							case "text", "textarea", "number", "time", "switch":
+							case "textarea", "time", "switch":
 								result = value.GetValue()
+							case "text":
+								if len(fl.Format) > 0 {
+									switch fl.Format {
+									case "leftTrim":
+										result = strings.TrimLeft(value.GetValue(), " ")
+									case "rightTrim":
+										result = strings.TrimRight(value.GetValue(), " ")
+									case "trim":
+										result = strings.TrimSpace(value.GetValue())
+									default:
+										result = value.GetValue()
+									}
+								} else {
+									result = value.GetValue()
+								}
+							case "number":
+								if len(fl.Format) > 0 {
+									result = formatNumber(value.GetValue(), fl.Format)
+								} else {
+									result = value.GetValue()
+								}
 							case "autonum":
 								result = value.GetValue()
 							case "lookup":
@@ -1390,4 +1414,152 @@ func getDatastoreMap(db, appID string) (dsMap map[string]string, err error) {
 	}
 
 	return
+}
+
+// FindConditionTemplates 查询全部自定义条件模板
+// @Router /select/condition/templates[GET]
+func (f *Journal) FindConditionTemplates(c *gin.Context) {
+	loggerx.InfoLog(c, ActionFindConditionTemplates, loggerx.MsgProcessStarted)
+
+	journalService := journal.NewJournalService("journal", client.DefaultClient)
+
+	var req journal.FindConditionTemplatesRequest
+
+	// 从共通获取
+	req.AppId = sessionx.GetCurrentApp(c)
+	req.Database = sessionx.GetUserCustomer(c)
+
+	response, err := journalService.FindConditionTemplates(context.TODO(), &req)
+	if err != nil {
+		httpx.GinHTTPError(c, ActionFindConditionTemplates, err)
+
+		return
+	}
+	loggerx.SuccessLog(c, ActionFindConditionTemplates, fmt.Sprintf(loggerx.MsgProcesSucceed, ActionFindConditionTemplates))
+
+	loggerx.InfoLog(c, ActionFindConditionTemplates, loggerx.MsgProcessEnded)
+	c.JSON(200, httpx.Response{
+		Status:  0,
+		Message: msg.GetMsg("ja-JP", msg.Info, msg.I004, fmt.Sprintf(httpx.Temp, DatastoreProcessName, ActionFindConditionTemplates)),
+		Data:    response,
+	})
+}
+
+// AddConditionTemplate 添加自定义条件模板
+// @Router /add/condition/template[post]
+func (f *Journal) AddConditionTemplate(c *gin.Context) {
+	loggerx.InfoLog(c, ActionAddConditionTemplate, loggerx.MsgProcessStarted)
+
+	journalService := journal.NewJournalService("journal", client.DefaultClient)
+
+	var req journal.AddConditionTemplateRequest
+
+	// 从body中获取
+	if err := c.BindJSON(&req); err != nil {
+		httpx.GinHTTPError(c, ActionAddConditionTemplate, err)
+		return
+	}
+
+	// 从共通获取
+	req.AppId = sessionx.GetCurrentApp(c)
+	req.Database = sessionx.GetUserCustomer(c)
+	req.Writer = sessionx.GetAuthUserID(c)
+
+	response, err := journalService.AddConditionTemplate(context.TODO(), &req)
+	if err != nil {
+		httpx.GinHTTPError(c, ActionAddConditionTemplate, err)
+
+		return
+	}
+	loggerx.SuccessLog(c, ActionAddConditionTemplate, fmt.Sprintf(loggerx.MsgProcesSucceed, ActionAddConditionTemplate))
+
+	loggerx.InfoLog(c, ActionAddConditionTemplate, loggerx.MsgProcessEnded)
+	c.JSON(200, httpx.Response{
+		Status:  0,
+		Message: msg.GetMsg("ja-JP", msg.Info, msg.I004, fmt.Sprintf(httpx.Temp, DatastoreProcessName, ActionAddConditionTemplate)),
+		Data:    response,
+	})
+}
+
+// DeleteConditionTemplate 删除自定义条件模板
+// @Router /delete/condition/template[delete]
+func (f *Journal) DeleteConditionTemplate(c *gin.Context) {
+	loggerx.InfoLog(c, ActionDeleteConditionTemplate, loggerx.MsgProcessStarted)
+
+	journalService := journal.NewJournalService("journal", client.DefaultClient)
+
+	var req journal.DeleteConditionTemplateRequest
+
+	// 从URL中获取template_id 绑定到req
+	templateId := c.Query("template_id")
+	req.TemplateId = templateId
+
+	// 从共通获取
+	req.AppId = sessionx.GetCurrentApp(c)
+	req.Database = sessionx.GetUserCustomer(c)
+
+	response, err := journalService.DeleteConditionTemplate(context.TODO(), &req)
+	if err != nil {
+		httpx.GinHTTPError(c, ActionDeleteConditionTemplate, err)
+
+		return
+	}
+	loggerx.SuccessLog(c, ActionDeleteConditionTemplate, fmt.Sprintf(loggerx.MsgProcesSucceed, ActionDeleteConditionTemplate))
+
+	loggerx.InfoLog(c, ActionDeleteConditionTemplate, loggerx.MsgProcessEnded)
+	c.JSON(200, httpx.Response{
+		Status:  0,
+		Message: msg.GetMsg("ja-JP", msg.Info, msg.I004, fmt.Sprintf(httpx.Temp, DatastoreProcessName, ActionDeleteConditionTemplate)),
+		Data:    response,
+	})
+}
+
+// 数字类型格式转换
+func formatNumber(numStr string, format string) string {
+	// 分割整数部分和小数部分
+	parts := strings.Split(numStr, ".")
+	integerPart := parts[0]
+	decimalPart := ""
+	if len(parts) > 1 {
+		decimalPart = parts[1]
+	}
+
+	// 整数部分每3位添加逗号
+	var formattedInteger string
+	length := len(integerPart)
+	for i := 0; i < length; i++ {
+		if i > 0 && (length-i)%3 == 0 {
+			formattedInteger += ","
+		}
+		formattedInteger += string(integerPart[i])
+	}
+
+	// 小数位精度
+	var precision int
+	switch format {
+	case "#,##0":
+		precision = 0
+	case "#,##0.0":
+		precision = 1
+	case "#,##0.00":
+		precision = 2
+	case "#,##0.000":
+		precision = 3
+	case "#,##0.0000":
+		precision = 4
+	case "#,##0.00000":
+		precision = 5
+	default:
+		break
+	}
+	// 小数部分截断多余的小数位
+	if precision > 0 {
+		if len(decimalPart) > precision {
+			decimalPart = decimalPart[:precision] // 截断多余的小数位
+		} else {
+			decimalPart += strings.Repeat("0", precision-len(decimalPart)) // 补足小数位
+		}
+		return formattedInteger + "." + decimalPart
+	}
+	return formattedInteger
 }

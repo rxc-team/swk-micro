@@ -12,6 +12,9 @@ service JournalService {
 	rpc FindDownloadSettings(FindDownloadSettingsRequest) returns (FindDownloadSettingsResponse) {}
 	rpc AddSelectJournals(AddSelectJournalsRequest) returns (AddSelectJournalsResponse) {}
 	rpc FindSelectJournals(JournalsRequest) returns (JournalsResponse) {}
+	rpc FindConditionTemplates(FindConditionTemplatesRequest) returns (FindConditionTemplatesResponse) {}
+	rpc AddConditionTemplate(AddConditionTemplateRequest) returns (AddConditionTemplateResponse) {}
+	rpc DeleteConditionTemplate(DeleteConditionTemplateRequest) returns (DeleteConditionTemplateResponse) {}
 }
 
 // 分录
@@ -208,3 +211,45 @@ message AddSelectJournalsRequest{
  
 message AddSelectJournalsResponse{                 
 }
+
+// 自定义条件模板
+message ConditionTemplate{
+	string template_id =1;   
+	string template_name =2; 
+	FieldCondition field_condition =3; 
+	string created_at =4; // 创建时间
+	string created_by =5; // 创建者
+	string app_id = 6;
+}
+
+// 查询自定义条件模板
+message FindConditionTemplatesRequest{
+	string app_id = 1;
+	string database = 2; // 数据库
+}
+
+message FindConditionTemplatesResponse{
+	repeated ConditionTemplate condition_templates =1;
+}
+
+// 添加自定义条件模板
+message AddConditionTemplateRequest{
+	string app_id = 1;
+	string database = 2; // 数据库
+	ConditionTemplate condition_template =3; 
+	string writer = 4; // 添加者
+}
+
+message AddConditionTemplateResponse{
+}
+
+// 删除自定义条件模板
+message DeleteConditionTemplateRequest{
+	string app_id = 1;
+	string database = 2; // 数据库
+	string template_id =3; 
+}
+
+message DeleteConditionTemplateResponse{
+}
+

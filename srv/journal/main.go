@@ -9,7 +9,6 @@ import (
 	lg "github.com/micro/go-plugins/logger/logrus/v2"
 
 	"rxcsoft.cn/pit3/srv/journal/handler"
-	"rxcsoft.cn/pit3/srv/journal/proto/condition"
 	"rxcsoft.cn/pit3/srv/journal/proto/journal"
 	"rxcsoft.cn/pit3/srv/journal/proto/subject"
 	"rxcsoft.cn/pit3/srv/journal/server"
@@ -47,7 +46,6 @@ func main() {
 	// 注册handler
 	journal.RegisterJournalServiceHandler(service.Server(), new(handler.Journal))
 	subject.RegisterSubjectServiceHandler(service.Server(), new(handler.Subject))
-	condition.RegisterConditionServiceHandler(service.Server(), new(handler.Condition))
 
 	// 运行服务
 	if err := service.Run(); err != nil {
