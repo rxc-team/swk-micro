@@ -531,7 +531,7 @@ func GenAddAndSubData(domain, db, appID, userID, lang string, owners []string) (
 		}
 		handleMonth := cfg.GetSyoriYm()
 
-		// 获取分录确认方式和结构体种类
+		// 获取分录结构体种类
 		appService := app.NewAppService("manage", client.DefaultClient)
 
 		var req app.FindAppRequest
@@ -852,8 +852,6 @@ func buildObtainData(p InsertParam) (e error) {
 		index := 1
 		for count, obtainItem := range itemResp.GetItems() {
 			var pattern *journal.Pattern
-			fmt.Println(obtainItem.Items["setteikubun"].GetValue())
-			fmt.Println(p.journalType)
 			if obtainItem.Items["setteikubun"].GetValue() == "固定資産取得" {
 				if p.journalType == "primary" {
 					pattern = getPattern("04001", p.jouDataMap["04"])
@@ -2218,7 +2216,7 @@ func GenPayData(domain, db, appID, userID, lang string, owners []string) (r *ite
 		}
 		handleMonth := cfg.GetSyoriYm()
 
-		// 获取分录确认方式和结构体种类
+		// 获取分录结构体种类
 		appService := app.NewAppService("manage", client.DefaultClient)
 
 		var req app.FindAppRequest
@@ -2380,8 +2378,8 @@ func buildPayData(p InsertParam) (e error) {
 	}
 
 	lastDay := getMonthLastDay(handleDate)
+	defaultTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
 
-	var req item.ItemsRequest
 	conditions := []*item.Condition{}
 	conditions = append(conditions, &item.Condition{
 		FieldId:     "paymentymd",
@@ -2396,6 +2394,14 @@ func buildPayData(p InsertParam) (e error) {
 		FieldType:   "date",
 		SearchValue: p.handleMonth + "-" + lastDay,
 		Operator:    "<=",
+		IsDynamic:   true,
+	})
+
+	conditions = append(conditions, &item.Condition{
+		FieldId:     "kakuteidate",
+		FieldType:   "date",
+		SearchValue: defaultTime.Format(time.RFC3339),
+		Operator:    "=",
 		IsDynamic:   true,
 	})
 
@@ -2423,6 +2429,7 @@ func buildPayData(p InsertParam) (e error) {
 	count := math.Ceil(total / 500)
 
 	for index := int64(0); index < int64(count); index++ {
+		var req item.ItemsRequest
 		var sorts []*item.SortItem
 		sorts = append(sorts, &item.SortItem{
 			SortKey:   "keiyakuno.value",
@@ -2716,6 +2723,14 @@ func buildPayData(p InsertParam) (e error) {
 			IsDynamic:     true,
 			ConditionType: "",
 		})
+		conditions = append(conditions, &item.Condition{
+			FieldId:       "kakuteidate",
+			FieldType:     "date",
+			SearchValue:   defaultTime.Format(time.RFC3339),
+			Operator:      "=",
+			IsDynamic:     true,
+			ConditionType: "",
+		})
 		delreq.ConditionList = conditions
 
 		_, err = itemService.DeleteItems(context.TODO(), &delreq, opss)
@@ -2726,10 +2741,42 @@ func buildPayData(p InsertParam) (e error) {
 
 		response, err := importData(p, items)
 		if err != nil {
-			loggerx.ErrorLog("getRepaymentData", err.Error())
+			loggerx.ErrorLog("getPayData", err.Error())
 			return err
 		}
 		fmt.Printf("%+v", response)
+	}
+
+	// 发送消息 数据状态修改
+	jobx.ModifyTask(task.ModifyRequest{
+		JobId:       p.jobID,
+		Message:     "仕訳状態更新",
+		CurrentStep: "modify_status",
+		Database:    p.db,
+	}, p.userID)
+
+	var req item.JournalRequest
+	req.DatastoreId = p.datastoreID
+	req.Database = p.db
+	req.StartDate = p.handleMonth + "-01"
+	req.LastDate = p.handleMonth + "-" + lastDay
+
+	_, err = itemService.GeneratePayItem(context.TODO(), &req, opss)
+	if err != nil {
+		path := filex.WriteAndSaveFile(p.domain, p.appID, []string{err.Error()})
+		// 发送消息 获取数据失败，终止任务
+		jobx.ModifyTask(task.ModifyRequest{
+			JobId:       p.jobID,
+			Message:     err.Error(),
+			CurrentStep: "modify_status",
+			EndTime:     time.Now().UTC().Format("2006-01-02 15:04:05"),
+			ErrorFile: &task.File{
+				Url:  path.MediaLink,
+				Name: path.Name,
+			},
+			Database: p.db,
+		}, p.userID)
+		return
 	}
 
 	return nil

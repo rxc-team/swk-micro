@@ -3831,6 +3831,53 @@ func GenerateShoukyakuItem(db, datastoreID, startDate, lastDate string) (err err
 	return
 }
 
+// GeneratePayItem
+func GeneratePayItem(db, datastoreID, startDate, lastDate string) (err error) {
+	client := database.New()
+	c := client.Database(database.GetDBName(db)).Collection(GetItemCollectionName(datastoreID))
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+
+	startDay, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		utils.ErrorLog("Error parsing start date:", err.Error())
+		return
+	}
+
+	lastDay, err := time.Parse("2006-01-02", lastDate)
+	if err != nil {
+		utils.ErrorLog("Error parsing last date:", err.Error())
+		return
+	}
+
+	defaultTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
+
+	query := bson.M{
+		"$and": []bson.M{
+			{"items.paymentymd.value": bson.M{"$gte": startDay}},
+			{"items.paymentymd.value": bson.M{"$lte": lastDay}},
+			{"items.kakuteidate.value": defaultTime},
+		},
+	}
+
+	update := bson.M{"$set": bson.M{
+		"items.sakuseidate.value": time.Now(),
+	}}
+
+	queryJSON, _ := json.Marshal(query)
+	utils.DebugLog("GeneratePayItem", fmt.Sprintf("query: [ %s ]", queryJSON))
+
+	updateJSON, _ := json.Marshal(update)
+	utils.DebugLog("GeneratePayItem", fmt.Sprintf("update: [ %s ]", updateJSON))
+
+	_, err = c.UpdateMany(ctx, query, update)
+	if err != nil {
+		utils.ErrorLog("GeneratePayItem", err.Error())
+		return err
+	}
+	return
+}
+
 // ConfimItem
 func ConfimItem(db, datastoreID, startDate, lastDate string) (err error) {
 	client := database.New()
@@ -3850,21 +3897,37 @@ func ConfimItem(db, datastoreID, startDate, lastDate string) (err error) {
 		return
 	}
 
-	query := bson.M{
-		"$or": []bson.M{
-			{
-				"$and": []bson.M{
-					{"items.keijoudate.value": bson.M{"$gte": startDay}},
-					{"items.keijoudate.value": bson.M{"$lte": lastDay}},
+	ds, err := FindDatastore(db, datastoreID)
+	if err != nil {
+		utils.ErrorLog("ConfimItem", err.Error())
+		return err
+	}
+
+	query := bson.M{}
+
+	if ds.ApiKey != "shiwake" {
+		query = bson.M{
+			"$or": []bson.M{
+				{
+					"$and": []bson.M{
+						{"items.keijoudate.value": bson.M{"$gte": startDay}},
+						{"items.keijoudate.value": bson.M{"$lte": lastDay}},
+					},
+				},
+				{
+					"$and": []bson.M{
+						{"items.syokyakuymd.value": bson.M{"$gte": startDay}},
+						{"items.syokyakuymd.value": bson.M{"$lte": lastDay}},
+					},
+				},
+				{
+					"$and": []bson.M{
+						{"items.paymentymd.value": bson.M{"$gte": startDay}},
+						{"items.paymentymd.value": bson.M{"$lte": lastDay}},
+					},
 				},
 			},
-			{
-				"$and": []bson.M{
-					{"items.syokyakuymd.value": bson.M{"$gte": startDay}},
-					{"items.syokyakuymd.value": bson.M{"$lte": lastDay}},
-				},
-			},
-		},
+		}
 	}
 
 	update := bson.M{"$set": bson.M{

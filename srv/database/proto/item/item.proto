@@ -14,6 +14,7 @@ service ItemService {
 	rpc ConfimItem(JournalRequest) returns (JournalResponse) {}
 	rpc GenerateItem(JournalRequest) returns (JournalResponse) {}
 	rpc GenerateShoukyakuItem(JournalRequest) returns (JournalResponse) {}
+	rpc GeneratePayItem(JournalRequest) returns (JournalResponse) {}
 	rpc InventoryItem(InventoryItemRequest) returns (InventoryItemResponse) {}
 	rpc MutilInventoryItem(MutilInventoryItemRequest) returns (MutilInventoryItemResponse) {}
 	rpc ResetInventoryItems(ResetInventoryItemsRequest) returns (ResetInventoryItemsResponse) {}

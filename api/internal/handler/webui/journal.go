@@ -464,6 +464,7 @@ func (f *Journal) JournalConfim(c *gin.Context) {
 	}
 	datastoreIDs = append(datastoreIDs, dsMap["zougenrireki"])
 	datastoreIDs = append(datastoreIDs, dsMap["repayment"])
+	datastoreIDs = append(datastoreIDs, dsMap["paymentInterest"])
 	datastoreIDs = append(datastoreIDs, dsMap["shiwake"])
 
 	// 获取处理月度

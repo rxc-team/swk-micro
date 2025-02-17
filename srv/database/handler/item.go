@@ -38,6 +38,7 @@ const (
 	ActionConfimItem            = "ConfimItem"
 	ActionGenerateItem          = "GenerateItem"
 	ActionGenerateShoukyakuItem = "GenerateShoukyakuItem"
+	ActionGeneratePayItem       = "GeneratePayItem"
 	ActionSwkDownload           = "SwkDownload"
 )
 
@@ -407,6 +408,20 @@ func (i *Item) GenerateShoukyakuItem(ctx context.Context, req *item.JournalReque
 	}
 
 	utils.InfoLog(ActionGenerateShoukyakuItem, utils.MsgProcessEnded)
+	return nil
+}
+
+// GeneratePayItem 更新台账数据作成
+func (i *Item) GeneratePayItem(ctx context.Context, req *item.JournalRequest, rsp *item.JournalResponse) error {
+	utils.InfoLog(ActionGeneratePayItem, utils.MsgProcessStarted)
+
+	err := model.GeneratePayItem(req.GetDatabase(), req.GetDatastoreId(), req.GetStartDate(), req.GetLastDate())
+	if err != nil {
+		utils.ErrorLog(ActionGeneratePayItem, err.Error())
+		return err
+	}
+
+	utils.InfoLog(ActionGeneratePayItem, utils.MsgProcessEnded)
 	return nil
 }
 
