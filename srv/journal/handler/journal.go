@@ -132,6 +132,7 @@ func (f *Journal) ModifyJournal(ctx context.Context, req *journal.ModifyRequest,
 		LendingDivision: req.GetLendingDivision(),
 		ChangeFlag:      req.GetChangeFlag(),
 		SubjectName:     req.GetSubjectName(),
+		SubjectCd:       req.GetSubjectCd(),
 		AmountName:      req.GetAmountName(),
 		AmountField:     req.GetAmountField(),
 	}

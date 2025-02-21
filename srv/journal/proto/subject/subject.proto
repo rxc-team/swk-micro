@@ -14,15 +14,16 @@ service SubjectService {
 message Subject {
 	string subject_key =1; // 科目KEY
 	string subject_name =2; // 科目名称
-	string default_name =3; // 默认科目名称
-	string assets_type =4; // 资产类型
-	string app_id =5; // 所属APP
-	string journal_id =6; // 仕訳ID
-	string pattern_id =7; // 会计处理分类ID
-	string created_at =8; // 创建时间
-	string created_by =9; // 创建者
-	string updated_at =10; // 更新时间
-	string updated_by =11; // 更新者
+	string subject_cd =3; // 科目コード
+	string default_name =4; // 默认科目名称
+	string assets_type =5; // 资产类型
+	string app_id =6; // 所属APP
+	string journal_id =7; // 仕訳ID
+	string pattern_id =8; // 会计处理分类ID
+	string created_at =9; // 创建时间
+	string created_by =10; // 创建者
+	string updated_at =11; // 更新时间
+	string updated_by =12; // 更新者
 }
 
 // 查找多条记录
@@ -64,9 +65,10 @@ message ModifyRequest{
 	string assets_type =2; // 资产类型-条件
 	string app_id =3; // 所属APP-条件
 	string subject_name =4; // 科目名称-变更项目
-	string default_name =5; // 默认科目名称
-	string database =6; // 数据库
-	string writer =7; // 更新者
+	string subject_cd =5; // 科目コード
+	string default_name =6; // 默认科目名称
+	string database =7; // 数据库
+	string writer =8; // 更新者
 }
 
 message ModifyResponse{

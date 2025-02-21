@@ -115,7 +115,7 @@ func (f *Subject) ImportSubject(ctx context.Context, req *subject.ImportRequest,
 func (f *Subject) ModifySubject(ctx context.Context, req *subject.ModifyRequest, rsp *subject.ModifyResponse) error {
 	utils.InfoLog(ActionModifySubject, utils.MsgProcessStarted)
 
-	err := model.ModifySubject(req.GetDatabase(), req.GetAppId(), req.GetAssetsType(), req.GetSubjectKey(), req.GetSubjectName(), req.GetDefaultName(), req.GetWriter())
+	err := model.ModifySubject(req.GetDatabase(), req.GetAppId(), req.GetAssetsType(), req.GetSubjectKey(), req.GetSubjectName(), req.GetSubjectCd(), req.GetDefaultName(), req.GetWriter())
 	if err != nil {
 		utils.ErrorLog(ActionModifySubject, err.Error())
 		return err

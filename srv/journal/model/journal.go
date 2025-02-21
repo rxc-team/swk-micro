@@ -438,6 +438,7 @@ type JournalParam struct {
 	LendingDivision string
 	ChangeFlag      string
 	SubjectName     string
+	SubjectCd       string
 	AmountName      string
 	AmountField     string
 }
@@ -455,7 +456,6 @@ func ModifyJournal(db, writer string, param JournalParam) (err error) {
 	}
 
 	change := bson.M{
-
 		"updated_at": time.Now(),
 		"updated_by": writer,
 	}
@@ -464,6 +464,11 @@ func ModifyJournal(db, writer string, param JournalParam) (err error) {
 		change["patterns.$[outer].subjects.$[inner].subject_name"] = param.SubjectName
 	} else {
 		change["patterns.$[outer].subjects.$[inner].subject_name"] = ""
+	}
+	if len(param.SubjectCd) > 0 {
+		change["patterns.$[outer].subjects.$[inner].subject_cd"] = param.SubjectCd
+	} else {
+		change["patterns.$[outer].subjects.$[inner].subject_cd"] = ""
 	}
 	if len(param.AmountName) > 0 {
 		change["patterns.$[outer].subjects.$[inner].amount_name"] = param.AmountName
@@ -495,7 +500,7 @@ func ModifyJournal(db, writer string, param JournalParam) (err error) {
 				"outer.subjects": bson.M{
 					"$ne": nil,
 				},
-				"outer.pattern_id": param.PatternID,
+				/* "outer.pattern_id": param.PatternID, */
 			},
 			bson.M{
 				"inner.subject_key": param.SubjectKey,

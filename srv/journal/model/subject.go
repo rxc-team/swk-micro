@@ -26,6 +26,7 @@ type (
 		ID          primitive.ObjectID `json:"id" bson:"_id"`
 		SubjectKey  string             `json:"subject_key" bson:"subject_key"`
 		SubjectName string             `json:"subject_name" bson:"subject_name"`
+		SubjectCd   string             `json:"subject_cd" bson:"subject_cd"`
 		DefaultName string             `json:"default_name" bson:"default_name"`
 		AssetsType  string             `json:"assets_type" bson:"assets_type"`
 		AppID       string             `json:"app_id" bson:"app_id"`
@@ -40,6 +41,7 @@ type (
 		PatternID   string `json:"pattern_id" bson:"pattern_id"`
 		SubjectKey  string `json:"subject_key" bson:"subject_key"`
 		SubjectName string `json:"subject_name" bson:"subject_name"`
+		SubjectCd   string `json:"subject_cd" bson:"subject_cd"`
 		DefaultName string `json:"default_name" bson:"default_name"`
 		AssetsType  string `json:"assets_type" bson:"assets_type"`
 	}
@@ -50,6 +52,7 @@ func (w *Subject) ToProto() *subject.Subject {
 	return &subject.Subject{
 		SubjectKey:  w.SubjectKey,
 		SubjectName: w.SubjectName,
+		SubjectCd:   w.SubjectCd,
 		DefaultName: w.DefaultName,
 		AssetsType:  w.AssetsType,
 		AppId:       w.AppID,
@@ -65,6 +68,7 @@ func (w *DSubject) ToProto() *subject.Subject {
 	return &subject.Subject{
 		SubjectKey:  w.SubjectKey,
 		SubjectName: w.SubjectName,
+		SubjectCd:   w.SubjectCd,
 		DefaultName: w.DefaultName,
 		AssetsType:  w.AssetsType,
 		JournalId:   w.JournalID,
@@ -143,6 +147,9 @@ func FindDefaultSubjects(db, appId string) (items []DSubject, err error) {
 				"subject_name": bson.M{
 					"$last": "$patterns.subjects.subject_name",
 				},
+				"subject_cd": bson.M{
+					"$last": "$patterns.subjects.subject_cd",
+				},
 				"default_name": bson.M{
 					"$last": "$patterns.subjects.default_name",
 				},
@@ -155,6 +162,7 @@ func FindDefaultSubjects(db, appId string) (items []DSubject, err error) {
 				"journal_id":   "$journal_id",
 				"pattern_id":   "$pattern_id",
 				"subject_name": "$subject_name",
+				"subject_cd":   "$subject_cd",
 				"default_name": "$default_name",
 				"assets_type":  "common",
 			},
@@ -275,7 +283,7 @@ func ImportSubject(db string, subjects []*Subject) (err error) {
 }
 
 // ModifySubject 更新流程实例数据
-func ModifySubject(db, appId, assetsType, subjectKey, subjectName, defaultName, writer string) (err error) {
+func ModifySubject(db, appId, assetsType, subjectKey, subjectName, SubjectCd, defaultName, writer string) (err error) {
 	client := database.New()
 	c := client.Database(database.GetDBName(db)).Collection(SubjectCollection)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -290,6 +298,7 @@ func ModifySubject(db, appId, assetsType, subjectKey, subjectName, defaultName, 
 	change := bson.M{
 		"default_name": defaultName,
 		"subject_name": subjectName,
+		"subject_cd":   SubjectCd,
 		"updated_at":   time.Now(),
 		"updated_by":   writer,
 	}
