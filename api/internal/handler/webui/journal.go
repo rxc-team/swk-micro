@@ -26,7 +26,6 @@ import (
 	"rxcsoft.cn/pit3/api/internal/common/loggerx"
 	"rxcsoft.cn/pit3/api/internal/common/logic/configx"
 	"rxcsoft.cn/pit3/api/internal/common/logic/journalx"
-	"rxcsoft.cn/pit3/api/internal/common/logic/langx"
 	"rxcsoft.cn/pit3/api/internal/common/typesx"
 	"rxcsoft.cn/pit3/api/internal/system/jobx"
 	"rxcsoft.cn/pit3/api/internal/system/sessionx"
@@ -793,9 +792,6 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 		// 获取当前台账的字段数据
 		var fields []*typesx.DownloadField
 
-		// 获取当前app的语言数据
-		langData := langx.GetLanguageData(db, lang, domain)
-
 		for _, rule := range downloadInfo.FieldRule {
 			if rule.SettingMethod == "1" {
 				fields = append(fields, &typesx.DownloadField{
@@ -1026,8 +1022,6 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 						if value, ok := itemMap[fl.FieldId]; ok {
 							result := ""
 							switch value.DataType {
-							case "textarea", "time", "switch":
-								result = value.GetValue()
 							case "text":
 								if len(fl.Format) > 0 {
 									switch fl.Format {
@@ -1049,12 +1043,6 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 								} else {
 									result = value.GetValue()
 								}
-							case "autonum":
-								result = value.GetValue()
-							case "lookup":
-								result = value.GetValue()
-							case "options":
-								result = langx.GetLangValue(langData, value.GetValue(), langx.DefaultResult)
 							case "date":
 								if value.GetValue() == "0001-01-01" {
 									result = ""
@@ -1070,24 +1058,9 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 										result = value.GetValue()
 									}
 								}
-							case "user":
-								var userStrList []string
-								json.Unmarshal([]byte(value.GetValue()), &userStrList)
-								result = strings.Join(userStrList, ",")
-							case "file":
-								var files []typesx.FileValue
-								json.Unmarshal([]byte(value.GetValue()), &files)
-								var fileStrList []string
-								for _, f := range files {
-									fileStrList = append(fileStrList, f.Name)
-								}
-								result = strings.Join(fileStrList, ",")
-							case "function":
-								result = value.GetValue()
 							default:
-								break
+								result = value.GetValue()
 							}
-
 							itemData = append(itemData, result)
 						} else {
 							itemData = append(itemData, "")

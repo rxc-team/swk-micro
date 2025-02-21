@@ -5272,10 +5272,10 @@ func SwkDownloadItems(db string, params ItemsParam, stream item.ItemService_Down
 	}
 
 	for _, f := range downloadInfo.FieldRule {
-		if f.SettingMethod != "1" && f.FieldType != "function" {
+		if f.SettingMethod != "1" && f.SettingMethod != "4" {
 			project["items."+f.FieldId] = "$items." + f.FieldId
 		}
-		if f.FieldType == "function" {
+		if f.SettingMethod == "4" {
 			// 生成最终的嵌套 JSON
 			finalJson := generateOptimizedJson(f.FieldConditions)
 
@@ -5339,12 +5339,21 @@ func buildOptimizedCondition(fieldCondition *journal.FieldCondition) map[string]
 	for _, group := range fieldCondition.FieldGroups {
 		var groupConditions []map[string]interface{}
 		for _, fieldCon := range group.FieldCons {
-			// 根据 con_operator 的值判断是 eq 还是 ne
+			// 根据 con_operator 的值判断比较类型
 			var operator string
-			if fieldCon.ConOperator == "eq" {
+			switch fieldCon.ConOperator {
+			case "eq":
 				operator = "$eq"
-			} else if fieldCon.ConOperator == "ne" {
+			case "ne":
 				operator = "$ne"
+			case "gt":
+				operator = "$gt"
+			case "gte":
+				operator = "$gte"
+			case "lt":
+				operator = "$lt"
+			case "lte":
+				operator = "$lte"
 			}
 
 			// 根据数据类型进行转换
@@ -5353,12 +5362,31 @@ func buildOptimizedCondition(fieldCondition *journal.FieldCondition) map[string]
 			convertValue := convertDataType(conValue, conDateType)
 
 			// 添加条件到 groupConditions 中
-			groupConditions = append(groupConditions, map[string]interface{}{
-				operator: []interface{}{
-					"$items." + fieldCon.ConField + ".value", // 动态生成字段名
-					convertValue,
-				},
-			})
+			if conDateType == "date" {
+				groupConditions = append(groupConditions, map[string]interface{}{
+					operator: []interface{}{
+						map[string]interface{}{
+							"$dateFromParts": bson.M{
+								"year":        bson.M{"$year": "$items." + fieldCon.ConField + ".value"},
+								"month":       bson.M{"$month": "$items." + fieldCon.ConField + ".value"},
+								"day":         bson.M{"$dayOfMonth": "$items." + fieldCon.ConField + ".value"},
+								"hour":        0,
+								"minute":      0,
+								"second":      0,
+								"millisecond": 0,
+							}},
+						convertValue,
+					},
+				})
+			} else {
+				groupConditions = append(groupConditions, map[string]interface{}{
+					operator: []interface{}{
+						"$items." + fieldCon.ConField + ".value", // 动态生成字段名
+						convertValue,
+					},
+				})
+			}
+
 		}
 
 		// 用 $and 或 $or 将多个条件组合起来
@@ -5372,8 +5400,7 @@ func buildOptimizedCondition(fieldCondition *journal.FieldCondition) map[string]
 
 	var thenValue interface{}
 	if fieldCondition.ThenType == "field" {
-		convertedValue := convertDateType(fieldCondition.ThenValue, fieldCondition.ThenValueDataType)
-		thenValue = convertedValue
+		thenValue = "$items." + fieldCondition.ThenValue + ".value"
 	} else if fieldCondition.ThenType == "value" {
 		thenValue = fieldCondition.ThenValue
 	} else if fieldCondition.ThenType == "custom" {
@@ -5397,8 +5424,7 @@ func buildOptimizedCondition(fieldCondition *journal.FieldCondition) map[string]
 			customFieldDataType := field.CustomFieldDataType
 			// 自定义字段类型处理
 			if field.CustomFieldType == "field" {
-				convertedValue := convertDateType(customFieldValue, customFieldDataType)
-				customThenFields = append(customThenFields, convertedValue)
+				customThenFields = append(customThenFields, "$items."+customFieldValue+".value")
 			} else if field.CustomFieldType == "value" {
 				// 自定义字段数据类型处理
 				convertedValue := convertDataType(customFieldValue, customFieldDataType)
@@ -5473,8 +5499,7 @@ func buildDefaultValue(fieldConditions []*journal.FieldCondition) interface{} {
 	// 根据类型进行default值的处理
 	if defaultValueType == "field" {
 		// 字段类型
-		convertedValue := convertDateType(fieldConditions[len(fieldConditions)-1].ElseValue, fieldConditions[len(fieldConditions)-1].ElseValueDataType)
-		defaultValue = convertedValue
+		defaultValue = "$items." + fieldConditions[len(fieldConditions)-1].ElseValue + ".value"
 	} else if defaultValueType == "value" {
 		// 值类型
 		defaultValue = fieldConditions[len(fieldConditions)-1].ElseValue
@@ -5495,8 +5520,7 @@ func buildDefaultValue(fieldConditions []*journal.FieldCondition) interface{} {
 			customFieldDataType := field.CustomFieldDataType
 			// 自定义字段类型处理
 			if field.CustomFieldType == "field" {
-				convertedValue := convertDateType(customFieldValue, customFieldDataType)
-				customDefaultFields = append(customDefaultFields, convertedValue)
+				customDefaultFields = append(customDefaultFields, "$items."+customFieldValue+".value")
 			} else if field.CustomFieldType == "value" {
 				// 自定义字段数据类型处理
 				convertedValue := convertDataType(customFieldValue, customFieldDataType)
@@ -5518,7 +5542,7 @@ func buildDefaultValue(fieldConditions []*journal.FieldCondition) interface{} {
 // 字段类型转换
 func convertDataType(value string, dataType string) (v interface{}) {
 	switch dataType {
-	case "text", "textarea":
+	case "text":
 		return value
 	case "number":
 		result, err := strconv.ParseFloat(value, 64)
@@ -5527,30 +5551,12 @@ func convertDataType(value string, dataType string) (v interface{}) {
 		}
 		return result
 	case "date":
-		zone := time.Time{}
-		if len(value) == 0 {
-			return zone
-		}
-		date, err := time.Parse("2006-01-02", value)
-		if err != nil {
-			return zone
-		}
-		return date
-	case "time":
-		return value
-	}
-	return 0
-}
-
-// 日期类型的相关处理
-func convertDateType(value string, dataType string) (v interface{}) {
-	if dataType == "date" {
-		return map[string]interface{}{
-			"$dateToString": map[string]interface{}{
-				"format": "%Y-%m-%d",
-				"date":   "$items." + value + ".value", // 添加默认值字段及defaultValue
+		return bson.M{
+			"$dateFromString": bson.M{
+				"dateString": value + "T00:00:00.000Z",
 			},
 		}
+	default:
+		return ""
 	}
-	return "$items." + value + ".value"
 }

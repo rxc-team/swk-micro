@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"rxcsoft.cn/pit3/srv/journal/model"
@@ -159,6 +160,16 @@ func (f *Journal) AddDownloadSetting(ctx context.Context, req *journal.AddDownlo
 			for _, group := range condition.GetFieldGroups() {
 				var fieldCons []*model.FieldCon
 				for _, con := range group.GetFieldCons() {
+					// 日期类型处理
+					if con.ConDataType == "date" && strings.Contains(con.ConValue, "T") {
+						date, err := time.Parse(time.RFC3339, con.ConValue)
+						if err != nil {
+							utils.ErrorLog(ActionAddDownloadSetting, err.Error())
+							return err
+						}
+						con.ConValue = date.Format("2006-01-02")
+					}
+
 					fieldCons = append(fieldCons, &model.FieldCon{
 						ConID:       con.ConId,
 						ConName:     con.ConName,
