@@ -37,7 +37,7 @@ spec:
             value: Rxc1234%
           - name: DEFAULT_DOMAIN
             value: proship.co.jp
-          image: gcr.io/{{ PROJECT_ID }}/outer:{{ IMAGE }}
+          image: us-docker.pkg.dev/{{ PROJECT_ID }}/gcr.io//outer:{{ IMAGE }}
           imagePullPolicy: Always
           ports:
           - containerPort: 8080

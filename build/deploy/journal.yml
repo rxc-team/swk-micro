@@ -33,7 +33,7 @@ spec:
             value: Asia/Tokyo
           - name: RABBITMQ
             value: amqp://administer:rabbitmq1234@rabbitmq.rabbitmq:5672
-          image: gcr.io/{{ PROJECT_ID }}/journal:{{ IMAGE }}
+          image: us-docker.pkg.dev/{{ PROJECT_ID }}/gcr.io//journal:{{ IMAGE }}
           imagePullPolicy: Always
           ports:
           - containerPort: 8080

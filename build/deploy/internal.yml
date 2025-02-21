@@ -52,7 +52,7 @@ spec:
             value: "http://mongo-script:8000"
           - name: VERSION
             value: "2.4.7"
-          image: gcr.io/{{ PROJECT_ID }}/internal:{{ IMAGE }}
+          image: us-docker.pkg.dev/{{ PROJECT_ID }}/gcr.io//internal:{{ IMAGE }}
           imagePullPolicy: Always
           ports:
           - containerPort: 8080
