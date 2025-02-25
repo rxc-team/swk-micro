@@ -99,14 +99,6 @@ func deleteContractItem(db, appId, datastoreID, itemID, userID, lang, domain str
 			return err
 		}
 
-		hs := NewHistory(db, userID, datastoreID, lang, domain, sc, nil)
-
-		err = hs.Add("1", itemID, oldItem.ItemMap)
-		if err != nil {
-			utils.ErrorLog("ModifyItem", err.Error())
-			return err
-		}
-
 		objectID, err := primitive.ObjectIDFromHex(itemID)
 		if err != nil {
 			utils.ErrorLog("deleteContractItem", err.Error())
@@ -121,18 +113,6 @@ func deleteContractItem(db, appId, datastoreID, itemID, userID, lang, domain str
 		utils.DebugLog("deleteContractItem", fmt.Sprintf("query: [ %s ]", queryJSON))
 
 		if _, err := c.DeleteOne(sc, query1); err != nil {
-			utils.ErrorLog("deleteContractItem", err.Error())
-			return err
-		}
-
-		err = hs.Compare("1", nil)
-		if err != nil {
-			utils.ErrorLog("deleteContractItem", err.Error())
-			return err
-		}
-
-		err = hs.Commit()
-		if err != nil {
 			utils.ErrorLog("deleteContractItem", err.Error())
 			return err
 		}

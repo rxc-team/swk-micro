@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"path"
-	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -3458,14 +3457,6 @@ func ModifyItem(db string, p *ItemUpdateParam) (err error) {
 			}
 		}
 
-		hs := NewHistory(db, p.UpdatedBy, p.DatastoreID, p.Lang, p.Domain, sc, allFields)
-
-		err := hs.Add("1", p.ItemID, oldItem.ItemMap)
-		if err != nil {
-			utils.ErrorLog("ModifyItem", err.Error())
-			return nil, err
-		}
-
 		item := bson.M{
 			"updated_at": p.UpdatedAt,
 			"updated_by": p.UpdatedBy,
@@ -3492,18 +3483,6 @@ func ModifyItem(db string, p *ItemUpdateParam) (err error) {
 		utils.DebugLog("ModifyItem", fmt.Sprintf("update: [ %s ]", updateJSON))
 
 		if _, err := c.UpdateByID(ctx, objectID, update); err != nil {
-			utils.ErrorLog("ModifyItem", err.Error())
-			return nil, err
-		}
-
-		err = hs.Compare("1", p.ItemMap)
-		if err != nil {
-			utils.ErrorLog("ModifyItem", err.Error())
-			return nil, err
-		}
-
-		err = hs.Commit()
-		if err != nil {
 			utils.ErrorLog("ModifyItem", err.Error())
 			return nil, err
 		}
@@ -3813,325 +3792,6 @@ func ResetInventoryItems(db, userID, appID string) (err error) {
 		if err != nil {
 			utils.ErrorLog("ResetInventoryItems", err.Error())
 			return err
-		}
-	}
-
-	return nil
-}
-
-// InventoryItem 单个盘点处理
-func InventoryItem(db, userID, itemID, datastoreID, appID, checkType, image, checkField string) (err error) {
-	client := database.New()
-	c := client.Database(database.GetDBName(db)).Collection(GetItemCollectionName(datastoreID))
-	hc := client.Database(database.GetDBName(db)).Collection(CheckHistoryCollection)
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	objectID, e := primitive.ObjectIDFromHex(itemID)
-	if e != nil {
-		utils.ErrorLog("InventoryItem", e.Error())
-		return e
-	}
-
-	query := bson.M{
-		"_id": objectID,
-	}
-
-	queryJSON, _ := json.Marshal(query)
-	utils.DebugLog("InventoryItem", fmt.Sprintf("query: [ %s ]", queryJSON))
-
-	oldItem, err := getItem(db, itemID, datastoreID, []string{})
-	if err != nil {
-		utils.ErrorLog("InventoryItem", err.Error())
-		return err
-	}
-
-	// 处理月取得
-	cfg, err := getConfig(db, appID)
-	if err != nil {
-		utils.ErrorLog("InventoryItem", err.Error())
-		return err
-	}
-	// 获取盘点开始日付，判断是否更新盘点状态
-	checkStartDate, err := time.ParseInLocation("2006-01-02", cfg.GetCheckStartDate(), time.Local)
-	if err != nil {
-		utils.ErrorLog("InventoryItem", err.Error())
-		return err
-	}
-	nowTime := time.Now()
-
-	if checkType == "Image" {
-		var fs []File
-		if value, ok := oldItem.ItemMap[checkField]; ok {
-			oldValue := value.Value.(string)
-			err = json.Unmarshal([]byte(oldValue), &fs)
-			if err != nil {
-				utils.ErrorLog("InventoryItem", err.Error())
-				return err
-			}
-		}
-
-		imageFile := File{
-			Name: filepath.Base(image),
-			URL:  image,
-		}
-
-		fs = append(fs, imageFile)
-
-		value, err := json.Marshal(&fs)
-		if err != nil {
-			utils.ErrorLog("InventoryItem", err.Error())
-			return err
-		}
-		var updateSet = bson.M{}
-		if checkStartDate.Before(nowTime) {
-			updateSet = bson.M{"$set": bson.M{
-				"items." + checkField + ".value":     string(value),
-				"items." + checkField + ".data_type": "file",
-				"check_type":                         checkType,
-				"check_status":                       "1",
-				"checked_at":                         nowTime,
-				"checked_by":                         userID,
-				"updated_at":                         nowTime,
-				"updated_by":                         userID,
-			}}
-		} else {
-			updateSet = bson.M{"$set": bson.M{
-				"items." + checkField + ".value":     string(value),
-				"items." + checkField + ".data_type": "file",
-				"check_type":                         checkType,
-				"check_status":                       "0",
-				"checked_at":                         nowTime,
-				"checked_by":                         userID,
-				"updated_at":                         nowTime,
-				"updated_by":                         userID,
-			}}
-
-		}
-		updateSetJSON, _ := json.Marshal(updateSet)
-		utils.DebugLog("InventoryItem", fmt.Sprintf("update: [ %s ]", updateSetJSON))
-
-		_, err = c.UpdateOne(ctx, query, updateSet)
-		if err != nil {
-			utils.ErrorLog("InventoryItem", err.Error())
-			return err
-		}
-	} else {
-		var update = bson.M{}
-		if checkStartDate.Before(nowTime) {
-			update = bson.M{"$set": bson.M{
-				"check_type":   checkType,
-				"check_status": "1",
-				"checked_at":   nowTime,
-				"checked_by":   userID,
-				"updated_at":   nowTime,
-				"updated_by":   userID,
-			}}
-		} else {
-			update = bson.M{"$set": bson.M{
-				"check_type":   checkType,
-				"check_status": "0",
-				"checked_at":   nowTime,
-				"checked_by":   userID,
-				"updated_at":   nowTime,
-				"updated_by":   userID,
-			}}
-		}
-
-		updateJSON, _ := json.Marshal(update)
-		utils.DebugLog("InventoryItem", fmt.Sprintf("update: [ %s ]", updateJSON))
-
-		if _, err := c.UpdateOne(ctx, query, update); err != nil {
-			utils.ErrorLog("InventoryItem", err.Error())
-			return err
-		}
-	}
-
-	h := &CheckHistory{
-		ItemId:         itemID,
-		DatastoreId:    datastoreID,
-		ItemMap:        oldItem.ItemMap,
-		CheckType:      checkType,
-		CheckStartDate: cfg.GetCheckStartDate(),
-		CheckedAt:      time.Now(),
-		CheckedBy:      userID,
-	}
-
-	h.ID = primitive.NewObjectID()
-	h.CheckId = h.ID.Hex()
-
-	_, err = hc.InsertOne(ctx, h)
-	if err != nil {
-		utils.ErrorLog("InventoryItem", err.Error())
-		return err
-	}
-
-	return nil
-}
-
-// MutilInventoryItem 多条数据盘点
-func MutilInventoryItem(db, userID, datastoreID, appID, checkType string, itemIDList []string) (err error) {
-	client := database.New()
-	c := client.Database(database.GetDBName(db)).Collection(GetItemCollectionName(datastoreID))
-	hc := client.Database(database.GetDBName(db)).Collection(CheckHistoryCollection)
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	var models []mongo.WriteModel
-	var hsModels []mongo.WriteModel
-
-	// 处理月取得
-	cfg, err := getConfig(db, appID)
-	if err != nil {
-		utils.ErrorLog("MutilInventoryItem", err.Error())
-		return err
-	}
-	checkStartDate, err := time.ParseInLocation("2006-01-02", cfg.GetCheckStartDate(), time.Local)
-	if err != nil {
-		utils.ErrorLog("MutilInventoryItem", err.Error())
-		return err
-	}
-	nowTime := time.Now()
-	if checkStartDate.Before(nowTime) {
-		for _, itemID := range itemIDList {
-			update := bson.M{"$set": bson.M{
-				"check_type":   checkType,
-				"check_status": "1",
-				"checked_at":   nowTime,
-				"checked_by":   userID,
-				"updated_at":   nowTime,
-				"updated_by":   userID,
-			}}
-
-			objectID, err := primitive.ObjectIDFromHex(itemID)
-			if err != nil {
-				utils.ErrorLog("MutilInventoryItem", err.Error())
-				return err
-			}
-
-			query := bson.M{
-				"_id": objectID,
-			}
-
-			queryJSON, _ := json.Marshal(query)
-			utils.DebugLog("MutilInventoryItem", fmt.Sprintf("query: [ %s ]", queryJSON))
-
-			updateJSON, _ := json.Marshal(update)
-			utils.DebugLog("MutilInventoryItem", fmt.Sprintf("update: [ %s ]", updateJSON))
-
-			upModel := mongo.NewUpdateOneModel()
-			upModel.SetFilter(query)
-			upModel.SetUpdate(update)
-			upModel.SetUpsert(false)
-
-			models = append(models, upModel)
-
-			oldItem, err := getItem(db, itemID, datastoreID, []string{})
-			if err != nil {
-				utils.ErrorLog("InventoryItem", err.Error())
-				return err
-			}
-
-			h := &CheckHistory{
-				ItemId:         itemID,
-				DatastoreId:    datastoreID,
-				ItemMap:        oldItem.ItemMap,
-				CheckType:      checkType,
-				CheckStartDate: cfg.GetCheckStartDate(),
-				CheckedAt:      time.Now(),
-				CheckedBy:      userID,
-			}
-
-			h.ID = primitive.NewObjectID()
-			h.CheckId = h.ID.Hex()
-
-			hs := mongo.NewInsertOneModel()
-			hs.SetDocument(h)
-
-			hsModels = append(hsModels, hs)
-		}
-	} else {
-		for _, itemID := range itemIDList {
-			update := bson.M{"$set": bson.M{
-				"check_type":   checkType,
-				"check_status": "0",
-				"checked_at":   nowTime,
-				"checked_by":   userID,
-				"updated_at":   nowTime,
-				"updated_by":   userID,
-			}}
-
-			objectID, err := primitive.ObjectIDFromHex(itemID)
-			if err != nil {
-				utils.ErrorLog("MutilInventoryItem", err.Error())
-				return err
-			}
-
-			query := bson.M{
-				"_id": objectID,
-			}
-
-			queryJSON, _ := json.Marshal(query)
-			utils.DebugLog("MutilInventoryItem", fmt.Sprintf("query: [ %s ]", queryJSON))
-
-			updateJSON, _ := json.Marshal(update)
-			utils.DebugLog("MutilInventoryItem", fmt.Sprintf("update: [ %s ]", updateJSON))
-
-			upModel := mongo.NewUpdateOneModel()
-			upModel.SetFilter(query)
-			upModel.SetUpdate(update)
-			upModel.SetUpsert(false)
-
-			models = append(models, upModel)
-
-			oldItem, err := getItem(db, itemID, datastoreID, []string{})
-			if err != nil {
-				utils.ErrorLog("InventoryItem", err.Error())
-				return err
-			}
-
-			h := &CheckHistory{
-				ItemId:         itemID,
-				DatastoreId:    datastoreID,
-				ItemMap:        oldItem.ItemMap,
-				CheckType:      checkType,
-				CheckStartDate: cfg.GetCheckStartDate(),
-				CheckedAt:      time.Now(),
-				CheckedBy:      userID,
-			}
-
-			h.ID = primitive.NewObjectID()
-			h.CheckId = h.ID.Hex()
-
-			hs := mongo.NewInsertOneModel()
-			hs.SetDocument(h)
-
-			hsModels = append(hsModels, hs)
-		}
-	}
-
-	if len(models) > 0 {
-		result, err := c.BulkWrite(ctx, models)
-		if err != nil {
-			utils.ErrorLog("MutilInventoryItem", err.Error())
-			return err
-		}
-
-		// TODO 回滚不可用
-		if int64(len(itemIDList)) != result.ModifiedCount {
-			log.Warnf("error MutilInventoryItem with image %v", "not completely update!")
-		}
-	}
-	if len(hsModels) > 0 {
-		result, err := hc.BulkWrite(ctx, hsModels)
-		if err != nil {
-			utils.ErrorLog("MutilInventoryItem", err.Error())
-			return err
-		}
-
-		// TODO 回滚不可用
-		if int64(len(itemIDList)) != result.ModifiedCount {
-			log.Warnf("error MutilInventoryItem with image %v", "not completely update!")
 		}
 	}
 
@@ -4845,21 +4505,13 @@ func deleteItem(db, datastoreID, itemID, userID, lang, domain string, owners []s
 
 	if err = mongo.WithSession(ctx, session, func(sc mongo.SessionContext) error {
 		// 添加删除履历
-		i, e := getItem(db, itemID, datastoreID, owners)
+		_, e := getItem(db, itemID, datastoreID, owners)
 		if e != nil {
 			if e.Error() == mongo.ErrNoDocuments.Error() {
 				return errors.New("データが存在しないか、データを削除する権限がありません")
 			}
 			utils.ErrorLog("deleteItem", e.Error())
 			return e
-		}
-
-		hs := NewHistory(db, userID, datastoreID, lang, domain, sc, nil)
-
-		err := hs.Add("1", itemID, i.ItemMap)
-		if err != nil {
-			utils.ErrorLog("deleteItem", err.Error())
-			return err
 		}
 
 		objectID, err := primitive.ObjectIDFromHex(itemID)
@@ -4876,18 +4528,6 @@ func deleteItem(db, datastoreID, itemID, userID, lang, domain string, owners []s
 		utils.DebugLog("DeleteItem", fmt.Sprintf("query: [ %s ]", queryJSON))
 		// 删除台账数据
 		if _, err := c.DeleteOne(sc, query); err != nil {
-			utils.ErrorLog("deleteItem", err.Error())
-			return err
-		}
-
-		err = hs.Compare("1", nil)
-		if err != nil {
-			utils.ErrorLog("deleteItem", err.Error())
-			return err
-		}
-
-		err = hs.Commit()
-		if err != nil {
 			utils.ErrorLog("deleteItem", err.Error())
 			return err
 		}

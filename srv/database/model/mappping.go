@@ -154,8 +154,6 @@ func dataHandler(ctx context.Context, meta *item.MappingMetaData, dataList []*Ch
 	callback := func(sc mongo.SessionContext) (interface{}, error) {
 		var result *mongo.BulkWriteResult
 
-		hs := NewHistory(meta.GetDatabase(), meta.GetWriter(), meta.GetDatastoreId(), meta.GetLangCd(), meta.GetDomain(), sc, allFields)
-
 		// 新规作成的场合
 		if meta.MappingType == "insert" {
 			step := len(dataList)
@@ -201,19 +199,6 @@ func dataHandler(ctx context.Context, meta *item.MappingMetaData, dataList []*Ch
 				dataItem.Status = "1"
 				dataItem.CheckStatus = "0"
 
-				err := hs.Add(cast.ToString(in+1), dataItem.ID.Hex(), nil)
-				if err != nil {
-					utils.ErrorLog("MappingImport", err.Error())
-					// 返回错误信息
-					importErrors = append(importErrors, &item.Error{
-						FirstLine:   firstLine,
-						CurrentLine: line,
-						LastLine:    lastLine,
-						ErrorMsg:    err.Error(),
-					})
-					return nil, err
-				}
-
 				// 没有必须字段的情况下直接插入数据
 				if len(requriedFields) == 0 {
 					for _, f := range allFields {
@@ -235,18 +220,6 @@ func dataHandler(ctx context.Context, meta *item.MappingMetaData, dataList []*Ch
 					insertCxModel := mongo.NewInsertOneModel()
 					insertCxModel.SetDocument(dataItem)
 					cxModels = append(cxModels, insertCxModel)
-
-					err = hs.Compare(cast.ToString(in+1), dataItem.ItemMap)
-					if err != nil {
-						// 返回错误信息
-						importErrors = append(importErrors, &item.Error{
-							FirstLine:   firstLine,
-							CurrentLine: line,
-							LastLine:    lastLine,
-							ErrorMsg:    err.Error(),
-						})
-						return nil, err
-					}
 
 					continue
 				}
@@ -302,18 +275,6 @@ func dataHandler(ctx context.Context, meta *item.MappingMetaData, dataList []*Ch
 				insertCxModel.SetDocument(dataItem)
 				cxModels = append(cxModels, insertCxModel)
 
-				err = hs.Compare(cast.ToString(in+1), dataItem.ItemMap)
-				if err != nil {
-					// 返回错误信息
-					importErrors = append(importErrors, &item.Error{
-						FirstLine:   firstLine,
-						CurrentLine: line,
-						LastLine:    lastLine,
-						ErrorMsg:    err.Error(),
-					})
-					return nil, err
-				}
-
 				continue
 			}
 			if len(cxModels) > 0 {
@@ -358,18 +319,7 @@ func dataHandler(ctx context.Context, meta *item.MappingMetaData, dataList []*Ch
 				result = res
 			}
 
-			err := hs.Commit()
-			if err != nil {
-				// 返回错误信息
-				importErrors = append(importErrors, &item.Error{
-					FirstLine: firstLine,
-					LastLine:  lastLine,
-					ErrorMsg:  err.Error(),
-				})
-				return nil, err
-			}
-
-			err = stream.Send(&item.MappingUploadResponse{
+			err := stream.Send(&item.MappingUploadResponse{
 				Status: item.Status_SUCCESS,
 				Result: &item.ImportResult{
 					Insert: result.InsertedCount,
@@ -433,19 +383,6 @@ func dataHandler(ctx context.Context, meta *item.MappingMetaData, dataList []*Ch
 				dataItem.Status = "1"
 				dataItem.CheckStatus = "0"
 
-				err := hs.Add(cast.ToString(in+1), dataItem.ID.Hex(), nil)
-				if err != nil {
-					utils.ErrorLog("MappingImport", err.Error())
-					// 返回错误信息
-					importErrors = append(importErrors, &item.Error{
-						FirstLine:   firstLine,
-						CurrentLine: line,
-						LastLine:    lastLine,
-						ErrorMsg:    err.Error(),
-					})
-					return nil, err
-				}
-
 				// 若无必须字段则直接插入
 				if len(requriedFields) == 0 {
 
@@ -492,18 +429,6 @@ func dataHandler(ctx context.Context, meta *item.MappingMetaData, dataList []*Ch
 					insertCxModel := mongo.NewInsertOneModel()
 					insertCxModel.SetDocument(dataItem)
 					cxModels = append(cxModels, insertCxModel)
-
-					err = hs.Compare(cast.ToString(in+1), dataItem.ItemMap)
-					if err != nil {
-						// 返回错误信息
-						importErrors = append(importErrors, &item.Error{
-							FirstLine:   firstLine,
-							CurrentLine: line,
-							LastLine:    lastLine,
-							ErrorMsg:    err.Error(),
-						})
-						return nil, err
-					}
 
 					continue
 				}
@@ -578,18 +503,6 @@ func dataHandler(ctx context.Context, meta *item.MappingMetaData, dataList []*Ch
 				insertCxModel.SetDocument(dataItem)
 				cxModels = append(cxModels, insertCxModel)
 
-				err = hs.Compare(cast.ToString(in+1), dataItem.ItemMap)
-				if err != nil {
-					// 返回错误信息
-					importErrors = append(importErrors, &item.Error{
-						FirstLine:   firstLine,
-						CurrentLine: line,
-						LastLine:    lastLine,
-						ErrorMsg:    err.Error(),
-					})
-					return nil, err
-				}
-
 				continue
 			}
 
@@ -622,17 +535,6 @@ func dataHandler(ctx context.Context, meta *item.MappingMetaData, dataList []*Ch
 
 				oldItem := itemList[0]
 
-				err := hs.Add(cast.ToString(in+1), oldItem.ItemID, oldItem.ItemMap)
-				if err != nil {
-					importErrors = append(importErrors, &item.Error{
-						FirstLine:   firstLine,
-						CurrentLine: line,
-						LastLine:    lastLine,
-						ErrorMsg:    err.Error(),
-					})
-					return nil, err
-				}
-
 				change := bson.M{
 					"updated_at": time.Now(),
 					"updated_by": meta.Writer,
@@ -677,17 +579,6 @@ func dataHandler(ctx context.Context, meta *item.MappingMetaData, dataList []*Ch
 				upCxModel.SetUpdate(update)
 				upCxModel.SetUpsert(false)
 				cxModels = append(cxModels, upCxModel)
-
-				err = hs.Compare(cast.ToString(in+1), d.Change)
-				if err != nil {
-					importErrors = append(importErrors, &item.Error{
-						FirstLine:   firstLine,
-						CurrentLine: line,
-						LastLine:    lastLine,
-						ErrorMsg:    err.Error(),
-					})
-					return nil, err
-				}
 
 				continue
 			}
@@ -697,17 +588,6 @@ func dataHandler(ctx context.Context, meta *item.MappingMetaData, dataList []*Ch
 
 				oldItem := itemList[0]
 
-				err := hs.Add(cast.ToString(in+1), oldItem.ItemID, oldItem.ItemMap)
-				if err != nil {
-					importErrors = append(importErrors, &item.Error{
-						FirstLine:   firstLine,
-						CurrentLine: line,
-						LastLine:    lastLine,
-						ErrorMsg:    err.Error(),
-					})
-					return nil, err
-				}
-
 				change := bson.M{
 					"updated_at": time.Now(),
 					"updated_by": meta.Writer,
@@ -751,17 +631,6 @@ func dataHandler(ctx context.Context, meta *item.MappingMetaData, dataList []*Ch
 				upCxModel.SetUpdate(update)
 				upCxModel.SetUpsert(false)
 				cxModels = append(cxModels, upCxModel)
-
-				err = hs.Compare(cast.ToString(in+1), d.Change)
-				if err != nil {
-					importErrors = append(importErrors, &item.Error{
-						FirstLine:   firstLine,
-						CurrentLine: line,
-						LastLine:    lastLine,
-						ErrorMsg:    err.Error(),
-					})
-					return nil, err
-				}
 
 				continue
 			}
@@ -775,17 +644,6 @@ func dataHandler(ctx context.Context, meta *item.MappingMetaData, dataList []*Ch
 				index.WriteString("_")
 				index.WriteString(cast.ToString(k + 1))
 
-				err := hs.Add(index.String(), oldItem.ItemID, oldItem.ItemMap)
-				if err != nil {
-					importErrors = append(importErrors, &item.Error{
-						FirstLine:   firstLine,
-						CurrentLine: line,
-						LastLine:    lastLine,
-						ErrorMsg:    err.Error(),
-					})
-					return nil, err
-				}
-
 				// 自增字段不更新
 				for _, f := range allFields {
 					if f.FieldType == "autonum" {
@@ -831,16 +689,6 @@ func dataHandler(ctx context.Context, meta *item.MappingMetaData, dataList []*Ch
 				upCxModel.SetUpsert(false)
 				cxModels = append(cxModels, upCxModel)
 
-				err = hs.Compare(index.String(), d.Change)
-				if err != nil {
-					importErrors = append(importErrors, &item.Error{
-						FirstLine:   firstLine,
-						CurrentLine: line,
-						LastLine:    lastLine,
-						ErrorMsg:    err.Error(),
-					})
-					return nil, err
-				}
 			}
 
 			continue
@@ -888,18 +736,7 @@ func dataHandler(ctx context.Context, meta *item.MappingMetaData, dataList []*Ch
 			result = res
 		}
 
-		err := hs.Commit()
-		if err != nil {
-			// 返回错误信息
-			importErrors = append(importErrors, &item.Error{
-				FirstLine: firstLine,
-				LastLine:  lastLine,
-				ErrorMsg:  err.Error(),
-			})
-			return nil, err
-		}
-
-		err = stream.Send(&item.MappingUploadResponse{
+		err := stream.Send(&item.MappingUploadResponse{
 			Status: item.Status_SUCCESS,
 			Result: &item.ImportResult{
 				Insert: result.InsertedCount,

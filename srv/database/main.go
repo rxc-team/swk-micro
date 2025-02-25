@@ -12,9 +12,7 @@ import (
 	"rxcsoft.cn/pit3/srv/database/handler"
 	av "rxcsoft.cn/pit3/srv/database/handler/approve"
 	"rxcsoft.cn/pit3/srv/database/proto/approve"
-	"rxcsoft.cn/pit3/srv/database/proto/check"
 	"rxcsoft.cn/pit3/srv/database/proto/copy"
-	"rxcsoft.cn/pit3/srv/database/proto/datahistory"
 	"rxcsoft.cn/pit3/srv/database/proto/datastore"
 	"rxcsoft.cn/pit3/srv/database/proto/feed"
 	"rxcsoft.cn/pit3/srv/database/proto/field"
@@ -64,10 +62,8 @@ func main() {
 	print.RegisterPrintServiceHandler(service.Server(), new(handler.Print))
 	option.RegisterOptionServiceHandler(service.Server(), new(handler.Option))
 	query.RegisterQueryServiceHandler(service.Server(), new(handler.Query))
-	datahistory.RegisterHistoryServiceHandler(service.Server(), new(handler.History))
 	feed.RegisterImportServiceHandler(service.Server(), new(handler.Import))
 	approve.RegisterApproveServiceHandler(service.Server(), new(av.Approve))
-	check.RegisterCheckHistoryServiceHandler(service.Server(), new(handler.CheckHistory))
 	copy.RegisterCopyServiceHandler(service.Server(), new(handler.Copy))
 	generate.RegisterGenerateServiceHandler(service.Server(), new(handler.Generate))
 

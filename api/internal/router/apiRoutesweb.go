@@ -224,30 +224,6 @@ func initAuthRouterWeb(router *gin.Engine) {
 		optionRoute.GET("/options/:o_id", option.FindOption)
 	}
 
-	// history
-	history := new(webui.History)
-	{
-		historyRoute := v1.Group("/history")
-		// 获取所有履历
-		historyRoute.GET("/datastores/:d_id/histories", history.FindHistories)
-		// 获取最新履历
-		historyRoute.GET("/last/datastores/:d_id/histories", history.FindLastHistories)
-		// 获取一条履历记录
-		historyRoute.GET("/datastores/:d_id/histories/:h_id", history.FindHistory)
-		// 履历下载
-		historyRoute.GET("/datastores/:d_id/download", history.HistoryDownload)
-	}
-
-	// checkHistory
-	checkHistory := new(webui.CheckHistory)
-	{
-		historyRoute := v1.Group("/checkhistory")
-		// 获取所有履历
-		historyRoute.POST("/datastores/:d_id/histories", checkHistory.FindHistories)
-		// 获取所有履历
-		historyRoute.POST("/datastores/:d_id/download", checkHistory.HistoryDownload)
-	}
-
 	// datastore
 	datastores := new(webui.Datastore)
 	{
