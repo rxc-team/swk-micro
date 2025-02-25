@@ -1024,7 +1024,7 @@ func (r *Prs) DownloadPrs(c *gin.Context) {
 	loggerx.InfoLog(c, ActionDownloadPrs, loggerx.MsgProcessEnded)
 	c.JSON(200, httpx.Response{
 		Status:  0,
-		Message: msg.GetMsg("ja-JP", msg.Info, msg.I004, fmt.Sprintf(httpx.Temp, ReportProcessName, ActionDownloadPrs)),
+		Message: msg.GetMsg("ja-JP", msg.Info, msg.I004, fmt.Sprintf(httpx.Temp, ActionDownloadPrs)),
 		Data:    gin.H{},
 	})
 }

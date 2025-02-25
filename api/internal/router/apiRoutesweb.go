@@ -203,8 +203,6 @@ func initAuthRouterWeb(router *gin.Engine) {
 		v1.POST("/validation/password", validation.PasswordValidation)
 		// 验证数据唯一
 		v1.POST("/validation/datastores/:id/items/unique", validation.ItemUniqueValidation)
-		// 验证映射数据是否有流程
-		v1.GET("/validation/datastores/:d_id/mappings/:m_id", validation.WorkflowExistValidation)
 		// 验证特殊字符
 		v1.POST("/validation/specialchar", validation.ValidSpecialChar)
 		// 验证快捷方式名称唯一性
@@ -213,16 +211,6 @@ func initAuthRouterWeb(router *gin.Engine) {
 		v1.POST("/validation/filename", validation.FileNameDuplicated)
 		// 验证问题标题唯一性
 		v1.POST("/validation/questiontitle", validation.QuestionTitleDuplicated)
-	}
-
-	// template
-	template := new(webui.Template)
-	{
-		tempRoute := v1.Group("/template")
-		// 查询临时台账数据（可分页）
-		tempRoute.GET("/templates", template.FindTemplateItems)
-		// 删除临时台账数据
-		tempRoute.DELETE("/templates/:template_id", template.DeleteTemplateItems)
 	}
 
 	// option
@@ -272,48 +260,6 @@ func initAuthRouterWeb(router *gin.Engine) {
 		datastoreRoute.GET("/key/datastores/:api_key", datastores.FindDatastoreByKey)
 	}
 
-	// report
-	reports := new(webui.Report)
-	{
-		reportRoute := v1.Group("/report")
-		// 获取所属公司所属APP下所有报表情报
-		reportRoute.GET("/reports", reports.FindReports)
-		// 通过报表ID获取单个报表情报
-		reportRoute.GET("/reports/:rp_id", reports.FindReport)
-		// 通过报表ID获取报表数据
-		reportRoute.POST("/reports/:rp_id/data", reports.FindReportData)
-		// 通过报表ID获取报表数据
-		reportRoute.POST("/gen/reports/:rp_id/data", reports.GenerateReportData)
-		// 通过报表ID获取报表数据
-		reportRoute.POST("/reports/:rp_id/download", reports.Download)
-		// 获取总表所有数据
-		reportRoute.POST("/colData", reports.FindColDatas)
-		// 通过契约番号，年月搜索总表数据
-		reportRoute.POST("/selectColData", reports.SelectColData)
-		// 通过d_id和app_id创建总表数据
-		reportRoute.POST("/:rp_id/create", reports.CreateColData)
-		// 根据条件CSV下载总表数据
-		reportRoute.GET("/downloadColData", reports.ColDataDownload)
-	}
-
-	// report 特殊报表的下载
-	prs := new(webui.Prs)
-	{
-		reportRoute := v1.Group("/item")
-		// 作成租赁物件本金返还预计表(明细表)数据,以csv文件下载
-		reportRoute.POST("/datastores/:d_id/prs/download", prs.DownloadPrs)
-	}
-
-	// dashboard
-	dashboards := new(webui.Dashboard)
-	{
-		dashboardRoute := v1.Group("/dashboard")
-		// 获取所属公司所属APP所属报表下所有仪表盘情报
-		dashboardRoute.GET("/dashboards", dashboards.FindDashboards)
-		// 通过仪表盘ID获取仪表盘数据情报
-		dashboardRoute.GET("/dashboards/:dash_id/data", dashboards.FindDashboardData)
-	}
-
 	// Item
 	items := new(webui.Item)
 	{
@@ -326,18 +272,8 @@ func initAuthRouterWeb(router *gin.Engine) {
 		itemRoute.POST("/datastores/:d_id/items/download", items.Download)
 		// 获取台账一条数据
 		itemRoute.GET("/datastores/:d_id/items/:i_id", items.FindItem)
-		// 获取台账一条数据(利子率マスタ)
-		itemRoute.GET("/datastores/:d_id/rishiritsu", items.FindRishiritsu)
-		// 查询台账未审批数据件数
-		itemRoute.GET("/datastores/:d_id/unApprove", items.FindUnApproveItems)
 		// 添加台账数据
 		itemRoute.POST("/datastores/:d_id/items", items.AddItem)
-		// 上传csv文件，导入台账数据
-		itemRoute.POST("/import/csv/datastores/:d_id/items", items.ImportCsvItem)
-		// 上传csv文件，批量盘点台账数据
-		itemRoute.POST("/import/csv/datastores/:d_id/check/items", items.ImportCheckItems)
-		// 上传csv文件，导入台账数据
-		itemRoute.POST("/import/image/datastores/:d_id/items", items.ImportCsvItem)
 		// 更新台账数据
 		itemRoute.PUT("/datastores/:d_id/items/:i_id", items.ModifyItem)
 		// 更新当前条件下的数据的所有者
@@ -354,32 +290,6 @@ func initAuthRouterWeb(router *gin.Engine) {
 		itemRoute.DELETE("/clear/datastores/:d_id/items/selected", items.DeleteSelectedItems)
 		// 修改标签出力时间
 		itemRoute.PUT("/changeLabel/datastores/:d_id/items", items.ChangeLabelTime)
-		// 生成支付数据(租赁系统用)
-		itemRoute.POST("/generate/pay", items.GeneratePay)
-		// 计算利息和偿还数据(租赁系统用)
-		itemRoute.POST("/compute/leaserepay", items.ComputeLeaserepay)
-		// 债务变更
-		itemRoute.PUT("/datastores/:d_id/items/:i_id/debt", items.ChangeDebt)
-		// 契约满了
-		itemRoute.PUT("/datastores/:d_id/items/:i_id/contractExpire", items.ContractExpire)
-		// 契约情报变更
-		itemRoute.PUT("/datastores/:d_id/items/:i_id/contract", items.ModifyContract)
-		// 中途解约
-		itemRoute.PUT("/datastores/:d_id/items/:i_id/terminate", items.TerminateContract)
-	}
-
-	// approve
-	approve := new(webui.Approve)
-	{
-		approveRoute := v1.Group("/approve")
-		// 获取台账所有数据
-		approveRoute.POST("/approves", approve.FindApproveItems)
-		// 审批日志下载
-		approveRoute.POST("/approves/log/download", approve.ApproveLogDownload)
-		// 获取台账一条数据
-		approveRoute.GET("/approves/:ex_id", approve.FindApproveItem)
-		// 删除单条台账数据field
-		approveRoute.DELETE("/approves", approve.DeleteApprove)
 	}
 
 	// field
@@ -400,57 +310,6 @@ func initAuthRouterWeb(router *gin.Engine) {
 		mappingRoute.POST("/datastores/:d_id/upload", mapping.MappingUpload)
 		// 导出数据
 		mappingRoute.POST("/datastores/:d_id/download", mapping.MappingDownload)
-	}
-
-	// helpType
-	helpType := new(webui.Type)
-	{
-		typeRoute := v1.Group("/type")
-		// 获取单个帮助文档类型
-		typeRoute.GET("/types/:type_id", helpType.FindType)
-		// 获取多个帮助文档类型
-		typeRoute.GET("/types", helpType.FindTypes)
-	}
-
-	// help
-	help := new(webui.Help)
-	{
-		helpRoute := v1.Group("/help")
-		// 获取单个帮助文档
-		helpRoute.GET("/helps/:help_id", help.FindHelp)
-		// 获取多个帮助文档
-		helpRoute.GET("/helps", help.FindHelps)
-	}
-
-	// question
-	question := new(webui.Question)
-	{
-		questionRoute := v1.Group("/question")
-		// 获取单个问题
-		questionRoute.GET("/questions/:question_id", question.FindQuestion)
-		// 获取多个问题
-		questionRoute.GET("/questions", question.FindQuestions)
-		// 添加问题
-		questionRoute.POST("/questions", question.AddQuestion)
-		// 更新问题
-		questionRoute.PUT("/questions/:question_id", question.ModifyQuestion)
-		// 硬删除多个问题
-		questionRoute.DELETE("/questions", question.DeleteQuestions)
-	}
-	// workflow
-	workflow := new(webui.Workflow)
-	{
-		workflowRoute := v1.Group("/workflow")
-		// 获取单个流程
-		workflowRoute.GET("/workflows/:wf_id", workflow.FindWorkflow)
-		// 获取多个流程
-		workflowRoute.GET("/workflows", workflow.FindWorkflows)
-		// 获取多个流程
-		workflowRoute.GET("/user/workflows", workflow.FindUserWorkflows)
-		// 承认
-		workflowRoute.POST("/admit", workflow.Admit)
-		// 拒绝
-		workflowRoute.POST("/dismiss", workflow.Dismiss)
 	}
 
 	// allow
