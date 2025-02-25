@@ -13,7 +13,6 @@ import (
 	"rxcsoft.cn/pit3/api/internal/common/loggerx"
 	"rxcsoft.cn/pit3/api/internal/system/sessionx"
 	"rxcsoft.cn/pit3/lib/msg"
-	"rxcsoft.cn/pit3/srv/database/proto/datahistory"
 	"rxcsoft.cn/pit3/srv/global/proto/language"
 	"rxcsoft.cn/pit3/srv/manage/proto/app"
 	"rxcsoft.cn/pit3/srv/manage/proto/customer"
@@ -235,27 +234,6 @@ func (u *Customer) AddCustomer(c *gin.Context) {
 	}
 	loggerx.SuccessLog(c, ActionAddCustomer, fmt.Sprintf(loggerx.MsgProcesSucceed, "AddLanguage ja"))
 	loggerx.InfoLog(c, ActionAddCustomer, fmt.Sprintf("Process AddLanguage ja:%s", loggerx.MsgProcessEnded))
-
-	// 创建history索引
-	loggerx.InfoLog(c, ActionAddCustomer, fmt.Sprintf("Process CreateHistoryIndex :%s", loggerx.MsgProcessStarted))
-	historyService := datahistory.NewHistoryService("database", client.DefaultClient)
-
-	var opss client.CallOption = func(o *client.CallOptions) {
-		o.RequestTimeout = time.Minute * 10
-		o.DialTimeout = time.Minute * 10
-	}
-
-	var ireq datahistory.CreateIndexRequest
-	ireq.CustomerId = response.CustomerId
-
-	_, ierr := historyService.CreateIndex(context.TODO(), &ireq, opss)
-	if ierr != nil {
-		httpx.GinHTTPError(c, ActionAddCustomer, ierr)
-		return
-	}
-	loggerx.SuccessLog(c, ActionAddCustomer, fmt.Sprintf(loggerx.MsgProcesSucceed, "CreateHistoryIndex"))
-	loggerx.InfoLog(c, ActionAddCustomer, fmt.Sprintf("Process CreateHistoryIndex :%s", loggerx.MsgProcessEnded))
-
 	// 创建顾客文件桶
 	loggerx.InfoLog(c, ActionAddCustomer, fmt.Sprintf("Process CreateFileBucket :%s", loggerx.MsgProcessStarted))
 	_, err = storagecli.NewClient(req.GetDomain())
