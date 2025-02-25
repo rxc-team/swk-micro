@@ -170,18 +170,6 @@ func initAuthRouterWeb(router *gin.Engine) {
 		fileRoute.GET("/public/data/file/copy", file.CopyPublicDataFile)
 	}
 
-	// folder
-	folder := new(webui.Folder)
-	{
-		folderRoute := v1.Group("/folder")
-		// 查找多个文件夹
-		folderRoute.GET("/folders", folder.FindFolders)
-		// 添加文件夹
-		folderRoute.POST("/folders", folder.AddFolder)
-		// 物理删除多个文件夹
-		folderRoute.DELETE("/phydel/folders", folder.HardDeleteFolders)
-	}
-
 	// query
 	query := new(webui.Query)
 	{
