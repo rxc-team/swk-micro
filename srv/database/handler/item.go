@@ -28,13 +28,9 @@ const (
 	ActionImportItem            = "ImportItem"
 	ActionImportCheckItem       = "ImportCheckItem"
 	ActionMappingImport         = "MappingImport"
-	ActionModifyItem            = "ModifyItem"
 	ActionDeleteItem            = "DeleteItem"
 	ActionDeleteDatastoreItems  = "DeleteDatastoreItems"
 	ActionDeleteItems           = "DeleteItems"
-	ActionChangeOwners          = "ChangeOwners"
-	ActionChangeItemOwner       = "ChangeItemOwner"
-	ActionChangeStatus          = "ChangeStatus"
 	ActionConfimItem            = "ConfimItem"
 	ActionGenerateItem          = "GenerateItem"
 	ActionGenerateShoukyakuItem = "GenerateShoukyakuItem"
@@ -294,40 +290,6 @@ func (i *Item) MappingUpload(ctx context.Context, stream item.ItemService_Mappin
 	return nil
 }
 
-// ModifyItem 更新台账一条数据
-func (i *Item) ModifyItem(ctx context.Context, req *item.ModifyRequest, rsp *item.ModifyResponse) error {
-	utils.InfoLog(ActionModifyItem, utils.MsgProcessStarted)
-
-	items := make(map[string]*model.Value, len(req.Items))
-	for key, item := range req.Items {
-		items[key] = &model.Value{
-			DataType: item.DataType,
-			Value:    model.GetValueFromProto(item),
-		}
-	}
-
-	params := model.ItemUpdateParam{
-		AppID:       req.GetAppId(),
-		ItemID:      req.GetItemId(),
-		DatastoreID: req.GetDatastoreId(),
-		ItemMap:     items,
-		UpdatedAt:   time.Now(),
-		UpdatedBy:   req.GetWriter(),
-		Owners:      req.GetOwners(),
-		Lang:        req.GetLangCd(),
-		Domain:      req.GetDomain(),
-	}
-
-	err := model.ModifyItem(req.GetDatabase(), &params)
-	if err != nil {
-		utils.ErrorLog(ActionModifyItem, err.Error())
-		return err
-	}
-
-	utils.InfoLog(ActionModifyItem, utils.MsgProcessEnded)
-	return nil
-}
-
 // GenerateItem 更新台账数据作成
 func (i *Item) GenerateItem(ctx context.Context, req *item.JournalRequest, rsp *item.JournalResponse) error {
 	utils.InfoLog(ActionGenerateItem, utils.MsgProcessStarted)
@@ -457,92 +419,6 @@ func (i *Item) DeleteItems(ctx context.Context, req *item.DeleteItemsRequest, rs
 	}
 
 	utils.InfoLog(ActionDeleteItems, utils.MsgProcessEnded)
-	return nil
-}
-
-// ChangeOwners 更新所有者
-func (i *Item) ChangeOwners(ctx context.Context, req *item.OwnersRequest, rsp *item.OwnersResponse) error {
-	utils.InfoLog(ActionChangeOwners, utils.MsgProcessStarted)
-
-	err := model.ChangeOwners(req.GetDatabase(), req)
-	if err != nil {
-		utils.ErrorLog(ActionChangeOwners, err.Error())
-		return err
-	}
-
-	utils.InfoLog(ActionChangeOwners, utils.MsgProcessEnded)
-	return nil
-}
-
-// ChangeSelectOwners 通过检索条件更新所有者信息
-func (i *Item) ChangeSelectOwners(ctx context.Context, req *item.SelectOwnersRequest, rsp *item.SelectOwnersResponse) error {
-	utils.InfoLog(ActionChangeOwners, utils.MsgProcessStarted)
-
-	var conditions []*model.Condition
-	for _, condition := range req.GetConditionList() {
-		conditions = append(conditions, &model.Condition{
-			FieldID:       condition.GetFieldId(),
-			FieldType:     condition.GetFieldType(),
-			SearchValue:   condition.GetSearchValue(),
-			Operator:      condition.GetOperator(),
-			IsDynamic:     condition.GetIsDynamic(),
-			ConditionType: condition.GetConditionType(),
-		})
-	}
-
-	params := model.OwnersParam{
-		AppID:         req.GetAppId(),
-		DatastoreID:   req.GetDatastoreId(),
-		ConditionType: req.GetConditionType(),
-		ConditionList: conditions,
-		Owner:         req.GetOwner(),
-		Writer:        req.GetWriter(),
-		OldOwners:     req.GetOldOwners(),
-	}
-
-	err := model.ChangeSelectOwners(req.GetDatabase(), params)
-	if err != nil {
-		utils.ErrorLog(ActionChangeOwners, err.Error())
-		return err
-	}
-
-	utils.InfoLog(ActionChangeOwners, utils.MsgProcessEnded)
-	return nil
-}
-
-// ChangeItemOwner 更新单条记录所属组织
-func (i *Item) ChangeItemOwner(ctx context.Context, req *item.ItemOwnerRequest, rsp *item.ItemOwnerResponse) error {
-	utils.InfoLog(ActionChangeItemOwner, utils.MsgProcessStarted)
-
-	params := model.OwnerParam{
-		AppID:       req.GetAppId(),
-		DatastoreID: req.GetDatastoreId(),
-		ItemID:      req.GetItemId(),
-		Owner:       req.GetOwner(),
-		Writer:      req.GetWriter(),
-	}
-
-	err := model.ChangeItemOwner(req.GetDatabase(), params)
-	if err != nil {
-		utils.ErrorLog(ActionChangeItemOwner, err.Error())
-		return err
-	}
-
-	utils.InfoLog(ActionChangeItemOwner, utils.MsgProcessEnded)
-	return nil
-}
-
-// ChangeStatus 更新状态
-func (i *Item) ChangeStatus(ctx context.Context, req *item.StatusRequest, rsp *item.StatusResponse) error {
-	utils.InfoLog(ActionChangeStatus, utils.MsgProcessStarted)
-
-	err := model.ChangeStatus(req.GetDatabase(), req)
-	if err != nil {
-		utils.ErrorLog(ActionChangeStatus, err.Error())
-		return err
-	}
-
-	utils.InfoLog(ActionChangeStatus, utils.MsgProcessEnded)
 	return nil
 }
 

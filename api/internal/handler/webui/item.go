@@ -39,7 +39,6 @@ import (
 	"rxcsoft.cn/pit3/api/internal/system/sessionx"
 	"rxcsoft.cn/pit3/api/internal/system/wsx"
 	"rxcsoft.cn/pit3/lib/msg"
-	"rxcsoft.cn/pit3/srv/database/proto/approve"
 	"rxcsoft.cn/pit3/srv/database/proto/datastore"
 	"rxcsoft.cn/pit3/srv/database/proto/item"
 	"rxcsoft.cn/pit3/srv/manage/proto/group"
@@ -60,7 +59,6 @@ const (
 	ActionImportItem           = "ImportItem"
 	ActionImportCsvItem        = "ImportCsvItem"
 	ActionImportCheckItems     = "ImportCheckItems"
-	ActionModifyItem           = "ModifyItem"
 	ActionModifyContract       = "ModifyContract"
 	ActionMutilModifyItem      = "MutilModifyItem"
 	ActionChangeDebt           = "ChangeDebt"
@@ -72,7 +70,6 @@ const (
 	ActionChangeOwners         = "ChangeOwners"
 	ActionChangeSelectOwners   = "ChangeSelectOwners"
 	ActionChangeItemOwner      = "ChangeItemOwner"
-	ActionChangeLabelTime      = "ChangeLabelTime"
 	ActionDeleteItem           = "DeleteItem"
 	ActionDeleteDatastoreItems = "DeleteDatastoreItems"
 	ActionDeleteSelectedItems  = "DeleteSelectedDatastoreItems"
@@ -271,171 +268,6 @@ func (i *Item) AddItem(c *gin.Context) {
 	})
 }
 
-// ModifyItem 更新台账一条数据
-// @Router /datastores/{d_id}/items/{i_id} [put]
-func (i *Item) ModifyItem(c *gin.Context) {
-	loggerx.InfoLog(c, ActionModifyItem, loggerx.MsgProcessStarted)
-
-	datastore := c.Param("d_id")
-	itemID := c.Param("i_id")
-	wfID := c.Query("wf_id")
-	db := sessionx.GetUserCustomer(c)
-	appID := sessionx.GetCurrentApp(c)
-	userID := sessionx.GetAuthUserID(c)
-	domain := sessionx.GetUserDomain(c)
-	owners := sessionx.GetUserAccessKeys(c, datastore, "W")
-
-	if len(wfID) > 0 {
-		itemService := item.NewItemService("database", client.DefaultClient)
-
-		var iReq item.ItemRequest
-		iReq.DatastoreId = datastore
-		iReq.ItemId = itemID
-		iReq.Database = db
-		iReq.IsOrigin = true
-		iReq.Owners = owners
-
-		iResp, err := itemService.FindItem(context.TODO(), &iReq)
-		if err != nil {
-			httpx.GinHTTPError(c, ActionModifyItem, err)
-			return
-		}
-
-		itemMap := map[string]*approve.Value{}
-		items := iResp.GetItem().GetItems()
-
-		for key, it := range items {
-			if it.GetDataType() == "user" {
-				var uList []string
-				err := json.Unmarshal([]byte(it.GetValue()), &uList)
-				if err != nil {
-					itemMap[key] = &approve.Value{
-						DataType: it.GetDataType(),
-						Value:    "",
-					}
-				} else {
-					itemMap[key] = &approve.Value{
-						DataType: it.GetDataType(),
-						Value:    strings.Join(uList, ","),
-					}
-				}
-			} else if it.GetDataType() == "lookup" {
-				if len(it.GetValue()) > 0 {
-					result := strings.Split(it.GetValue(), " : ")
-					itemMap[key] = &approve.Value{
-						DataType: it.GetDataType(),
-						Value:    result[0],
-					}
-				} else {
-					itemMap[key] = &approve.Value{
-						DataType: it.GetDataType(),
-						Value:    "",
-					}
-				}
-			} else {
-				itemMap[key] = &approve.Value{
-					DataType: it.GetDataType(),
-					Value:    it.GetValue(),
-				}
-			}
-		}
-
-		approveService := approve.NewApproveService("database", client.DefaultClient)
-
-		var req approve.AddRequest
-		if err := c.BindJSON(&req); err != nil {
-			httpx.GinHTTPError(c, ActionModifyItem, err)
-			return
-		}
-		req.Current = req.Items
-		req.ItemId = itemID
-		req.History = itemMap
-		req.DatastoreId = datastore
-		req.AppId = appID
-		req.Writer = userID
-		req.Database = db
-		req.Domain = domain
-		req.LangCd = sessionx.GetCurrentLanguage(c)
-
-		response, err := approveService.AddItem(context.TODO(), &req)
-		if err != nil {
-			httpx.GinHTTPError(c, ActionModifyItem, err)
-			return
-		}
-
-		// 数据状态转换成待审批状态
-		var statusReq item.StatusRequest
-		statusReq.AppId = appID
-		statusReq.DatastoreId = datastore
-		statusReq.ItemId = itemID
-		statusReq.Database = db
-		statusReq.Writer = userID
-		statusReq.Status = "2"
-
-		_, err = itemService.ChangeStatus(context.TODO(), &statusReq)
-		if err != nil {
-			httpx.GinHTTPError(c, ActionModifyItem, err)
-			return
-		}
-
-		loggerx.SuccessLog(c, ActionModifyItem, fmt.Sprintf("Item[%s] Update Success", response.GetItemId()))
-
-		loggerx.InfoLog(c, ActionAddItem, loggerx.MsgProcessEnded)
-		c.JSON(200, httpx.Response{
-			Status:  0,
-			Message: msg.GetMsg("ja-JP", msg.Info, msg.I004, fmt.Sprintf(httpx.Temp, ItemProcessName, ActionAddItem)),
-			Data:    response,
-		})
-		c.Abort()
-		return
-	}
-	itemService := item.NewItemService("database", client.DefaultClient)
-
-	var req item.ModifyRequest
-	// 从body中获取参数
-	if err := c.BindJSON(&req); err != nil {
-		httpx.GinHTTPError(c, ActionModifyItem, err)
-		return
-	}
-	// 从path中获取参数
-	req.DatastoreId = datastore
-	req.ItemId = itemID
-	// 从共通中获取参数
-	req.AppId = appID
-	req.Writer = userID
-	req.Owners = owners
-	req.LangCd = sessionx.GetCurrentLanguage(c)
-	req.Domain = domain
-	req.Database = db
-
-	response, err := itemService.ModifyItem(context.TODO(), &req)
-	if err != nil {
-		httpx.GinHTTPError(c, ActionModifyItem, err)
-		return
-	}
-	loggerx.SuccessLog(c, ActionModifyItem, fmt.Sprintf("item[%s] update success", req.GetItemId()))
-
-	code := "I_016"
-	param := wsx.MessageParam{
-		Sender:  "SYSTEM",
-		Domain:  sessionx.GetUserDomain(c),
-		MsgType: "normal",
-		Code:    code,
-		Link:    "/datastores/" + req.GetDatastoreId() + "/list",
-		Content: "更新数据成功，请刷新浏览器获取最新数据！",
-		Object:  "apps." + sessionx.GetCurrentApp(c) + ".datastores." + req.GetDatastoreId(),
-		Status:  "unread",
-	}
-	wsx.SendToCurrentAndParentGroup(param, sessionx.GetUserCustomer(c), sessionx.GetUserGroup(c))
-
-	loggerx.InfoLog(c, ActionModifyItem, loggerx.MsgProcessEnded)
-	c.JSON(200, httpx.Response{
-		Status:  0,
-		Message: msg.GetMsg("ja-JP", msg.Info, msg.I005, fmt.Sprintf(httpx.Temp, ItemProcessName, ActionModifyItem)),
-		Data:    response,
-	})
-}
-
 // ChangeOwners 更新所有者
 // @Router /datastores/{d_id}/items [patch]
 func (i *Item) ChangeOwners(c *gin.Context) {
@@ -519,79 +351,6 @@ func (i *Item) ChangeOwners(c *gin.Context) {
 	})
 }
 
-// ChangeSelectOwners 变更检索到的数据的所有者
-// @Router /datastores/{d_id}/items/owners [post]
-func (i *Item) ChangeSelectOwners(c *gin.Context) {
-	loggerx.InfoLog(c, ActionChangeSelectOwners, loggerx.MsgProcessStarted)
-	var opss client.CallOption = func(o *client.CallOptions) {
-		o.RequestTimeout = time.Hour * 1
-		o.DialTimeout = time.Hour * 1
-	}
-
-	itemService := item.NewItemService("database", client.DefaultClient)
-
-	var req item.SelectOwnersRequest
-	// 从body中获取参数
-	if err := c.BindJSON(&req); err != nil {
-		httpx.GinHTTPError(c, ActionChangeSelectOwners, err)
-		return
-	}
-	// 从path中获取参数
-	req.DatastoreId = c.Param("d_id")
-	// 从共通中获取参数
-	req.AppId = sessionx.GetCurrentApp(c)
-	req.Writer = sessionx.GetAuthUserID(c)
-	req.Database = sessionx.GetUserCustomer(c)
-	req.OldOwners = sessionx.GetUserAccessKeys(c, req.DatastoreId, "R")
-
-	_, err := itemService.ChangeSelectOwners(context.TODO(), &req, opss)
-	if err != nil {
-		httpx.GinHTTPError(c, ActionChangeSelectOwners, err)
-		return
-	}
-
-	loggerx.InfoLog(c, ActionChangeSelectOwners, loggerx.MsgProcessEnded)
-	c.JSON(200, httpx.Response{
-		Status:  0,
-		Message: msg.GetMsg("ja-JP", msg.Info, msg.I003, fmt.Sprintf(httpx.Temp, ItemProcessName, ActionChangeSelectOwners)),
-		Data:    nil,
-	})
-}
-
-// ChangeItemOwner 更新当前itemid条件下的数据的所有者
-// @Router /datastores/{d_id}/{i_id}/items/owner [post]
-func (i *Item) ChangeItemOwner(c *gin.Context) {
-	loggerx.InfoLog(c, ActionChangeItemOwner, loggerx.MsgProcessStarted)
-	var opss client.CallOption = func(o *client.CallOptions) {
-		o.RequestTimeout = time.Hour * 1
-		o.DialTimeout = time.Hour * 1
-	}
-
-	itemService := item.NewItemService("database", client.DefaultClient)
-
-	var req item.ItemOwnerRequest
-	if err := c.BindJSON(&req); err != nil {
-		httpx.GinHTTPError(c, ActionChangeItemOwner, err)
-		return
-	}
-	req.AppId = sessionx.GetCurrentApp(c)
-	req.Writer = sessionx.GetAuthUserID(c)
-	req.Database = sessionx.GetUserCustomer(c)
-
-	_, err := itemService.ChangeItemOwner(context.TODO(), &req, opss)
-	if err != nil {
-		httpx.GinHTTPError(c, ActionChangeItemOwner, err)
-		return
-	}
-
-	loggerx.InfoLog(c, ActionChangeItemOwner, loggerx.MsgProcessEnded)
-	c.JSON(200, httpx.Response{
-		Status:  0,
-		Message: msg.GetMsg("ja-JP", msg.Info, msg.I003, fmt.Sprintf(httpx.Temp, ItemProcessName, ActionChangeItemOwner)),
-		Data:    nil,
-	})
-}
-
 // ResetInventoryItems 盘点台账盘点数据盘点状态重置
 // @Router /apps/{app_id}/inventory/reset [patch]
 func (i *Item) ResetInventoryItems(c *gin.Context) {
@@ -618,35 +377,6 @@ func (i *Item) ResetInventoryItems(c *gin.Context) {
 	c.JSON(200, httpx.Response{
 		Status:  0,
 		Message: msg.GetMsg("ja-JP", msg.Info, msg.I005, fmt.Sprintf(httpx.Temp, ItemProcessName, ActionResetInventoryItems)),
-		Data:    response,
-	})
-}
-
-// ChangeLabelTime 修改标签出力时间
-// @Router /changeLabel/datastores/{d_id}/items [put]
-func (i *Item) ChangeLabelTime(c *gin.Context) {
-	loggerx.InfoLog(c, ActionChangeLabelTime, loggerx.MsgProcessStarted)
-
-	var req item.LabelTimeRequest
-	req.DatastoreId = c.Param("d_id")
-	if err := c.BindJSON(&req); err != nil {
-		httpx.GinHTTPError(c, ActionChangeLabelTime, err)
-		return
-	}
-	req.Database = sessionx.GetUserCustomer(c)
-
-	itemService := item.NewItemService("database", client.DefaultClient)
-	response, err := itemService.ChangeLabelTime(context.TODO(), &req)
-	if err != nil {
-		httpx.GinHTTPError(c, ActionChangeLabelTime, err)
-		return
-	}
-	loggerx.SuccessLog(c, ActionChangeLabelTime, fmt.Sprintf("Items[%s] ChangeLabelTime Success", req.GetItemIdList()))
-
-	loggerx.InfoLog(c, ActionChangeLabelTime, loggerx.MsgProcessEnded)
-	c.JSON(200, httpx.Response{
-		Status:  0,
-		Message: msg.GetMsg("ja-JP", msg.Info, msg.I005, fmt.Sprintf(httpx.Temp, ItemProcessName, ActionChangeLabelTime)),
 		Data:    response,
 	})
 }

@@ -250,12 +250,6 @@ func initAuthRouterWeb(router *gin.Engine) {
 		itemRoute.GET("/datastores/:d_id/items/:i_id", items.FindItem)
 		// 添加台账数据
 		itemRoute.POST("/datastores/:d_id/items", items.AddItem)
-		// 更新台账数据
-		itemRoute.PUT("/datastores/:d_id/items/:i_id", items.ModifyItem)
-		// 更新当前条件下的数据的所有者
-		itemRoute.POST("/datastores/:d_id/items/owners", items.ChangeSelectOwners)
-		// 更新当前itemid条件下的数据的所有者
-		itemRoute.POST("/datastores/:d_id/item/owner", items.ChangeItemOwner)
 		// 删除单条台账数据
 		itemRoute.DELETE("/datastores/:d_id/items/:i_id", items.DeleteItem)
 		// 删除该台账的所有数据记录
@@ -264,8 +258,6 @@ func initAuthRouterWeb(router *gin.Engine) {
 		itemRoute.DELETE("/clear/datastores/clearAll", items.DeleteAllDatastoreItems)
 		// 删除该台账选中的数据记录
 		itemRoute.DELETE("/clear/datastores/:d_id/items/selected", items.DeleteSelectedItems)
-		// 修改标签出力时间
-		itemRoute.PUT("/changeLabel/datastores/:d_id/items", items.ChangeLabelTime)
 	}
 
 	// field

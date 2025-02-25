@@ -8,7 +8,6 @@ service ItemService {
 	rpc FindKaraCount(KaraCountRequest) returns (KaraCountResponse) {}
 	rpc FindItem(ItemRequest) returns (ItemResponse) {}
 	rpc AddItem(AddRequest) returns (AddResponse) {}
-	rpc ModifyItem(ModifyRequest) returns (ModifyResponse) {}
 	rpc ConfimItem(JournalRequest) returns (JournalResponse) {}
 	rpc GenerateItem(JournalRequest) returns (JournalResponse) {}
 	rpc GenerateShoukyakuItem(JournalRequest) returns (JournalResponse) {}
@@ -331,22 +330,6 @@ message MutilInventoryItemRequest{
 }
 
 message MutilInventoryItemResponse{
-}
-
-// 更新记录
-message ModifyRequest{
-	string app_id = 6; // 所属APP
-	string item_id =1; // 数据ID
-	string datastore_id =2; // 所属台账
-	map<string, Value> items = 3; // 字段对应的值
-	repeated string owners = 4; // 更新者权限
-	string writer = 5; // 更新者
-	string database = 7; // 数据库
-	string lang_cd = 8; // 语言
-	string domain = 9; // domain
-}
-
-message ModifyResponse{
 }
 
 // 确定记录
