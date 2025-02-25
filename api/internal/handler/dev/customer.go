@@ -211,7 +211,7 @@ func (u *Customer) AddCustomer(c *gin.Context) {
 
 	loggerx.InfoLog(c, ActionAddCustomer, fmt.Sprintf("Process AddLanguage th:%s", loggerx.MsgProcessStarted))
 	_, ther := languageService.AddLanguage(context.TODO(), &langThReq)
-	if ener != nil {
+	if ther != nil {
 		httpx.GinHTTPError(c, ActionAddCustomer, ther)
 		return
 	}
