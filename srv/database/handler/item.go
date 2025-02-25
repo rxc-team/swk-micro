@@ -243,31 +243,6 @@ func (i *Item) FindItem(ctx context.Context, req *item.ItemRequest, rsp *item.It
 	return nil
 }
 
-// FindRishiritsu 通过租赁日期，租赁期间获取数据
-func (i *Item) FindRishiritsu(ctx context.Context, req *item.RishiritsuRequest, rsp *item.RishiritsuResponse) error {
-	utils.InfoLog(ActionFindRishiritsu, utils.MsgProcessStarted)
-
-	param := model.RishiritsuParam{
-		DatastoreID: req.GetDatastoreId(),
-		LeaseStymd:  req.GetLeasestymd(),
-		LeaseKikan:  req.GetLeasekikan(),
-	}
-
-	res, err := model.FindRishiritsu(req.GetDatabase(), &param)
-	if err != nil {
-		if err.Error() == mongo.ErrNoDocuments.Error() {
-			return errors.New("利子率マスタから利子率を取得できませんでした、追加借入利子率を手入力してください")
-		}
-		utils.ErrorLog(ActionFindRishiritsu, err.Error())
-		return err
-	}
-
-	rsp.Item = res.ToProto()
-
-	utils.InfoLog(ActionFindRishiritsu, utils.MsgProcessEnded)
-	return nil
-}
-
 // AddItem 添加台账数据
 func (i *Item) AddItem(ctx context.Context, req *item.AddRequest, rsp *item.AddResponse) error {
 	utils.InfoLog(ActionAddItem, utils.MsgProcessStarted)

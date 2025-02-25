@@ -6,9 +6,7 @@ service ItemService {
 	rpc FindItems(ItemsRequest) returns (ItemsResponse) {}
 	rpc FindCount(CountRequest) returns (CountResponse) {}
 	rpc FindKaraCount(KaraCountRequest) returns (KaraCountResponse) {}
-	rpc FindUnApproveItems(UnApproveItemsRequest) returns (UnApproveItemsResponse) {}
 	rpc FindItem(ItemRequest) returns (ItemResponse) {}
-	rpc FindRishiritsu(RishiritsuRequest) returns (RishiritsuResponse) {}
 	rpc AddItem(AddRequest) returns (AddResponse) {}
 	rpc ModifyItem(ModifyRequest) returns (ModifyResponse) {}
 	rpc ConfimItem(JournalRequest) returns (JournalResponse) {}
@@ -156,17 +154,6 @@ message KaraCountResponse{
 	int64 total = 1;
 }
 
-// 查询台账未审批数据件数
-message UnApproveItemsRequest{
-	string app_id = 1; // 所属APP
-	string datastore_id = 2; // 所属台账
-	string status = 3; // 状态
-	string database = 4; // 数据库
-}
-message UnApproveItemsResponse{
-	int64 total = 1;
-}
-
 // 查询单条记录
 message ItemRequest{
 	string item_id = 1; // 台账数据ID
@@ -176,19 +163,7 @@ message ItemRequest{
 	string database = 5; // 数据库
 }
 
-// 查询单条记录
-message RishiritsuRequest{
-	string datastore_id = 1; // 台账ID
-	string leasestymd = 2; // 租赁开始日
-	string leasekikan = 3; // 租赁期间
-	string database = 4; // 数据库
-}
-
 message ItemResponse{
-	Item item = 1;
-}
-
-message RishiritsuResponse{
 	Item item = 1;
 }
 

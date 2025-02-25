@@ -22,8 +22,9 @@ type Allow struct{}
 
 // log出力使用
 const (
-	AllowProcessName = "Allow"
-	AllowCheckAllow  = "CheckAllow"
+	AllowProcessName  = "Allow"
+	AllowCheckAllow   = "CheckAllow"
+	ActionFindActions = "FindActions"
 )
 
 // FindLevelAllows 获取所有许可操作

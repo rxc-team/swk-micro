@@ -19,11 +19,9 @@ import (
 	"rxcsoft.cn/pit3/srv/database/proto/feed"
 	"rxcsoft.cn/pit3/srv/database/proto/field"
 	"rxcsoft.cn/pit3/srv/database/proto/generate"
-	"rxcsoft.cn/pit3/srv/database/proto/item"
 	"rxcsoft.cn/pit3/srv/database/proto/option"
 	"rxcsoft.cn/pit3/srv/database/proto/print"
 	"rxcsoft.cn/pit3/srv/database/proto/query"
-	"rxcsoft.cn/pit3/srv/database/proto/template"
 	"rxcsoft.cn/pit3/srv/database/server"
 	myLogger "rxcsoft.cn/utils/logger"
 	utilsServer "rxcsoft.cn/utils/server"
@@ -64,11 +62,9 @@ func main() {
 	datastore.RegisterDataStoreServiceHandler(service.Server(), new(handler.Datastore))
 	field.RegisterFieldServiceHandler(service.Server(), new(handler.Field))
 	print.RegisterPrintServiceHandler(service.Server(), new(handler.Print))
-	item.RegisterItemServiceHandler(service.Server(), new(handler.Item))
 	option.RegisterOptionServiceHandler(service.Server(), new(handler.Option))
 	query.RegisterQueryServiceHandler(service.Server(), new(handler.Query))
 	datahistory.RegisterHistoryServiceHandler(service.Server(), new(handler.History))
-	template.RegisterTemplateServiceHandler(service.Server(), new(handler.Template))
 	feed.RegisterImportServiceHandler(service.Server(), new(handler.Import))
 	approve.RegisterApproveServiceHandler(service.Server(), new(av.Approve))
 	check.RegisterCheckHistoryServiceHandler(service.Server(), new(handler.CheckHistory))

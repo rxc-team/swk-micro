@@ -4,26 +4,21 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/micro/go-micro/v2/client"
-	"github.com/micro/go-micro/v2/client/grpc"
 	"rxcsoft.cn/pit3/api/internal/common/cryptox"
 	"rxcsoft.cn/pit3/api/internal/common/httpx"
 	"rxcsoft.cn/pit3/api/internal/common/loggerx"
 	"rxcsoft.cn/pit3/api/internal/common/stringx"
 	"rxcsoft.cn/pit3/api/internal/system/sessionx"
-	"rxcsoft.cn/pit3/api/internal/system/wfx"
 	"rxcsoft.cn/pit3/lib/msg"
-	"rxcsoft.cn/pit3/srv/database/proto/datastore"
 	"rxcsoft.cn/pit3/srv/database/proto/item"
 	"rxcsoft.cn/pit3/srv/database/proto/query"
 	"rxcsoft.cn/pit3/srv/global/proto/question"
 	"rxcsoft.cn/pit3/srv/manage/proto/app"
 	"rxcsoft.cn/pit3/srv/manage/proto/user"
 	"rxcsoft.cn/pit3/srv/storage/proto/file"
-	"rxcsoft.cn/pit3/srv/workflow/proto/workflow"
 )
 
 // Validation 验证
@@ -115,158 +110,6 @@ func (a *Validation) ItemUniqueValidation(c *gin.Context) {
 	c.JSON(200, httpx.Response{
 		Status:  0,
 		Message: msg.GetMsg("ja-JP", msg.Info, msg.I003, fmt.Sprintf(httpx.Temp, ValidationProcessName, ActionItemUniqueValidation)),
-		Data:    result,
-	})
-}
-
-// WorkflowExistValidation 验证映射数据是否有流程
-// @Router /validation/datastores/{d_id}/mappings/{m_id} [get]
-func (a *Validation) WorkflowExistValidation(c *gin.Context) {
-	loggerx.InfoLog(c, ActionWorkflowExistValidation, fmt.Sprintf("Process FindItems:%s", loggerx.MsgProcessStarted))
-
-	ct := grpc.NewClient(
-		grpc.MaxSendMsgSize(100*1024*1024), grpc.MaxRecvMsgSize(100*1024*1024),
-	)
-
-	var opss client.CallOption = func(o *client.CallOptions) {
-		o.RequestTimeout = time.Minute * 10
-		o.DialTimeout = time.Minute * 10
-	}
-
-	// PATH参数
-	datastoreId := c.Param("d_id")
-	mappingId := c.Param("m_id")
-	// 共通参数
-	db := sessionx.GetUserCustomer(c)
-	groupID := sessionx.GetUserGroup(c)
-	appId := sessionx.GetCurrentApp(c)
-
-	// 通过台账ID和映射ID获取验证对象映射情报
-	datastoreService := datastore.NewDataStoreService("database", ct)
-	var reqDatastore datastore.MappingRequest
-	reqDatastore.DatastoreId = datastoreId
-	reqDatastore.MappingId = mappingId
-	reqDatastore.Database = db
-	resDatastore, err := datastoreService.FindDatastoreMapping(context.TODO(), &reqDatastore, opss)
-	if err != nil {
-		httpx.GinHTTPError(c, ActionWorkflowExistValidation, err)
-		return
-	}
-
-	// 获取用户流程情报(默认必须是有效的流程)
-	userWorkflows := wfx.GetUserWorkflow(db, groupID, appId, datastoreId, "")
-	// 映射没有删除,去除用户的删除流程
-	var wfs []*workflow.Workflow
-	for _, uwf := range userWorkflows {
-		if uwf.Params["action"] != "delete" {
-			wfs = append(wfs, uwf)
-		}
-	}
-
-	// 映射流程有无true(不包含流程可映射上传)
-	result := true
-
-	// 新规映射的场合
-	if resDatastore.GetMapping().GetMappingType() == "insert" {
-		// 循环用户流程情报,如有新规流程返回false(包含流程不能映射上传新规)
-		for i := 0; i < len(wfs); i++ {
-			if wfs[i].Params["action"] == "insert" {
-				result = false
-				break
-			}
-		}
-	}
-
-	// 更新映射的场合
-	if resDatastore.GetMapping().GetMappingType() == "update" {
-		// 更新流程字段
-		var fieldIds []string
-		// 循环用户流程情报,更新流程字段取得
-		for i := 0; i < len(wfs); i++ {
-			// 更新流程的场合
-			if wfs[i].Params["action"] == "update" {
-				// 更新流程字段字符串
-				fieldStr := wfs[i].Params["fields"]
-				// 更新流程字段字符串为空即更新全字段,返回false(包含流程不能映射上传更新)
-				if len(fieldStr) == 0 {
-					result = false
-					break
-				} else {
-					// 累计更新流程字段
-					fieldIds = append(fieldIds, strings.Split(fieldStr, ",")...)
-				}
-			}
-		}
-		// 流程更新部分字段
-		if result && len(fieldIds) > 0 {
-			rules := resDatastore.Mapping.GetMappingRule()
-			for i := 0; i < len(rules); i++ {
-				for m := 0; m < len(fieldIds); m++ {
-					if rules[i].GetFromKey() == fieldIds[m] {
-						result = false
-						break
-					}
-				}
-				// 已包含流程即刻返回
-				if !result {
-					break
-				}
-			}
-		}
-	}
-
-	// 新规或更新映射的场合
-	if resDatastore.GetMapping().GetMappingType() == "upsert" {
-		// 循环用户流程情报,如有新规流程返回false(包含流程不能映射上传新规或更新)
-		for i := 0; i < len(wfs); i++ {
-			if wfs[i].Params["action"] == "insert" {
-				result = false
-				break
-			}
-		}
-		// 非新规场合继续判断是否更新
-		if result {
-			// 更新流程字段
-			var fieldIds []string
-			// 循环用户流程情报,更新流程字段取得
-			for i := 0; i < len(wfs); i++ {
-				// 更新流程的场合
-				if wfs[i].Params["action"] == "update" {
-					// 更新流程字段字符串
-					fieldStr := wfs[i].Params["fields"]
-					// 更新流程字段字符串为空即更新全字段,返回false(包含流程不能映射上传新规或更新)
-					if len(fieldStr) == 0 {
-						result = false
-						break
-					} else {
-						// 累计更新流程字段
-						fieldIds = append(fieldIds, strings.Split(fieldStr, ",")...)
-					}
-				}
-			}
-			// 流程更新部分字段
-			if result && len(fieldIds) > 0 {
-				rules := resDatastore.Mapping.GetMappingRule()
-				for i := 0; i < len(rules); i++ {
-					for m := 0; m < len(fieldIds); m++ {
-						if rules[i].GetFromKey() == fieldIds[m] {
-							result = false
-							break
-						}
-					}
-					// 已包含流程即刻返回
-					if !result {
-						break
-					}
-				}
-			}
-		}
-	}
-
-	loggerx.InfoLog(c, ActionWorkflowExistValidation, fmt.Sprintf("Process FindItems:%s", loggerx.MsgProcessEnded))
-	c.JSON(200, httpx.Response{
-		Status:  0,
-		Message: msg.GetMsg("ja-JP", msg.Info, msg.I003, fmt.Sprintf(httpx.Temp, ValidationProcessName, ActionWorkflowExistValidation)),
 		Data:    result,
 	})
 }

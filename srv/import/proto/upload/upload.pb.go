@@ -22,23 +22,23 @@ const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // 基础参数
 type Params struct {
-	JobId                string   `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
-	Action               string   `protobuf:"bytes,2,opt,name=action,proto3" json:"action,omitempty"`
-	Encoding             string   `protobuf:"bytes,3,opt,name=encoding,proto3" json:"encoding,omitempty"`
-	ZipCharset           string   `protobuf:"bytes,16,opt,name=zip_charset,json=zipCharset,proto3" json:"zip_charset,omitempty"`
-	UserId               string   `protobuf:"bytes,4,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	AppId                string   `protobuf:"bytes,5,opt,name=app_id,json=appId,proto3" json:"app_id,omitempty"`
-	Lang                 string   `protobuf:"bytes,6,opt,name=lang,proto3" json:"lang,omitempty"`
-	Domain               string   `protobuf:"bytes,7,opt,name=domain,proto3" json:"domain,omitempty"`
-	DatastoreId          string   `protobuf:"bytes,8,opt,name=datastore_id,json=datastoreId,proto3" json:"datastore_id,omitempty"`
-	GroupId              string   `protobuf:"bytes,11,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
-	EmptyChange          bool     `protobuf:"varint,17,opt,name=empty_change,json=emptyChange,proto3" json:"empty_change,omitempty"`
-	AccessKeys           []string `protobuf:"bytes,12,rep,name=access_keys,json=accessKeys,proto3" json:"access_keys,omitempty"`
-	Owners               []string `protobuf:"bytes,13,rep,name=owners,proto3" json:"owners,omitempty"`
-	Roles                []string `protobuf:"bytes,14,rep,name=roles,proto3" json:"roles,omitempty"`
-	WfId                 string   `protobuf:"bytes,15,opt,name=wf_id,json=wfId,proto3" json:"wf_id,omitempty"`
-	Database             string   `protobuf:"bytes,10,opt,name=database,proto3" json:"database,omitempty"`
-	FirstMonth           string   `protobuf:"bytes,18,opt,name=firstMonth,proto3" json:"firstMonth,omitempty"`
+	JobId                string   `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id"`
+	Action               string   `protobuf:"bytes,2,opt,name=action,proto3" json:"action"`
+	Encoding             string   `protobuf:"bytes,3,opt,name=encoding,proto3" json:"encoding"`
+	ZipCharset           string   `protobuf:"bytes,16,opt,name=zip_charset,json=zipCharset,proto3" json:"zip_charset"`
+	UserId               string   `protobuf:"bytes,4,opt,name=user_id,json=userId,proto3" json:"user_id"`
+	AppId                string   `protobuf:"bytes,5,opt,name=app_id,json=appId,proto3" json:"app_id"`
+	Lang                 string   `protobuf:"bytes,6,opt,name=lang,proto3" json:"lang"`
+	Domain               string   `protobuf:"bytes,7,opt,name=domain,proto3" json:"domain"`
+	DatastoreId          string   `protobuf:"bytes,8,opt,name=datastore_id,json=datastoreId,proto3" json:"datastore_id"`
+	GroupId              string   `protobuf:"bytes,11,opt,name=group_id,json=groupId,proto3" json:"group_id"`
+	EmptyChange          bool     `protobuf:"varint,17,opt,name=empty_change,json=emptyChange,proto3" json:"empty_change"`
+	AccessKeys           []string `protobuf:"bytes,12,rep,name=access_keys,json=accessKeys,proto3" json:"access_keys"`
+	Owners               []string `protobuf:"bytes,13,rep,name=owners,proto3" json:"owners"`
+	Roles                []string `protobuf:"bytes,14,rep,name=roles,proto3" json:"roles"`
+	WfId                 string   `protobuf:"bytes,15,opt,name=wf_id,json=wfId,proto3" json:"wf_id"`
+	Database             string   `protobuf:"bytes,10,opt,name=database,proto3" json:"database"`
+	FirstMonth           string   `protobuf:"bytes,18,opt,name=firstMonth,proto3" json:"firstMonth"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -190,9 +190,9 @@ func (m *Params) GetFirstMonth() string {
 
 // 文件参数
 type FileParams struct {
-	FilePath             string   `protobuf:"bytes,1,opt,name=file_path,json=filePath,proto3" json:"file_path,omitempty"`
-	ZipFilePath          string   `protobuf:"bytes,2,opt,name=zip_file_path,json=zipFilePath,proto3" json:"zip_file_path,omitempty"`
-	PayFilePath          string   `protobuf:"bytes,3,opt,name=pay_file_path,json=payFilePath,proto3" json:"pay_file_path,omitempty"`
+	FilePath             string   `protobuf:"bytes,1,opt,name=file_path,json=filePath,proto3" json:"file_path"`
+	ZipFilePath          string   `protobuf:"bytes,2,opt,name=zip_file_path,json=zipFilePath,proto3" json:"zip_file_path"`
+	PayFilePath          string   `protobuf:"bytes,3,opt,name=pay_file_path,json=payFilePath,proto3" json:"pay_file_path"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -244,336 +244,20 @@ func (m *FileParams) GetPayFilePath() string {
 	return ""
 }
 
-type CSVRequest struct {
-	BaseParams           *Params     `protobuf:"bytes,1,opt,name=base_params,json=baseParams,proto3" json:"base_params,omitempty"`
-	FileParams           *FileParams `protobuf:"bytes,2,opt,name=file_params,json=fileParams,proto3" json:"file_params,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
-	XXX_unrecognized     []byte      `json:"-"`
-	XXX_sizecache        int32       `json:"-"`
-}
-
-func (m *CSVRequest) Reset()         { *m = CSVRequest{} }
-func (m *CSVRequest) String() string { return proto.CompactTextString(m) }
-func (*CSVRequest) ProtoMessage()    {}
-func (*CSVRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_91b94b655bd2a7e5, []int{2}
-}
-
-func (m *CSVRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_CSVRequest.Unmarshal(m, b)
-}
-func (m *CSVRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_CSVRequest.Marshal(b, m, deterministic)
-}
-func (m *CSVRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CSVRequest.Merge(m, src)
-}
-func (m *CSVRequest) XXX_Size() int {
-	return xxx_messageInfo_CSVRequest.Size(m)
-}
-func (m *CSVRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_CSVRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_CSVRequest proto.InternalMessageInfo
-
-func (m *CSVRequest) GetBaseParams() *Params {
-	if m != nil {
-		return m.BaseParams
-	}
-	return nil
-}
-
-func (m *CSVRequest) GetFileParams() *FileParams {
-	if m != nil {
-		return m.FileParams
-	}
-	return nil
-}
-
-type CSVResponse struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *CSVResponse) Reset()         { *m = CSVResponse{} }
-func (m *CSVResponse) String() string { return proto.CompactTextString(m) }
-func (*CSVResponse) ProtoMessage()    {}
-func (*CSVResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_91b94b655bd2a7e5, []int{3}
-}
-
-func (m *CSVResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_CSVResponse.Unmarshal(m, b)
-}
-func (m *CSVResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_CSVResponse.Marshal(b, m, deterministic)
-}
-func (m *CSVResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CSVResponse.Merge(m, src)
-}
-func (m *CSVResponse) XXX_Size() int {
-	return xxx_messageInfo_CSVResponse.Size(m)
-}
-func (m *CSVResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_CSVResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_CSVResponse proto.InternalMessageInfo
-
-// 批量盘点基础参数
-type CheckParams struct {
-	JobId                string   `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
-	Encoding             string   `protobuf:"bytes,2,opt,name=encoding,proto3" json:"encoding,omitempty"`
-	UserId               string   `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	AppId                string   `protobuf:"bytes,4,opt,name=app_id,json=appId,proto3" json:"app_id,omitempty"`
-	Lang                 string   `protobuf:"bytes,5,opt,name=lang,proto3" json:"lang,omitempty"`
-	Domain               string   `protobuf:"bytes,6,opt,name=domain,proto3" json:"domain,omitempty"`
-	DatastoreId          string   `protobuf:"bytes,7,opt,name=datastore_id,json=datastoreId,proto3" json:"datastore_id,omitempty"`
-	GroupId              string   `protobuf:"bytes,8,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
-	AccessKeys           []string `protobuf:"bytes,9,rep,name=access_keys,json=accessKeys,proto3" json:"access_keys,omitempty"`
-	Owners               []string `protobuf:"bytes,10,rep,name=owners,proto3" json:"owners,omitempty"`
-	Roles                []string `protobuf:"bytes,11,rep,name=roles,proto3" json:"roles,omitempty"`
-	Database             string   `protobuf:"bytes,12,opt,name=database,proto3" json:"database,omitempty"`
-	MainKeys             []string `protobuf:"bytes,13,rep,name=main_keys,json=mainKeys,proto3" json:"main_keys,omitempty"`
-	CheckType            string   `protobuf:"bytes,14,opt,name=check_type,json=checkType,proto3" json:"check_type,omitempty"`
-	CheckedAt            string   `protobuf:"bytes,15,opt,name=checked_at,json=checkedAt,proto3" json:"checked_at,omitempty"`
-	CheckedBy            string   `protobuf:"bytes,16,opt,name=checked_by,json=checkedBy,proto3" json:"checked_by,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *CheckParams) Reset()         { *m = CheckParams{} }
-func (m *CheckParams) String() string { return proto.CompactTextString(m) }
-func (*CheckParams) ProtoMessage()    {}
-func (*CheckParams) Descriptor() ([]byte, []int) {
-	return fileDescriptor_91b94b655bd2a7e5, []int{4}
-}
-
-func (m *CheckParams) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_CheckParams.Unmarshal(m, b)
-}
-func (m *CheckParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_CheckParams.Marshal(b, m, deterministic)
-}
-func (m *CheckParams) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CheckParams.Merge(m, src)
-}
-func (m *CheckParams) XXX_Size() int {
-	return xxx_messageInfo_CheckParams.Size(m)
-}
-func (m *CheckParams) XXX_DiscardUnknown() {
-	xxx_messageInfo_CheckParams.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_CheckParams proto.InternalMessageInfo
-
-func (m *CheckParams) GetJobId() string {
-	if m != nil {
-		return m.JobId
-	}
-	return ""
-}
-
-func (m *CheckParams) GetEncoding() string {
-	if m != nil {
-		return m.Encoding
-	}
-	return ""
-}
-
-func (m *CheckParams) GetUserId() string {
-	if m != nil {
-		return m.UserId
-	}
-	return ""
-}
-
-func (m *CheckParams) GetAppId() string {
-	if m != nil {
-		return m.AppId
-	}
-	return ""
-}
-
-func (m *CheckParams) GetLang() string {
-	if m != nil {
-		return m.Lang
-	}
-	return ""
-}
-
-func (m *CheckParams) GetDomain() string {
-	if m != nil {
-		return m.Domain
-	}
-	return ""
-}
-
-func (m *CheckParams) GetDatastoreId() string {
-	if m != nil {
-		return m.DatastoreId
-	}
-	return ""
-}
-
-func (m *CheckParams) GetGroupId() string {
-	if m != nil {
-		return m.GroupId
-	}
-	return ""
-}
-
-func (m *CheckParams) GetAccessKeys() []string {
-	if m != nil {
-		return m.AccessKeys
-	}
-	return nil
-}
-
-func (m *CheckParams) GetOwners() []string {
-	if m != nil {
-		return m.Owners
-	}
-	return nil
-}
-
-func (m *CheckParams) GetRoles() []string {
-	if m != nil {
-		return m.Roles
-	}
-	return nil
-}
-
-func (m *CheckParams) GetDatabase() string {
-	if m != nil {
-		return m.Database
-	}
-	return ""
-}
-
-func (m *CheckParams) GetMainKeys() []string {
-	if m != nil {
-		return m.MainKeys
-	}
-	return nil
-}
-
-func (m *CheckParams) GetCheckType() string {
-	if m != nil {
-		return m.CheckType
-	}
-	return ""
-}
-
-func (m *CheckParams) GetCheckedAt() string {
-	if m != nil {
-		return m.CheckedAt
-	}
-	return ""
-}
-
-func (m *CheckParams) GetCheckedBy() string {
-	if m != nil {
-		return m.CheckedBy
-	}
-	return ""
-}
-
-type InventoryRequest struct {
-	BaseParams           *CheckParams `protobuf:"bytes,1,opt,name=base_params,json=baseParams,proto3" json:"base_params,omitempty"`
-	FilePath             string       `protobuf:"bytes,2,opt,name=file_path,json=filePath,proto3" json:"file_path,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
-	XXX_unrecognized     []byte       `json:"-"`
-	XXX_sizecache        int32        `json:"-"`
-}
-
-func (m *InventoryRequest) Reset()         { *m = InventoryRequest{} }
-func (m *InventoryRequest) String() string { return proto.CompactTextString(m) }
-func (*InventoryRequest) ProtoMessage()    {}
-func (*InventoryRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_91b94b655bd2a7e5, []int{5}
-}
-
-func (m *InventoryRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_InventoryRequest.Unmarshal(m, b)
-}
-func (m *InventoryRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_InventoryRequest.Marshal(b, m, deterministic)
-}
-func (m *InventoryRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_InventoryRequest.Merge(m, src)
-}
-func (m *InventoryRequest) XXX_Size() int {
-	return xxx_messageInfo_InventoryRequest.Size(m)
-}
-func (m *InventoryRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_InventoryRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_InventoryRequest proto.InternalMessageInfo
-
-func (m *InventoryRequest) GetBaseParams() *CheckParams {
-	if m != nil {
-		return m.BaseParams
-	}
-	return nil
-}
-
-func (m *InventoryRequest) GetFilePath() string {
-	if m != nil {
-		return m.FilePath
-	}
-	return ""
-}
-
-type InventoryResponse struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *InventoryResponse) Reset()         { *m = InventoryResponse{} }
-func (m *InventoryResponse) String() string { return proto.CompactTextString(m) }
-func (*InventoryResponse) ProtoMessage()    {}
-func (*InventoryResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_91b94b655bd2a7e5, []int{6}
-}
-
-func (m *InventoryResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_InventoryResponse.Unmarshal(m, b)
-}
-func (m *InventoryResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_InventoryResponse.Marshal(b, m, deterministic)
-}
-func (m *InventoryResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_InventoryResponse.Merge(m, src)
-}
-func (m *InventoryResponse) XXX_Size() int {
-	return xxx_messageInfo_InventoryResponse.Size(m)
-}
-func (m *InventoryResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_InventoryResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_InventoryResponse proto.InternalMessageInfo
-
 // 基础参数
 type MappingParams struct {
-	JobId                string   `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
-	MappingId            string   `protobuf:"bytes,2,opt,name=mapping_id,json=mappingId,proto3" json:"mapping_id,omitempty"`
-	UserId               string   `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	AppId                string   `protobuf:"bytes,4,opt,name=app_id,json=appId,proto3" json:"app_id,omitempty"`
-	Lang                 string   `protobuf:"bytes,5,opt,name=lang,proto3" json:"lang,omitempty"`
-	Domain               string   `protobuf:"bytes,6,opt,name=domain,proto3" json:"domain,omitempty"`
-	DatastoreId          string   `protobuf:"bytes,7,opt,name=datastore_id,json=datastoreId,proto3" json:"datastore_id,omitempty"`
-	EmptyChange          bool     `protobuf:"varint,12,opt,name=empty_change,json=emptyChange,proto3" json:"empty_change,omitempty"`
-	AccessKeys           []string `protobuf:"bytes,8,rep,name=access_keys,json=accessKeys,proto3" json:"access_keys,omitempty"`
-	Owners               []string `protobuf:"bytes,9,rep,name=owners,proto3" json:"owners,omitempty"`
-	Roles                []string `protobuf:"bytes,10,rep,name=roles,proto3" json:"roles,omitempty"`
-	Database             string   `protobuf:"bytes,11,opt,name=database,proto3" json:"database,omitempty"`
+	JobId                string   `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id"`
+	MappingId            string   `protobuf:"bytes,2,opt,name=mapping_id,json=mappingId,proto3" json:"mapping_id"`
+	UserId               string   `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id"`
+	AppId                string   `protobuf:"bytes,4,opt,name=app_id,json=appId,proto3" json:"app_id"`
+	Lang                 string   `protobuf:"bytes,5,opt,name=lang,proto3" json:"lang"`
+	Domain               string   `protobuf:"bytes,6,opt,name=domain,proto3" json:"domain"`
+	DatastoreId          string   `protobuf:"bytes,7,opt,name=datastore_id,json=datastoreId,proto3" json:"datastore_id"`
+	EmptyChange          bool     `protobuf:"varint,12,opt,name=empty_change,json=emptyChange,proto3" json:"empty_change"`
+	AccessKeys           []string `protobuf:"bytes,8,rep,name=access_keys,json=accessKeys,proto3" json:"access_keys"`
+	Owners               []string `protobuf:"bytes,9,rep,name=owners,proto3" json:"owners"`
+	Roles                []string `protobuf:"bytes,10,rep,name=roles,proto3" json:"roles"`
+	Database             string   `protobuf:"bytes,11,opt,name=database,proto3" json:"database"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -583,7 +267,7 @@ func (m *MappingParams) Reset()         { *m = MappingParams{} }
 func (m *MappingParams) String() string { return proto.CompactTextString(m) }
 func (*MappingParams) ProtoMessage()    {}
 func (*MappingParams) Descriptor() ([]byte, []int) {
-	return fileDescriptor_91b94b655bd2a7e5, []int{7}
+	return fileDescriptor_91b94b655bd2a7e5, []int{2}
 }
 
 func (m *MappingParams) XXX_Unmarshal(b []byte) error {
@@ -689,8 +373,8 @@ func (m *MappingParams) GetDatabase() string {
 }
 
 type MappingRequest struct {
-	BaseParams           *MappingParams `protobuf:"bytes,1,opt,name=base_params,json=baseParams,proto3" json:"base_params,omitempty"`
-	FilePath             string         `protobuf:"bytes,2,opt,name=file_path,json=filePath,proto3" json:"file_path,omitempty"`
+	BaseParams           *MappingParams `protobuf:"bytes,1,opt,name=base_params,json=baseParams,proto3" json:"base_params"`
+	FilePath             string         `protobuf:"bytes,2,opt,name=file_path,json=filePath,proto3" json:"file_path"`
 	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
 	XXX_unrecognized     []byte         `json:"-"`
 	XXX_sizecache        int32          `json:"-"`
@@ -700,7 +384,7 @@ func (m *MappingRequest) Reset()         { *m = MappingRequest{} }
 func (m *MappingRequest) String() string { return proto.CompactTextString(m) }
 func (*MappingRequest) ProtoMessage()    {}
 func (*MappingRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_91b94b655bd2a7e5, []int{8}
+	return fileDescriptor_91b94b655bd2a7e5, []int{3}
 }
 
 func (m *MappingRequest) XXX_Unmarshal(b []byte) error {
@@ -745,7 +429,7 @@ func (m *MappingResponse) Reset()         { *m = MappingResponse{} }
 func (m *MappingResponse) String() string { return proto.CompactTextString(m) }
 func (*MappingResponse) ProtoMessage()    {}
 func (*MappingResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_91b94b655bd2a7e5, []int{9}
+	return fileDescriptor_91b94b655bd2a7e5, []int{4}
 }
 
 func (m *MappingResponse) XXX_Unmarshal(b []byte) error {
@@ -769,11 +453,6 @@ var xxx_messageInfo_MappingResponse proto.InternalMessageInfo
 func init() {
 	proto.RegisterType((*Params)(nil), "upload.Params")
 	proto.RegisterType((*FileParams)(nil), "upload.FileParams")
-	proto.RegisterType((*CSVRequest)(nil), "upload.CSVRequest")
-	proto.RegisterType((*CSVResponse)(nil), "upload.CSVResponse")
-	proto.RegisterType((*CheckParams)(nil), "upload.CheckParams")
-	proto.RegisterType((*InventoryRequest)(nil), "upload.InventoryRequest")
-	proto.RegisterType((*InventoryResponse)(nil), "upload.InventoryResponse")
 	proto.RegisterType((*MappingParams)(nil), "upload.MappingParams")
 	proto.RegisterType((*MappingRequest)(nil), "upload.MappingRequest")
 	proto.RegisterType((*MappingResponse)(nil), "upload.MappingResponse")
@@ -782,51 +461,39 @@ func init() {
 func init() { proto.RegisterFile("upload.proto", fileDescriptor_91b94b655bd2a7e5) }
 
 var fileDescriptor_91b94b655bd2a7e5 = []byte{
-	// 736 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x95, 0xdf, 0x4e, 0xdb, 0x30,
-	0x14, 0xc6, 0xd7, 0x96, 0xb6, 0xc9, 0x49, 0x5b, 0xc0, 0x1d, 0x10, 0x40, 0x6c, 0x2c, 0x57, 0x5c,
-	0x31, 0x09, 0x26, 0xee, 0x47, 0x25, 0xb4, 0x68, 0x42, 0x9a, 0xca, 0xc6, 0x6d, 0xe5, 0x26, 0x6e,
-	0x1b, 0x68, 0x63, 0x13, 0xbb, 0xa0, 0xf0, 0x72, 0x7b, 0x86, 0x4d, 0xda, 0xfb, 0x4c, 0xfe, 0x93,
-	0x34, 0xed, 0x42, 0xb7, 0xbb, 0xdd, 0xe5, 0x7c, 0xc7, 0x3e, 0xe7, 0xd8, 0xdf, 0x4f, 0x0e, 0xb4,
-	0xe6, 0x6c, 0x4a, 0x71, 0x78, 0xca, 0x12, 0x2a, 0x28, 0x6a, 0xe8, 0xc8, 0xfb, 0x51, 0x83, 0xc6,
-	0x17, 0x9c, 0xe0, 0x19, 0x47, 0x3b, 0xd0, 0xb8, 0xa3, 0xc3, 0x41, 0x14, 0xba, 0x95, 0xe3, 0xca,
-	0x89, 0xdd, 0xaf, 0xdf, 0xd1, 0xa1, 0x1f, 0xa2, 0x5d, 0x68, 0xe0, 0x40, 0x44, 0x34, 0x76, 0xab,
-	0x4a, 0x36, 0x11, 0x3a, 0x00, 0x8b, 0xc4, 0x01, 0x0d, 0xa3, 0x78, 0xec, 0xd6, 0x54, 0x26, 0x8f,
-	0xd1, 0x5b, 0x70, 0x9e, 0x23, 0x36, 0x08, 0x26, 0x38, 0xe1, 0x44, 0xb8, 0x5b, 0x2a, 0x0d, 0xcf,
-	0x11, 0xeb, 0x69, 0x05, 0xed, 0x41, 0x73, 0xce, 0x49, 0x22, 0x9b, 0x6d, 0xe8, 0xaa, 0x32, 0xf4,
-	0x43, 0x39, 0x04, 0x66, 0x4c, 0xea, 0x75, 0x3d, 0x04, 0x66, 0xcc, 0x0f, 0x11, 0x82, 0x8d, 0x29,
-	0x8e, 0xc7, 0x6e, 0x43, 0x89, 0xea, 0x5b, 0x0e, 0x16, 0xd2, 0x19, 0x8e, 0x62, 0xb7, 0xa9, 0x4b,
-	0xe8, 0x08, 0xbd, 0x83, 0x56, 0x88, 0x05, 0xe6, 0x82, 0x26, 0x44, 0x16, 0xb2, 0x54, 0xd6, 0xc9,
-	0x35, 0x3f, 0x44, 0xfb, 0x60, 0x8d, 0x13, 0x3a, 0x57, 0x7d, 0x1c, 0x95, 0x6e, 0xaa, 0xd8, 0x0f,
-	0xe5, 0x6e, 0x32, 0x63, 0x22, 0x95, 0xc3, 0xc7, 0x63, 0xe2, 0x6e, 0x1f, 0x57, 0x4e, 0xac, 0xbe,
-	0xa3, 0xb4, 0x9e, 0x92, 0xe4, 0xe9, 0x70, 0x10, 0x10, 0xce, 0x07, 0xf7, 0x24, 0xe5, 0x6e, 0xeb,
-	0xb8, 0x26, 0x4f, 0xa7, 0xa5, 0xcf, 0x24, 0xe5, 0x72, 0x32, 0xfa, 0x14, 0x93, 0x84, 0xbb, 0x6d,
-	0x95, 0x33, 0x11, 0x7a, 0x0d, 0xf5, 0x84, 0x4e, 0x09, 0x77, 0x3b, 0x4a, 0xd6, 0x01, 0xea, 0x42,
-	0xfd, 0x69, 0x24, 0x27, 0xd9, 0xd4, 0x87, 0x7b, 0x1a, 0xf9, 0xa1, 0xbc, 0x5d, 0x39, 0xf0, 0x10,
-	0x73, 0xe2, 0x82, 0xbe, 0xdd, 0x2c, 0x46, 0x6f, 0x00, 0x46, 0x51, 0xc2, 0xc5, 0x35, 0x8d, 0xc5,
-	0xc4, 0x45, 0xfa, 0x72, 0x17, 0x8a, 0xf7, 0x00, 0x70, 0x15, 0x4d, 0x89, 0xb1, 0xf5, 0x10, 0xec,
-	0x51, 0x34, 0x25, 0x03, 0x86, 0xc5, 0xc4, 0x38, 0x6b, 0x8d, 0x54, 0x5a, 0x4c, 0x90, 0x07, 0x6d,
-	0x69, 0xd4, 0x62, 0x81, 0xf6, 0x58, 0xba, 0x77, 0x55, 0x58, 0xc3, 0x70, 0x5a, 0x58, 0xa3, 0xdd,
-	0x76, 0x18, 0x4e, 0xb3, 0x35, 0x5e, 0x02, 0xd0, 0xbb, 0xb9, 0xed, 0x93, 0x87, 0x39, 0xe1, 0x02,
-	0xbd, 0x07, 0x47, 0x0e, 0x3a, 0x60, 0x6a, 0x02, 0xd5, 0xd4, 0x39, 0xeb, 0x9c, 0x1a, 0x00, 0xf5,
-	0x5c, 0x7d, 0x90, 0x4b, 0xcc, 0x8c, 0xe7, 0xe0, 0x98, 0xf2, 0x6a, 0x43, 0x55, 0x6d, 0x40, 0xd9,
-	0x86, 0xc5, 0x61, 0xe4, 0x31, 0xb3, 0x6f, 0xaf, 0x0d, 0x8e, 0xea, 0xc9, 0x19, 0x8d, 0x39, 0xf1,
-	0xbe, 0xd7, 0xc0, 0xe9, 0x4d, 0x48, 0x70, 0xbf, 0x1e, 0xe7, 0x22, 0xb6, 0xd5, 0x15, 0x6c, 0x0b,
-	0x54, 0xd6, 0x5e, 0xa0, 0x72, 0xa3, 0x8c, 0xca, 0x7a, 0x29, 0x95, 0x8d, 0xb5, 0x54, 0x36, 0xd7,
-	0x53, 0x69, 0x2d, 0x53, 0xb9, 0x82, 0x9c, 0xbd, 0x06, 0x39, 0x28, 0x47, 0xce, 0x29, 0x22, 0x57,
-	0xa4, 0xab, 0xb5, 0x42, 0xd7, 0x21, 0xd8, 0x72, 0x60, 0xdd, 0x48, 0xf3, 0x6b, 0x49, 0x41, 0xb5,
-	0x39, 0x02, 0x08, 0xe4, 0x1d, 0x0f, 0x44, 0xca, 0x88, 0xdb, 0x51, 0x5b, 0x6d, 0xa5, 0x7c, 0x4d,
-	0x19, 0xc9, 0xd3, 0x24, 0x1c, 0x60, 0x61, 0x78, 0xb6, 0x8d, 0xf2, 0x51, 0x14, 0xd3, 0xc3, 0xd4,
-	0xbc, 0x0a, 0x59, 0xfa, 0x32, 0xf5, 0x08, 0x6c, 0xf9, 0xf1, 0x23, 0x89, 0x05, 0x4d, 0xd2, 0x0c,
-	0xa5, 0x0f, 0x65, 0x28, 0x75, 0x33, 0x32, 0x0a, 0x7e, 0x2f, 0xf1, 0xb4, 0xc4, 0x7c, 0x75, 0x99,
-	0x79, 0xaf, 0x0b, 0xdb, 0x85, 0x36, 0x86, 0x9e, 0x9f, 0x55, 0x68, 0x5f, 0x63, 0xc6, 0xa2, 0x78,
-	0xbc, 0x9e, 0x9f, 0x23, 0x80, 0x99, 0x5e, 0x27, 0x53, 0xba, 0xb6, 0x6d, 0x14, 0x3f, 0xfc, 0xdf,
-	0x08, 0xad, 0xbe, 0x5e, 0xad, 0xbf, 0xbe, 0x5e, 0xd6, 0x1a, 0x94, 0xec, 0x72, 0x94, 0xe0, 0x25,
-	0x94, 0x9c, 0x65, 0x94, 0x3c, 0x02, 0x1d, 0x73, 0xa7, 0x99, 0x9d, 0x17, 0x65, 0x76, 0xee, 0x64,
-	0x76, 0x2e, 0x19, 0xf0, 0xef, 0x86, 0x6e, 0xc3, 0x66, 0xde, 0x46, 0xdb, 0x79, 0xf6, 0xab, 0x02,
-	0xed, 0x6f, 0xaa, 0xe8, 0x0d, 0x49, 0x1e, 0xa3, 0x80, 0xa0, 0x0b, 0xb0, 0x7b, 0x37, 0xb7, 0x5a,
-	0x43, 0xf9, 0xd3, 0xb2, 0x78, 0xb4, 0x0e, 0xba, 0x4b, 0x9a, 0xc1, 0xe2, 0x15, 0xfa, 0x04, 0x9b,
-	0x39, 0x2d, 0x66, 0xb7, 0x9b, 0xad, 0x5c, 0xa5, 0xf5, 0x60, 0xbf, 0x24, 0x93, 0x57, 0xba, 0xcc,
-	0x09, 0x33, 0x75, 0x76, 0x57, 0xce, 0x9d, 0x55, 0xd9, 0xfb, 0x43, 0xcf, 0x6a, 0x0c, 0x1b, 0xea,
-	0xef, 0x7d, 0xfe, 0x3b, 0x00, 0x00, 0xff, 0xff, 0x57, 0x8f, 0x57, 0x1b, 0xcd, 0x07, 0x00, 0x00,
+	// 534 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x54, 0xdd, 0x6e, 0x1a, 0x3d,
+	0x10, 0xfd, 0xf8, 0x5b, 0x96, 0x59, 0x48, 0xbe, 0xb8, 0x4d, 0xe2, 0xa6, 0x6a, 0x4b, 0xf7, 0x2a,
+	0x57, 0xb9, 0x48, 0xa5, 0x3e, 0x40, 0x23, 0x45, 0x5a, 0x55, 0x91, 0x2a, 0xa2, 0x5e, 0x23, 0xb3,
+	0x1e, 0xc0, 0x29, 0xd8, 0x8e, 0x6d, 0x8a, 0xc8, 0x5b, 0xb6, 0x4f, 0x54, 0xd9, 0xde, 0x10, 0x48,
+	0x28, 0xbd, 0xe3, 0x9c, 0x19, 0x66, 0x8e, 0xe7, 0x1c, 0x80, 0xee, 0x42, 0xcf, 0x14, 0xe3, 0x17,
+	0xda, 0x28, 0xa7, 0x48, 0x12, 0x51, 0xfe, 0xab, 0x01, 0xc9, 0x37, 0x66, 0xd8, 0xdc, 0x92, 0x63,
+	0x48, 0xee, 0xd4, 0x68, 0x28, 0x38, 0xad, 0xf5, 0x6b, 0xe7, 0x9d, 0x41, 0xeb, 0x4e, 0x8d, 0x0a,
+	0x4e, 0x4e, 0x20, 0x61, 0xa5, 0x13, 0x4a, 0xd2, 0x7a, 0xa0, 0x2b, 0x44, 0xce, 0x20, 0x45, 0x59,
+	0x2a, 0x2e, 0xe4, 0x84, 0x36, 0x42, 0x65, 0x8d, 0xc9, 0x07, 0xc8, 0x1e, 0x84, 0x1e, 0x96, 0x53,
+	0x66, 0x2c, 0x3a, 0xfa, 0x7f, 0x28, 0xc3, 0x83, 0xd0, 0x57, 0x91, 0x21, 0xa7, 0xd0, 0x5e, 0x58,
+	0x34, 0x7e, 0x59, 0x33, 0x4e, 0xf5, 0xb0, 0xe0, 0x5e, 0x04, 0xd3, 0xda, 0xf3, 0xad, 0x28, 0x82,
+	0x69, 0x5d, 0x70, 0x42, 0xa0, 0x39, 0x63, 0x72, 0x42, 0x93, 0x40, 0x86, 0xcf, 0x5e, 0x18, 0x57,
+	0x73, 0x26, 0x24, 0x6d, 0xc7, 0x11, 0x11, 0x91, 0x8f, 0xd0, 0xe5, 0xcc, 0x31, 0xeb, 0x94, 0x41,
+	0x3f, 0x28, 0x0d, 0xd5, 0x6c, 0xcd, 0x15, 0x9c, 0xbc, 0x81, 0x74, 0x62, 0xd4, 0x22, 0xec, 0xc9,
+	0x42, 0xb9, 0x1d, 0x70, 0xc1, 0xfd, 0xb7, 0x71, 0xae, 0xdd, 0xca, 0x8b, 0x97, 0x13, 0xa4, 0x47,
+	0xfd, 0xda, 0x79, 0x3a, 0xc8, 0x02, 0x77, 0x15, 0x28, 0xff, 0x3a, 0x56, 0x96, 0x68, 0xed, 0xf0,
+	0x07, 0xae, 0x2c, 0xed, 0xf6, 0x1b, 0xfe, 0x75, 0x91, 0xfa, 0x8a, 0x2b, 0xeb, 0x95, 0xa9, 0xa5,
+	0x44, 0x63, 0x69, 0x2f, 0xd4, 0x2a, 0x44, 0x5e, 0x43, 0xcb, 0xa8, 0x19, 0x5a, 0x7a, 0x10, 0xe8,
+	0x08, 0xc8, 0x2b, 0x68, 0x2d, 0xc7, 0x5e, 0xc9, 0x61, 0x7c, 0xdc, 0x72, 0x5c, 0x70, 0x7f, 0x5d,
+	0x2f, 0x78, 0xc4, 0x2c, 0x52, 0x88, 0xd7, 0x7d, 0xc4, 0xe4, 0x3d, 0xc0, 0x58, 0x18, 0xeb, 0x6e,
+	0x94, 0x74, 0x53, 0x4a, 0xe2, 0x71, 0x9f, 0x98, 0xfc, 0x1e, 0xe0, 0x5a, 0xcc, 0xb0, 0xb2, 0xf5,
+	0x2d, 0x74, 0xc6, 0x62, 0x86, 0x43, 0xcd, 0xdc, 0xb4, 0x72, 0x36, 0x1d, 0x87, 0xb2, 0x9b, 0x92,
+	0x1c, 0x7a, 0xde, 0xa8, 0xa7, 0x86, 0xe8, 0xb1, 0x77, 0xef, 0x7a, 0xa3, 0x47, 0xb3, 0xd5, 0x46,
+	0x4f, 0x74, 0x3b, 0xd3, 0x6c, 0xf5, 0xd8, 0x93, 0xff, 0xae, 0x43, 0xef, 0x86, 0x69, 0x2d, 0xe4,
+	0x64, 0x7f, 0x9a, 0xde, 0x01, 0xcc, 0x63, 0x9f, 0x2f, 0xc5, 0x6d, 0x9d, 0x8a, 0x29, 0xf8, 0x66,
+	0x2e, 0x1a, 0x7f, 0xc9, 0x45, 0x73, 0x57, 0x2e, 0x5a, 0x3b, 0x73, 0x91, 0xec, 0xcd, 0x45, 0xfb,
+	0x65, 0x2e, 0x9e, 0x9b, 0xdf, 0xfd, 0xa7, 0xf9, 0xe9, 0x1e, 0xf3, 0x3b, 0xbb, 0xcd, 0x87, 0x4d,
+	0xf3, 0x37, 0x7d, 0xce, 0xb6, 0x7d, 0xce, 0x11, 0x0e, 0xaa, 0x9b, 0x0e, 0xf0, 0x7e, 0x81, 0xd6,
+	0x91, 0xcf, 0x90, 0xf9, 0xca, 0x50, 0x87, 0x1b, 0x87, 0xcb, 0x66, 0x97, 0xc7, 0x17, 0xd5, 0x2f,
+	0x7b, 0xcb, 0x80, 0x01, 0xf8, 0xce, 0x5d, 0x19, 0xa8, 0x6f, 0x67, 0x20, 0x3f, 0x82, 0xc3, 0xf5,
+	0x1a, 0xab, 0x95, 0xb4, 0x78, 0x79, 0x0b, 0xbd, 0xef, 0x61, 0xe6, 0x2d, 0x9a, 0x9f, 0xa2, 0x44,
+	0xf2, 0x65, 0x6d, 0x6f, 0xe4, 0xc9, 0xc9, 0xb3, 0xa5, 0x95, 0xc2, 0xb3, 0xd3, 0x17, 0x7c, 0x1c,
+	0x99, 0xff, 0x37, 0x4a, 0xc2, 0x3f, 0xcf, 0xa7, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x19, 0xa0,
+	0xf8, 0x99, 0x89, 0x04, 0x00, 0x00,
 }

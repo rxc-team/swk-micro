@@ -22,9 +22,7 @@ replace (
 
 require (
 	github.com/360EntSecGroup-Skylar/excelize/v2 v2.3.2
-	github.com/Andrew-M-C/go.timeconv v0.3.0
 	github.com/golang/protobuf v1.5.2
-	github.com/google/uuid v1.1.2
 	github.com/kataras/i18n v0.0.6
 	github.com/micro/go-micro/v2 v2.9.1
 	github.com/micro/go-plugins/broker/rabbitmq/v2 v2.9.1
@@ -45,6 +43,5 @@ require (
 	rxcsoft.cn/pit3/srv/global v0.0.0-00010101000000-000000000000
 	rxcsoft.cn/pit3/srv/manage v0.0.0-00010101000000-000000000000
 	rxcsoft.cn/pit3/srv/task v0.0.0-00010101000000-000000000000
-	rxcsoft.cn/pit3/srv/workflow v0.0.0-00010101000000-000000000000
 	rxcsoft.cn/utils v0.0.0-00010101000000-000000000000
 )

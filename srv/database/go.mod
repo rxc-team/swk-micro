@@ -17,7 +17,6 @@ require (
 	github.com/Andrew-M-C/go.timeconv v0.3.0
 	github.com/goinggo/mapstructure v0.0.0-20140717182941-194205d9b4a9
 	github.com/golang/protobuf v1.5.2
-	github.com/google/uuid v1.1.2
 	github.com/micro/go-micro/v2 v2.9.1
 	github.com/micro/go-plugins/logger/logrus/v2 v2.9.1
 	github.com/micro/go-plugins/registry/consul/v2 v2.9.1

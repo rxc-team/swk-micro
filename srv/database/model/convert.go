@@ -11,7 +11,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"rxcsoft.cn/pit3/srv/database/proto/copy"
 	"rxcsoft.cn/pit3/srv/database/proto/item"
-	"rxcsoft.cn/pit3/srv/database/proto/template"
 )
 
 // GetLinkedParam 获取值
@@ -167,43 +166,6 @@ func GetCopyeValueFromProto(value *copy.Value) (v interface{}) {
 			return false
 		}
 		return result
-	case "user":
-		if len(value.GetValue()) == 0 {
-			return []string{}
-		}
-		result := strings.Split(value.GetValue(), ",")
-		return result
-	case "file":
-		return value.GetValue()
-	case "options":
-		return value.GetValue()
-	case "lookup":
-		return value.GetValue()
-	}
-
-	return ""
-}
-
-func GetTemplateValueFromProto(value *template.Value) (v interface{}) {
-
-	switch value.DataType {
-	case "text", "textarea":
-		return value.GetValue()
-	case "number":
-		return cast.ToFloat32(value.Value)
-	case "date":
-		if len(value.GetValue()) == 0 {
-			return nil
-		}
-		date, err := time.Parse("2006-01-02", value.GetValue())
-		if err != nil {
-			return nil
-		}
-		return date
-	case "time":
-		return value.GetValue()
-	case "switch":
-		return cast.ToBool(value.Value)
 	case "user":
 		if len(value.GetValue()) == 0 {
 			return []string{}

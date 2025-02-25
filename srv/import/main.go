@@ -10,8 +10,6 @@ import (
 	lg "github.com/micro/go-plugins/logger/logrus/v2"
 	"github.com/sirupsen/logrus"
 
-	"rxcsoft.cn/pit3/srv/import/handler"
-	"rxcsoft.cn/pit3/srv/import/proto/upload"
 	"rxcsoft.cn/pit3/srv/import/server"
 	myLogger "rxcsoft.cn/utils/logger"
 	utilsServer "rxcsoft.cn/utils/server"
@@ -54,9 +52,6 @@ func main() {
 
 	// micro服务初始化
 	service.Init()
-
-	// 注册handler
-	upload.RegisterUploadServiceHandler(service.Server(), new(handler.Upload))
 
 	// 运行服务
 	if err := service.Run(); err != nil {

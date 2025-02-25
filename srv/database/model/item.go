@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/goinggo/mapstructure"
-	"github.com/google/uuid"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -3354,22 +3353,6 @@ func AddItem(db, collection, lang, domain string, i *Item) (id string, err error
 			addEmptyData(i.ItemMap, f)
 		}
 
-		// 临时数据ID
-		templateID := ""
-		if val, exist := i.ItemMap["template_id"]; exist {
-			templateID = val.Value.(string)
-			// 删除临时数据ID
-			delete(i.ItemMap, "template_id")
-		}
-
-		// hs := NewHistory(db, i.CreatedBy, i.DatastoreID, lang, domain, sc, fields)
-
-		// err = hs.Add("1", i.ItemID, nil)
-		// if err != nil {
-		// 	utils.ErrorLog("AddItem", err.Error())
-		// 	return nil, err
-		// }
-
 		// 插入数据
 		queryJSON, _ := json.Marshal(i)
 		utils.DebugLog("AddItem", fmt.Sprintf("item: [ %s ]", queryJSON))
@@ -3379,198 +3362,6 @@ func AddItem(db, collection, lang, domain string, i *Item) (id string, err error
 			return nil, err
 		}
 
-		// 判断是否为契约台账，并登录契约生成的数据
-		if ds.ApiKey == "keiyakudaicho" {
-			ct := client.Database(database.GetDBName(db)).Collection(genTplCollectionName(collection))
-
-			rirekiSeq, err := uuid.NewUUID()
-			if err != nil {
-				utils.ErrorLog("AddItem", err.Error())
-				return nil, err
-			}
-
-			// 变更后契约履历情报
-			newItemMap := copyMap(i.ItemMap)
-			// 契約履歴番号
-			newItemMap["no"] = &Value{
-				DataType: "text",
-				Value:    rirekiSeq.String(),
-			}
-			// 操作区分编辑
-			newItemMap["actkbn"] = &Value{
-				DataType: "options",
-				Value:    "",
-			}
-			// 修正区分编辑
-			newItemMap["zengokbn"] = &Value{
-				DataType: "options",
-				Value:    "after",
-			}
-			// 对接区分编辑
-			newItemMap["dockkbn"] = &Value{
-				DataType: "options",
-				Value:    "undo",
-			}
-			// 将契约番号变成lookup类型
-			keiyakuno := i.ItemMap["keiyakuno"]
-
-			keiyakuItem := keiyakuno.Value.(string)
-
-			itMap := make(map[string]interface{})
-			for key, val := range i.ItemMap {
-				itMap[key] = val
-			}
-
-			newItemMap["keiyakuno"] = &Value{
-				DataType: "lookup",
-				Value:    keiyakuItem,
-			}
-
-			leaseType := i.ItemMap["lease_type"]
-			leaseTypeVal := leaseType.Value.(string)
-
-			if leaseTypeVal == "normal_lease" {
-				// 查询临时表取得契约履历的下列数据
-				queryTmp := bson.M{
-					"template_id":   templateID,
-					"datastore_key": "rireki",
-				}
-				var rirekiTmp TemplateItem
-
-				if err := ct.FindOne(ctx, queryTmp).Decode(&rirekiTmp); err != nil {
-					utils.ErrorLog("AddItem", err.Error())
-					return nil, err
-				}
-
-				// リース料総額
-				newItemMap["leaseTotal"] = &Value{
-					DataType: "number",
-					Value:    rirekiTmp.ItemMap["leaseTotal"].Value,
-				}
-				// リース料総額の現在価値
-				newItemMap["presentTotal"] = &Value{
-					DataType: "number",
-					Value:    rirekiTmp.ItemMap["presentTotal"].Value,
-				}
-				// 処理月度の先月までの償却費の累計額
-				newItemMap["preDepreciationTotal"] = &Value{
-					DataType: "number",
-					Value:    rirekiTmp.ItemMap["preDepreciationTotal"].Value,
-				}
-			}
-
-			// 添加新契约履历情报
-			/* var newRirekiItem Item
-			newRirekiItem.ID = primitive.NewObjectID()
-			newRirekiItem.ItemID = newRirekiItem.ID.Hex()
-			newRirekiItem.AppID = i.AppID
-			newRirekiItem.DatastoreID = dsrireki
-			newRirekiItem.CreatedAt = i.UpdatedAt
-			newRirekiItem.CreatedBy = i.UpdatedBy
-			newRirekiItem.ItemMap = newItemMap
-			newRirekiItem.Owners = i.Owners */
-
-			/* if _, err := cr.InsertOne(sc, newRirekiItem); err != nil {
-				utils.ErrorLog("AddItem", err.Error())
-				return nil, err
-			} */
-
-			// 获取会社信息
-			leasekaisha := i.ItemMap["leasekaishacd"]
-			kaisyaItem := leasekaisha.Value.(string)
-
-			// 获取分類コード信息
-			bunruicd := i.ItemMap["bunruicd"]
-			bunruicdItem := bunruicd.Value.(string)
-
-			// 获取管理部門
-			segmentcd := i.ItemMap["segmentcd"]
-			segmentcdItem := segmentcd.Value.(string)
-
-			// 取支付信息数据登录数据库 paymentStatus
-			err = insertTempData(client, sc, TmpParam{
-				DB:            db,
-				TemplateID:    templateID,
-				APIKey:        "paymentStatus",
-				UserID:        i.CreatedBy,
-				Owners:        i.Owners,
-				Datastores:    dsList,
-				Keiyakuno:     keiyakuItem,
-				Leasekaishacd: kaisyaItem,
-				Bunruicd:      bunruicdItem,
-				Segmentcd:     segmentcdItem,
-				FileMap:       fieldMap,
-			})
-			if err != nil {
-				utils.ErrorLog("AddItem", err.Error())
-				return nil, err
-			}
-
-			if leaseTypeVal == "normal_lease" {
-				// 取利息数据登录数据库 paymentInterest
-				err = insertTempData(client, sc, TmpParam{
-					DB:            db,
-					TemplateID:    templateID,
-					APIKey:        "paymentInterest",
-					UserID:        i.CreatedBy,
-					Owners:        i.Owners,
-					Datastores:    dsList,
-					Keiyakuno:     keiyakuItem,
-					Leasekaishacd: kaisyaItem,
-					Bunruicd:      bunruicdItem,
-					Segmentcd:     segmentcdItem,
-					FileMap:       fieldMap,
-				})
-				if err != nil {
-					utils.ErrorLog("AddItem", err.Error())
-					return nil, err
-				}
-
-				// 取偿还数据登录数据库 repayment
-				err = insertTempData(client, sc, TmpParam{
-					DB:            db,
-					TemplateID:    templateID,
-					APIKey:        "repayment",
-					UserID:        i.CreatedBy,
-					Owners:        i.Owners,
-					Datastores:    dsList,
-					Keiyakuno:     keiyakuItem,
-					Leasekaishacd: kaisyaItem,
-					Bunruicd:      bunruicdItem,
-					Segmentcd:     segmentcdItem,
-					FileMap:       fieldMap,
-				})
-				if err != nil {
-					utils.ErrorLog("AddItem", err.Error())
-					return nil, err
-				}
-			}
-
-			// 删除临时数据
-			tc := client.Database(database.GetDBName(db)).Collection(genTplCollectionName(collection))
-			query := bson.M{
-				"template_id": templateID,
-			}
-
-			_, err = tc.DeleteMany(sc, query)
-			if err != nil {
-				utils.ErrorLog("AddItem", err.Error())
-				return nil, err
-			}
-		}
-
-		/* err = hs.Compare("1", i.ItemMap)
-		if err != nil {
-			utils.ErrorLog("AddItem", err.Error())
-			return nil, err
-		}
-
-		err = hs.Commit()
-		if err != nil {
-			utils.ErrorLog("AddItem", err.Error())
-			return nil, err
-		}
-		*/
 		return nil, nil
 	}
 
@@ -4794,34 +4585,6 @@ func ChangeLabelTime(db string, itemIDList []string, datastoreID string) error {
 	return nil
 }
 
-// FindUnApproveItems 查询台账未审批数据件数
-func FindUnApproveItems(db string, status string, datastoreID string) (total int64, err error) {
-	client := database.New()
-	c := client.Database(database.GetDBName(db)).Collection(GetItemCollectionName(datastoreID))
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	query := bson.M{
-		"status": status,
-	}
-
-	queryJSON, _ := json.Marshal(query)
-	utils.DebugLog("FindUnApproveItems", fmt.Sprintf("query: [ %s ]", queryJSON))
-
-	// 取总件数
-	count, err := c.CountDocuments(ctx, query)
-	if err != nil {
-		utils.ErrorLog("FindUnApproveItems", err.Error())
-		return -1, err
-	}
-
-	// int转为int64
-	// totalStr := strconv.Itoa(count)
-	// t, _ := strconv.ParseInt(totalStr, 10, 64)
-
-	return count, nil
-}
-
 func compare(newValue *Value, oldValue *Value) bool {
 	switch newValue.DataType {
 	case "text", "textarea", "time":
@@ -5145,31 +4908,6 @@ func deleteItem(db, datastoreID, itemID, userID, lang, domain string, owners []s
 	session.EndSession(ctx)
 
 	return nil
-}
-
-// getMonthLastDay  获取当前月份的最后一天
-func getMonthLastDay(date time.Time) (day string) {
-	// 年月日取得
-	years := date.Year()
-	month := date.Month()
-
-	// 月末日取得
-	lastday := 0
-	if month != 2 {
-		if month == 4 || month == 6 || month == 9 || month == 11 {
-			lastday = 30
-		} else {
-			lastday = 31
-		}
-	} else {
-		if ((years%4) == 0 && (years%100) != 0) || (years%400) == 0 {
-			lastday = 29
-		} else {
-			lastday = 28
-		}
-	}
-
-	return strconv.Itoa(lastday)
 }
 
 // DownloadItems 下载台账数据

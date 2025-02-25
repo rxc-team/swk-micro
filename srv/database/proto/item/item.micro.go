@@ -45,9 +45,7 @@ type ItemService interface {
 	FindItems(ctx context.Context, in *ItemsRequest, opts ...client.CallOption) (*ItemsResponse, error)
 	FindCount(ctx context.Context, in *CountRequest, opts ...client.CallOption) (*CountResponse, error)
 	FindKaraCount(ctx context.Context, in *KaraCountRequest, opts ...client.CallOption) (*KaraCountResponse, error)
-	FindUnApproveItems(ctx context.Context, in *UnApproveItemsRequest, opts ...client.CallOption) (*UnApproveItemsResponse, error)
 	FindItem(ctx context.Context, in *ItemRequest, opts ...client.CallOption) (*ItemResponse, error)
-	FindRishiritsu(ctx context.Context, in *RishiritsuRequest, opts ...client.CallOption) (*RishiritsuResponse, error)
 	AddItem(ctx context.Context, in *AddRequest, opts ...client.CallOption) (*AddResponse, error)
 	ModifyItem(ctx context.Context, in *ModifyRequest, opts ...client.CallOption) (*ModifyResponse, error)
 	ConfimItem(ctx context.Context, in *JournalRequest, opts ...client.CallOption) (*JournalResponse, error)
@@ -122,29 +120,9 @@ func (c *itemService) FindKaraCount(ctx context.Context, in *KaraCountRequest, o
 	return out, nil
 }
 
-func (c *itemService) FindUnApproveItems(ctx context.Context, in *UnApproveItemsRequest, opts ...client.CallOption) (*UnApproveItemsResponse, error) {
-	req := c.c.NewRequest(c.name, "ItemService.FindUnApproveItems", in)
-	out := new(UnApproveItemsResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *itemService) FindItem(ctx context.Context, in *ItemRequest, opts ...client.CallOption) (*ItemResponse, error) {
 	req := c.c.NewRequest(c.name, "ItemService.FindItem", in)
 	out := new(ItemResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *itemService) FindRishiritsu(ctx context.Context, in *RishiritsuRequest, opts ...client.CallOption) (*RishiritsuResponse, error) {
-	req := c.c.NewRequest(c.name, "ItemService.FindRishiritsu", in)
-	out := new(RishiritsuResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -681,9 +659,7 @@ type ItemServiceHandler interface {
 	FindItems(context.Context, *ItemsRequest, *ItemsResponse) error
 	FindCount(context.Context, *CountRequest, *CountResponse) error
 	FindKaraCount(context.Context, *KaraCountRequest, *KaraCountResponse) error
-	FindUnApproveItems(context.Context, *UnApproveItemsRequest, *UnApproveItemsResponse) error
 	FindItem(context.Context, *ItemRequest, *ItemResponse) error
-	FindRishiritsu(context.Context, *RishiritsuRequest, *RishiritsuResponse) error
 	AddItem(context.Context, *AddRequest, *AddResponse) error
 	ModifyItem(context.Context, *ModifyRequest, *ModifyResponse) error
 	ConfimItem(context.Context, *JournalRequest, *JournalResponse) error
@@ -721,9 +697,7 @@ func RegisterItemServiceHandler(s server.Server, hdlr ItemServiceHandler, opts .
 		FindItems(ctx context.Context, in *ItemsRequest, out *ItemsResponse) error
 		FindCount(ctx context.Context, in *CountRequest, out *CountResponse) error
 		FindKaraCount(ctx context.Context, in *KaraCountRequest, out *KaraCountResponse) error
-		FindUnApproveItems(ctx context.Context, in *UnApproveItemsRequest, out *UnApproveItemsResponse) error
 		FindItem(ctx context.Context, in *ItemRequest, out *ItemResponse) error
-		FindRishiritsu(ctx context.Context, in *RishiritsuRequest, out *RishiritsuResponse) error
 		AddItem(ctx context.Context, in *AddRequest, out *AddResponse) error
 		ModifyItem(ctx context.Context, in *ModifyRequest, out *ModifyResponse) error
 		ConfimItem(ctx context.Context, in *JournalRequest, out *JournalResponse) error
@@ -776,16 +750,8 @@ func (h *itemServiceHandler) FindKaraCount(ctx context.Context, in *KaraCountReq
 	return h.ItemServiceHandler.FindKaraCount(ctx, in, out)
 }
 
-func (h *itemServiceHandler) FindUnApproveItems(ctx context.Context, in *UnApproveItemsRequest, out *UnApproveItemsResponse) error {
-	return h.ItemServiceHandler.FindUnApproveItems(ctx, in, out)
-}
-
 func (h *itemServiceHandler) FindItem(ctx context.Context, in *ItemRequest, out *ItemResponse) error {
 	return h.ItemServiceHandler.FindItem(ctx, in, out)
-}
-
-func (h *itemServiceHandler) FindRishiritsu(ctx context.Context, in *RishiritsuRequest, out *RishiritsuResponse) error {
-	return h.ItemServiceHandler.FindRishiritsu(ctx, in, out)
 }
 
 func (h *itemServiceHandler) AddItem(ctx context.Context, in *AddRequest, out *AddResponse) error {

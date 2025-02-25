@@ -38,7 +38,6 @@ import (
 	"rxcsoft.cn/pit3/api/internal/common/typesx"
 	"rxcsoft.cn/pit3/api/internal/system/jobx"
 	"rxcsoft.cn/pit3/api/internal/system/sessionx"
-	"rxcsoft.cn/pit3/api/internal/system/wfx"
 	"rxcsoft.cn/pit3/api/internal/system/wsx"
 	"rxcsoft.cn/pit3/lib/msg"
 	"rxcsoft.cn/pit3/srv/database/proto/approve"
@@ -216,40 +215,6 @@ func (i *Item) FindItem(c *gin.Context) {
 	})
 }
 
-// FindRishiritsu 通过database_Id获取数据
-// @Router /database/{d_id}/rishiritsu [get]
-func (i *Item) FindRishiritsu(c *gin.Context) {
-	loggerx.InfoLog(c, ActionFindRishiritsu, loggerx.MsgProcessStarted)
-
-	itemService := item.NewItemService("database", client.DefaultClient)
-
-	var req item.RishiritsuRequest
-	req.DatastoreId = c.Param("d_id")
-	req.Leasekikan = c.Query("lease_kikan")
-	req.Leasestymd = c.Query("lease_stymd")
-	req.Database = sessionx.GetUserCustomer(c)
-
-	response, err := itemService.FindRishiritsu(context.TODO(), &req)
-	if err != nil {
-		httpx.GinHTTPError(c, ActionFindRishiritsu, err)
-		return
-	}
-
-	var rishiritsu interface{}
-	for key, value := range response.GetItem().GetItems() {
-		if key == "rishiritsu" {
-			rishiritsu = transferx.TransferData(value)
-		}
-	}
-
-	loggerx.InfoLog(c, ActionFindRishiritsu, loggerx.MsgProcessEnded)
-	c.JSON(200, httpx.Response{
-		Status:  0,
-		Message: msg.GetMsg("ja-JP", msg.Info, msg.I003, fmt.Sprintf(httpx.Temp, ItemProcessName, ActionFindRishiritsu)),
-		Data:    rishiritsu,
-	})
-}
-
 // FindUnApproveItems 通过database_Id和status获取未审批数据件数
 // @Router /database/{d_id}/items/{id} [get]
 func (i *Item) FindUnApproveItems(c *gin.Context) {
@@ -286,58 +251,6 @@ func (i *Item) AddItem(c *gin.Context) {
 	domain := sessionx.GetUserDomain(c)
 	appID := sessionx.GetCurrentApp(c)
 	userID := sessionx.GetAuthUserID(c)
-	groupID := sessionx.GetUserGroup(c)
-
-	wks := wfx.GetUserWorkflow(db, groupID, appID, datastore, "insert")
-	if len(wks) > 0 {
-		wfID := wks[0].GetWfId()
-		approveService := approve.NewApproveService("database", client.DefaultClient)
-
-		var req approve.AddRequest
-		// 从body中获取参数
-		if err := c.BindJSON(&req); err != nil {
-			httpx.GinHTTPError(c, ActionAddItem, err)
-			return
-		}
-		req.Current = req.Items
-		// 从共通中获取参数
-		req.DatastoreId = datastore
-		req.AppId = appID
-		req.Writer = userID
-		req.Database = db
-		req.Domain = domain
-		req.LangCd = sessionx.GetCurrentLanguage(c)
-		// 开启流程
-		approve := new(wfx.Approve)
-		// 添加流程实例
-		exID, err := approve.AddExample(db, wfID, userID)
-		if err != nil {
-			httpx.GinHTTPError(c, ActionAddItem, err)
-			return
-		}
-		req.ExampleId = exID
-		response, err := approveService.AddItem(context.TODO(), &req)
-		if err != nil {
-			httpx.GinHTTPError(c, ActionAddItem, err)
-			return
-		}
-		// 流程开始启动
-		err = approve.StartExampleInstance(db, wfID, userID, exID, domain)
-		if err != nil {
-			httpx.GinHTTPError(c, ActionAddItem, err)
-			return
-		}
-
-		loggerx.SuccessLog(c, ActionAddItem, fmt.Sprintf("Item[%s] Add Success", response.GetItemId()))
-		loggerx.InfoLog(c, ActionAddItem, loggerx.MsgProcessEnded)
-		c.JSON(200, httpx.Response{
-			Status:  0,
-			Message: msg.GetMsg("ja-JP", msg.Info, msg.I004, fmt.Sprintf(httpx.Temp, ItemProcessName, ActionAddItem)),
-			Data:    response,
-		})
-		c.Abort()
-		return
-	}
 
 	itemService := item.NewItemService("database", client.DefaultClient)
 
@@ -965,17 +878,7 @@ func (i *Item) ModifyItem(c *gin.Context) {
 	domain := sessionx.GetUserDomain(c)
 	owners := sessionx.GetUserAccessKeys(c, datastore, "W")
 
-	if len(wfID) == 0 {
-		groupID := sessionx.GetUserGroup(c)
-		wks := wfx.GetUserWorkflow(db, groupID, appID, datastore, "update")
-		for _, wk := range wks {
-			if len(wk.Params["fields"]) == 0 {
-				wfID = wk.GetWfId()
-			}
-		}
-	}
-
-	if len(wfID) > 0 && wfx.CheckWfValid(db, wfID) {
+	if len(wfID) > 0 {
 		itemService := item.NewItemService("database", client.DefaultClient)
 
 		var iReq item.ItemRequest
@@ -1046,15 +949,7 @@ func (i *Item) ModifyItem(c *gin.Context) {
 		req.Database = db
 		req.Domain = domain
 		req.LangCd = sessionx.GetCurrentLanguage(c)
-		// 开启流程
-		approve := new(wfx.Approve)
-		// 添加流程实例
-		exID, err := approve.AddExample(db, wfID, userID)
-		if err != nil {
-			httpx.GinHTTPError(c, ActionModifyItem, err)
-			return
-		}
-		req.ExampleId = exID
+
 		response, err := approveService.AddItem(context.TODO(), &req)
 		if err != nil {
 			httpx.GinHTTPError(c, ActionModifyItem, err)
@@ -1076,12 +971,6 @@ func (i *Item) ModifyItem(c *gin.Context) {
 			return
 		}
 
-		// 流程开始启动
-		err = approve.StartExampleInstance(db, wfID, userID, exID, domain)
-		if err != nil {
-			httpx.GinHTTPError(c, ActionModifyItem, err)
-			return
-		}
 		loggerx.SuccessLog(c, ActionModifyItem, fmt.Sprintf("Item[%s] Update Success", response.GetItemId()))
 
 		loggerx.InfoLog(c, ActionAddItem, loggerx.MsgProcessEnded)
@@ -1366,111 +1255,7 @@ func (i *Item) DeleteItem(c *gin.Context) {
 	appID := sessionx.GetCurrentApp(c)
 	userID := sessionx.GetAuthUserID(c)
 	domain := sessionx.GetUserDomain(c)
-	groupID := sessionx.GetUserGroup(c)
 	owners := sessionx.GetUserAccessKeys(c, datastore, "D")
-
-	wks := wfx.GetUserWorkflow(db, groupID, appID, datastore, "delete")
-	if len(wks) > 0 {
-		itemService := item.NewItemService("database", client.DefaultClient)
-
-		var iReq item.ItemRequest
-		iReq.DatastoreId = datastore
-		iReq.ItemId = itemID
-		iReq.Database = db
-		iReq.IsOrigin = true
-		iReq.Owners = owners
-
-		iResp, err := itemService.FindItem(context.TODO(), &iReq)
-		if err != nil {
-			httpx.GinHTTPError(c, ActionDeleteItem, err)
-			return
-		}
-
-		items := iResp.GetItem().GetItems()
-
-		itemMap := map[string]*approve.Value{}
-		for key, it := range items {
-			if it.GetDataType() == "user" {
-				var uList []string
-				err := json.Unmarshal([]byte(it.GetValue()), &uList)
-				if err != nil {
-					itemMap[key] = &approve.Value{
-						DataType: it.GetDataType(),
-						Value:    "",
-					}
-				} else {
-					itemMap[key] = &approve.Value{
-						DataType: it.GetDataType(),
-						Value:    strings.Join(uList, ","),
-					}
-				}
-			} else {
-				itemMap[key] = &approve.Value{
-					DataType: it.GetDataType(),
-					Value:    it.GetValue(),
-				}
-			}
-		}
-
-		wfID := wks[0].GetWfId()
-
-		approveService := approve.NewApproveService("database", client.DefaultClient)
-
-		var req approve.AddRequest
-		req.ItemId = itemID
-		req.Items = itemMap
-		req.Current = req.Items
-		req.DatastoreId = datastore
-		req.AppId = appID
-		req.Writer = userID
-		req.Database = db
-		req.Domain = domain
-		req.LangCd = sessionx.GetCurrentLanguage(c)
-		// 开启流程
-		approve := new(wfx.Approve)
-		// 添加流程实例
-		exID, err := approve.AddExample(db, wfID, userID)
-		if err != nil {
-			httpx.GinHTTPError(c, ActionDeleteItem, err)
-			return
-		}
-		req.ExampleId = exID
-		response, err := approveService.AddItem(context.TODO(), &req)
-		if err != nil {
-			httpx.GinHTTPError(c, ActionDeleteItem, err)
-			return
-		}
-		// 流程开始启动
-		err = approve.StartExampleInstance(db, wfID, userID, exID, domain)
-		if err != nil {
-			httpx.GinHTTPError(c, ActionDeleteItem, err)
-			return
-		}
-		loggerx.SuccessLog(c, ActionDeleteItem, fmt.Sprintf("Item[%s] Add Success", response.GetItemId()))
-
-		var statusReq item.StatusRequest
-		statusReq.AppId = appID
-		statusReq.DatastoreId = datastore
-		statusReq.ItemId = itemID
-		statusReq.Database = db
-		statusReq.Writer = userID
-		statusReq.Status = "2"
-
-		_, err = itemService.ChangeStatus(context.TODO(), &statusReq)
-		if err != nil {
-			httpx.GinHTTPError(c, ActionDeleteItem, err)
-			return
-		}
-
-		loggerx.InfoLog(c, ActionAddItem, loggerx.MsgProcessEnded)
-		c.JSON(200, httpx.Response{
-			Status:  0,
-			Message: msg.GetMsg("ja-JP", msg.Info, msg.I004, fmt.Sprintf(httpx.Temp, ItemProcessName, ActionAddItem)),
-			Data:    response,
-		})
-		c.Abort()
-		return
-	}
 
 	itemService := item.NewItemService("database", client.DefaultClient)
 

@@ -42,8 +42,6 @@ func NewUploadServiceEndpoints() []*api.Endpoint {
 // Client API for UploadService service
 
 type UploadService interface {
-	CSVUpload(ctx context.Context, in *CSVRequest, opts ...client.CallOption) (*CSVResponse, error)
-	InventoryUpload(ctx context.Context, in *InventoryRequest, opts ...client.CallOption) (*InventoryResponse, error)
 	MappingUpload(ctx context.Context, in *MappingRequest, opts ...client.CallOption) (*MappingResponse, error)
 }
 
@@ -59,26 +57,6 @@ func NewUploadService(name string, c client.Client) UploadService {
 	}
 }
 
-func (c *uploadService) CSVUpload(ctx context.Context, in *CSVRequest, opts ...client.CallOption) (*CSVResponse, error) {
-	req := c.c.NewRequest(c.name, "UploadService.CSVUpload", in)
-	out := new(CSVResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *uploadService) InventoryUpload(ctx context.Context, in *InventoryRequest, opts ...client.CallOption) (*InventoryResponse, error) {
-	req := c.c.NewRequest(c.name, "UploadService.InventoryUpload", in)
-	out := new(InventoryResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *uploadService) MappingUpload(ctx context.Context, in *MappingRequest, opts ...client.CallOption) (*MappingResponse, error) {
 	req := c.c.NewRequest(c.name, "UploadService.MappingUpload", in)
 	out := new(MappingResponse)
@@ -92,15 +70,11 @@ func (c *uploadService) MappingUpload(ctx context.Context, in *MappingRequest, o
 // Server API for UploadService service
 
 type UploadServiceHandler interface {
-	CSVUpload(context.Context, *CSVRequest, *CSVResponse) error
-	InventoryUpload(context.Context, *InventoryRequest, *InventoryResponse) error
 	MappingUpload(context.Context, *MappingRequest, *MappingResponse) error
 }
 
 func RegisterUploadServiceHandler(s server.Server, hdlr UploadServiceHandler, opts ...server.HandlerOption) error {
 	type uploadService interface {
-		CSVUpload(ctx context.Context, in *CSVRequest, out *CSVResponse) error
-		InventoryUpload(ctx context.Context, in *InventoryRequest, out *InventoryResponse) error
 		MappingUpload(ctx context.Context, in *MappingRequest, out *MappingResponse) error
 	}
 	type UploadService struct {
@@ -112,14 +86,6 @@ func RegisterUploadServiceHandler(s server.Server, hdlr UploadServiceHandler, op
 
 type uploadServiceHandler struct {
 	UploadServiceHandler
-}
-
-func (h *uploadServiceHandler) CSVUpload(ctx context.Context, in *CSVRequest, out *CSVResponse) error {
-	return h.UploadServiceHandler.CSVUpload(ctx, in, out)
-}
-
-func (h *uploadServiceHandler) InventoryUpload(ctx context.Context, in *InventoryRequest, out *InventoryResponse) error {
-	return h.UploadServiceHandler.InventoryUpload(ctx, in, out)
 }
 
 func (h *uploadServiceHandler) MappingUpload(ctx context.Context, in *MappingRequest, out *MappingResponse) error {
