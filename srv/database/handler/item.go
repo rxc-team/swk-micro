@@ -294,36 +294,6 @@ func (i *Item) MappingUpload(ctx context.Context, stream item.ItemService_Mappin
 	return nil
 }
 
-// ImportItem1 批量导入台账数据
-func (i *Item) ImportItem(ctx context.Context, stream item.ItemService_ImportItemStream) error {
-	utils.InfoLog(ActionImportItem, utils.MsgProcessStarted)
-
-	err := model.ImportItem(ctx, stream)
-	if err != nil {
-		utils.ErrorLog(ActionImportItem, err.Error())
-		return err
-	}
-
-	utils.InfoLog(ActionImportItem, utils.MsgProcessEnded)
-
-	return nil
-}
-
-// ImportCheckItem 批量盘点
-func (i *Item) ImportCheckItem(ctx context.Context, stream item.ItemService_ImportCheckItemStream) error {
-	utils.InfoLog(ActionImportCheckItem, utils.MsgProcessStarted)
-
-	err := model.ImportCheckItem(ctx, stream)
-	if err != nil {
-		utils.ErrorLog(ActionImportCheckItem, err.Error())
-		return err
-	}
-
-	utils.InfoLog(ActionImportCheckItem, utils.MsgProcessEnded)
-
-	return nil
-}
-
 // ModifyItem 更新台账一条数据
 func (i *Item) ModifyItem(ctx context.Context, req *item.ModifyRequest, rsp *item.ModifyResponse) error {
 	utils.InfoLog(ActionModifyItem, utils.MsgProcessStarted)

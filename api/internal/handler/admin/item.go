@@ -106,32 +106,6 @@ func (i *Item) FindItems(c *gin.Context) {
 	})
 }
 
-// FindUnApproveItems 通过database_Id和status获取未审批数据件数
-// @Router /database/{d_id}/items/{id} [get]
-func (i *Item) FindUnApproveItems(c *gin.Context) {
-	loggerx.InfoLog(c, ActionFindUnApproveItems, loggerx.MsgProcessStarted)
-
-	itemService := item.NewItemService("database", client.DefaultClient)
-
-	var req item.UnApproveItemsRequest
-	req.DatastoreId = c.Param("d_id")
-	req.Status = c.Query("status")
-	req.Database = sessionx.GetUserCustomer(c)
-
-	res, err := itemService.FindUnApproveItems(context.TODO(), &req)
-	if err != nil {
-		httpx.GinHTTPError(c, ActionFindUnApproveItems, err)
-		return
-	}
-
-	loggerx.InfoLog(c, ActionFindUnApproveItems, loggerx.MsgProcessEnded)
-	c.JSON(200, httpx.Response{
-		Status:  0,
-		Message: msg.GetMsg("ja-JP", msg.Info, msg.I003, fmt.Sprintf(httpx.Temp, ItemProcessName, ActionFindUnApproveItems)),
-		Data:    res.GetTotal(),
-	})
-}
-
 // ChangeOwners 更新所有者
 // @Router /datastores/{d_id}/items [patch]
 func (i *Item) ChangeOwners(c *gin.Context) {

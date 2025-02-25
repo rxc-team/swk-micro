@@ -337,8 +337,6 @@ func initAuthRouterAdm(router *gin.Engine) {
 		itemRoute := v1.Group("/item")
 		// 获取台账所有数据
 		itemRoute.POST("/datastores/:d_id/items/search", items.FindItems)
-		// 查询台账未审批数据件数
-		itemRoute.GET("/datastores/:d_id/unApprove", items.FindUnApproveItems)
 		// 更新所有者
 		itemRoute.PATCH("/datastores/:d_id/items", items.ChangeOwners)
 		// 盘点台账盘点数据盘点状态重置
