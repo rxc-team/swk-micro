@@ -17,6 +17,7 @@ import (
 	"rxcsoft.cn/pit3/srv/database/proto/feed"
 	"rxcsoft.cn/pit3/srv/database/proto/field"
 	"rxcsoft.cn/pit3/srv/database/proto/generate"
+	"rxcsoft.cn/pit3/srv/database/proto/item"
 	"rxcsoft.cn/pit3/srv/database/proto/option"
 	"rxcsoft.cn/pit3/srv/database/proto/print"
 	"rxcsoft.cn/pit3/srv/database/proto/query"
@@ -66,7 +67,7 @@ func main() {
 	approve.RegisterApproveServiceHandler(service.Server(), new(av.Approve))
 	copy.RegisterCopyServiceHandler(service.Server(), new(handler.Copy))
 	generate.RegisterGenerateServiceHandler(service.Server(), new(handler.Generate))
-
+	item.RegisterItemServiceHandler(service.Server(), new(handler.Item))
 	// 运行服务
 	if err := service.Run(); err != nil {
 		log.Fatalf("server start has error: %v", err)

@@ -338,9 +338,9 @@ func initAuthRouterAdm(router *gin.Engine) {
 		// 获取台账所有数据
 		itemRoute.POST("/datastores/:d_id/items/search", items.FindItems)
 		// 更新所有者
-		itemRoute.PATCH("/datastores/:d_id/items", items.ChangeOwners)
+		/* itemRoute.PATCH("/datastores/:d_id/items", items.ChangeOwners) */
 		// 盘点台账盘点数据盘点状态重置
-		itemRoute.PATCH("/apps/:app_id/inventory/reset", items.ResetInventoryItems)
+		/* itemRoute.PATCH("/apps/:app_id/inventory/reset", items.ResetInventoryItems) */
 	}
 
 	// approve

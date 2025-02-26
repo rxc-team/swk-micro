@@ -47,30 +47,15 @@ type ItemService interface {
 	FindKaraCount(ctx context.Context, in *KaraCountRequest, opts ...client.CallOption) (*KaraCountResponse, error)
 	FindItem(ctx context.Context, in *ItemRequest, opts ...client.CallOption) (*ItemResponse, error)
 	AddItem(ctx context.Context, in *AddRequest, opts ...client.CallOption) (*AddResponse, error)
-	ModifyItem(ctx context.Context, in *ModifyRequest, opts ...client.CallOption) (*ModifyResponse, error)
 	ConfimItem(ctx context.Context, in *JournalRequest, opts ...client.CallOption) (*JournalResponse, error)
 	GenerateItem(ctx context.Context, in *JournalRequest, opts ...client.CallOption) (*JournalResponse, error)
 	GenerateShoukyakuItem(ctx context.Context, in *JournalRequest, opts ...client.CallOption) (*JournalResponse, error)
 	GeneratePayItem(ctx context.Context, in *JournalRequest, opts ...client.CallOption) (*JournalResponse, error)
-	InventoryItem(ctx context.Context, in *InventoryItemRequest, opts ...client.CallOption) (*InventoryItemResponse, error)
-	MutilInventoryItem(ctx context.Context, in *MutilInventoryItemRequest, opts ...client.CallOption) (*MutilInventoryItemResponse, error)
-	ResetInventoryItems(ctx context.Context, in *ResetInventoryItemsRequest, opts ...client.CallOption) (*ResetInventoryItemsResponse, error)
 	DeleteItem(ctx context.Context, in *DeleteRequest, opts ...client.CallOption) (*DeleteResponse, error)
 	DeleteDatastoreItems(ctx context.Context, in *DeleteDatastoreItemsRequest, opts ...client.CallOption) (*DeleteResponse, error)
 	DeleteItems(ctx context.Context, in *DeleteItemsRequest, opts ...client.CallOption) (*DeleteResponse, error)
 	DeleteSelectItems(ctx context.Context, in *SelectedItemsRequest, opts ...client.CallOption) (ItemService_DeleteSelectItemsService, error)
-	ChangeOwners(ctx context.Context, in *OwnersRequest, opts ...client.CallOption) (*OwnersResponse, error)
-	ChangeSelectOwners(ctx context.Context, in *SelectOwnersRequest, opts ...client.CallOption) (*SelectOwnersResponse, error)
-	ChangeItemOwner(ctx context.Context, in *ItemOwnerRequest, opts ...client.CallOption) (*ItemOwnerResponse, error)
-	ChangeStatus(ctx context.Context, in *StatusRequest, opts ...client.CallOption) (*StatusResponse, error)
-	ChangeLabelTime(ctx context.Context, in *LabelTimeRequest, opts ...client.CallOption) (*LabelTimeResponse, error)
-	ChangeDebt(ctx context.Context, in *ChangeDebtRequest, opts ...client.CallOption) (*ChangeDebtResponse, error)
-	ContractExpire(ctx context.Context, in *ContractExpireRequest, opts ...client.CallOption) (*ContractExpireResponse, error)
-	ModifyContract(ctx context.Context, in *ModifyContractRequest, opts ...client.CallOption) (*ModifyContractResponse, error)
-	TerminateContract(ctx context.Context, in *TerminateContractRequest, opts ...client.CallOption) (*TerminateContractResponse, error)
-	// double stream
 	ImportItem(ctx context.Context, opts ...client.CallOption) (ItemService_ImportItemService, error)
-	ImportCheckItem(ctx context.Context, opts ...client.CallOption) (ItemService_ImportCheckItemService, error)
 	MappingUpload(ctx context.Context, opts ...client.CallOption) (ItemService_MappingUploadService, error)
 	// single stream
 	Download(ctx context.Context, in *DownloadRequest, opts ...client.CallOption) (ItemService_DownloadService, error)
@@ -140,16 +125,6 @@ func (c *itemService) AddItem(ctx context.Context, in *AddRequest, opts ...clien
 	return out, nil
 }
 
-func (c *itemService) ModifyItem(ctx context.Context, in *ModifyRequest, opts ...client.CallOption) (*ModifyResponse, error) {
-	req := c.c.NewRequest(c.name, "ItemService.ModifyItem", in)
-	out := new(ModifyResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *itemService) ConfimItem(ctx context.Context, in *JournalRequest, opts ...client.CallOption) (*JournalResponse, error) {
 	req := c.c.NewRequest(c.name, "ItemService.ConfimItem", in)
 	out := new(JournalResponse)
@@ -183,36 +158,6 @@ func (c *itemService) GenerateShoukyakuItem(ctx context.Context, in *JournalRequ
 func (c *itemService) GeneratePayItem(ctx context.Context, in *JournalRequest, opts ...client.CallOption) (*JournalResponse, error) {
 	req := c.c.NewRequest(c.name, "ItemService.GeneratePayItem", in)
 	out := new(JournalResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *itemService) InventoryItem(ctx context.Context, in *InventoryItemRequest, opts ...client.CallOption) (*InventoryItemResponse, error) {
-	req := c.c.NewRequest(c.name, "ItemService.InventoryItem", in)
-	out := new(InventoryItemResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *itemService) MutilInventoryItem(ctx context.Context, in *MutilInventoryItemRequest, opts ...client.CallOption) (*MutilInventoryItemResponse, error) {
-	req := c.c.NewRequest(c.name, "ItemService.MutilInventoryItem", in)
-	out := new(MutilInventoryItemResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *itemService) ResetInventoryItems(ctx context.Context, in *ResetInventoryItemsRequest, opts ...client.CallOption) (*ResetInventoryItemsResponse, error) {
-	req := c.c.NewRequest(c.name, "ItemService.ResetInventoryItems", in)
-	out := new(ResetInventoryItemsResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -299,96 +244,6 @@ func (x *itemServiceDeleteSelectItems) Recv() (*SelectedItemsResponse, error) {
 	return m, nil
 }
 
-func (c *itemService) ChangeOwners(ctx context.Context, in *OwnersRequest, opts ...client.CallOption) (*OwnersResponse, error) {
-	req := c.c.NewRequest(c.name, "ItemService.ChangeOwners", in)
-	out := new(OwnersResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *itemService) ChangeSelectOwners(ctx context.Context, in *SelectOwnersRequest, opts ...client.CallOption) (*SelectOwnersResponse, error) {
-	req := c.c.NewRequest(c.name, "ItemService.ChangeSelectOwners", in)
-	out := new(SelectOwnersResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *itemService) ChangeItemOwner(ctx context.Context, in *ItemOwnerRequest, opts ...client.CallOption) (*ItemOwnerResponse, error) {
-	req := c.c.NewRequest(c.name, "ItemService.ChangeItemOwner", in)
-	out := new(ItemOwnerResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *itemService) ChangeStatus(ctx context.Context, in *StatusRequest, opts ...client.CallOption) (*StatusResponse, error) {
-	req := c.c.NewRequest(c.name, "ItemService.ChangeStatus", in)
-	out := new(StatusResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *itemService) ChangeLabelTime(ctx context.Context, in *LabelTimeRequest, opts ...client.CallOption) (*LabelTimeResponse, error) {
-	req := c.c.NewRequest(c.name, "ItemService.ChangeLabelTime", in)
-	out := new(LabelTimeResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *itemService) ChangeDebt(ctx context.Context, in *ChangeDebtRequest, opts ...client.CallOption) (*ChangeDebtResponse, error) {
-	req := c.c.NewRequest(c.name, "ItemService.ChangeDebt", in)
-	out := new(ChangeDebtResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *itemService) ContractExpire(ctx context.Context, in *ContractExpireRequest, opts ...client.CallOption) (*ContractExpireResponse, error) {
-	req := c.c.NewRequest(c.name, "ItemService.ContractExpire", in)
-	out := new(ContractExpireResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *itemService) ModifyContract(ctx context.Context, in *ModifyContractRequest, opts ...client.CallOption) (*ModifyContractResponse, error) {
-	req := c.c.NewRequest(c.name, "ItemService.ModifyContract", in)
-	out := new(ModifyContractResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *itemService) TerminateContract(ctx context.Context, in *TerminateContractRequest, opts ...client.CallOption) (*TerminateContractResponse, error) {
-	req := c.c.NewRequest(c.name, "ItemService.TerminateContract", in)
-	out := new(TerminateContractResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *itemService) ImportItem(ctx context.Context, opts ...client.CallOption) (ItemService_ImportItemService, error) {
 	req := c.c.NewRequest(c.name, "ItemService.ImportItem", &ImportRequest{})
 	stream, err := c.c.Stream(ctx, req, opts...)
@@ -430,7 +285,7 @@ func (x *itemServiceImportItem) RecvMsg(m interface{}) error {
 func (x *itemServiceImportItem) Send(m *ImportRequest) error {
 	return x.stream.Send(m)
 }
-
+ 
 func (x *itemServiceImportItem) Recv() (*ImportResponse, error) {
 	m := new(ImportResponse)
 	err := x.stream.Recv(m)
@@ -440,22 +295,11 @@ func (x *itemServiceImportItem) Recv() (*ImportResponse, error) {
 	return m, nil
 }
 
-func (c *itemService) ImportCheckItem(ctx context.Context, opts ...client.CallOption) (ItemService_ImportCheckItemService, error) {
-	req := c.c.NewRequest(c.name, "ItemService.ImportCheckItem", &ImportCheckRequest{})
-	stream, err := c.c.Stream(ctx, req, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return &itemServiceImportCheckItem{stream}, nil
-}
-
 type ItemService_ImportCheckItemService interface {
 	Context() context.Context
 	SendMsg(interface{}) error
 	RecvMsg(interface{}) error
 	Close() error
-	Send(*ImportCheckRequest) error
-	Recv() (*ImportCheckResponse, error)
 }
 
 type itemServiceImportCheckItem struct {
@@ -476,19 +320,6 @@ func (x *itemServiceImportCheckItem) SendMsg(m interface{}) error {
 
 func (x *itemServiceImportCheckItem) RecvMsg(m interface{}) error {
 	return x.stream.Recv(m)
-}
-
-func (x *itemServiceImportCheckItem) Send(m *ImportCheckRequest) error {
-	return x.stream.Send(m)
-}
-
-func (x *itemServiceImportCheckItem) Recv() (*ImportCheckResponse, error) {
-	m := new(ImportCheckResponse)
-	err := x.stream.Recv(m)
-	if err != nil {
-		return nil, err
-	}
-	return m, nil
 }
 
 func (c *itemService) MappingUpload(ctx context.Context, opts ...client.CallOption) (ItemService_MappingUploadService, error) {
@@ -661,30 +492,15 @@ type ItemServiceHandler interface {
 	FindKaraCount(context.Context, *KaraCountRequest, *KaraCountResponse) error
 	FindItem(context.Context, *ItemRequest, *ItemResponse) error
 	AddItem(context.Context, *AddRequest, *AddResponse) error
-	ModifyItem(context.Context, *ModifyRequest, *ModifyResponse) error
 	ConfimItem(context.Context, *JournalRequest, *JournalResponse) error
 	GenerateItem(context.Context, *JournalRequest, *JournalResponse) error
 	GenerateShoukyakuItem(context.Context, *JournalRequest, *JournalResponse) error
 	GeneratePayItem(context.Context, *JournalRequest, *JournalResponse) error
-	InventoryItem(context.Context, *InventoryItemRequest, *InventoryItemResponse) error
-	MutilInventoryItem(context.Context, *MutilInventoryItemRequest, *MutilInventoryItemResponse) error
-	ResetInventoryItems(context.Context, *ResetInventoryItemsRequest, *ResetInventoryItemsResponse) error
 	DeleteItem(context.Context, *DeleteRequest, *DeleteResponse) error
 	DeleteDatastoreItems(context.Context, *DeleteDatastoreItemsRequest, *DeleteResponse) error
 	DeleteItems(context.Context, *DeleteItemsRequest, *DeleteResponse) error
 	DeleteSelectItems(context.Context, *SelectedItemsRequest, ItemService_DeleteSelectItemsStream) error
-	ChangeOwners(context.Context, *OwnersRequest, *OwnersResponse) error
-	ChangeSelectOwners(context.Context, *SelectOwnersRequest, *SelectOwnersResponse) error
-	ChangeItemOwner(context.Context, *ItemOwnerRequest, *ItemOwnerResponse) error
-	ChangeStatus(context.Context, *StatusRequest, *StatusResponse) error
-	ChangeLabelTime(context.Context, *LabelTimeRequest, *LabelTimeResponse) error
-	ChangeDebt(context.Context, *ChangeDebtRequest, *ChangeDebtResponse) error
-	ContractExpire(context.Context, *ContractExpireRequest, *ContractExpireResponse) error
-	ModifyContract(context.Context, *ModifyContractRequest, *ModifyContractResponse) error
-	TerminateContract(context.Context, *TerminateContractRequest, *TerminateContractResponse) error
-	// double stream
 	ImportItem(context.Context, ItemService_ImportItemStream) error
-	ImportCheckItem(context.Context, ItemService_ImportCheckItemStream) error
 	MappingUpload(context.Context, ItemService_MappingUploadStream) error
 	// single stream
 	Download(context.Context, *DownloadRequest, ItemService_DownloadStream) error
@@ -699,29 +515,15 @@ func RegisterItemServiceHandler(s server.Server, hdlr ItemServiceHandler, opts .
 		FindKaraCount(ctx context.Context, in *KaraCountRequest, out *KaraCountResponse) error
 		FindItem(ctx context.Context, in *ItemRequest, out *ItemResponse) error
 		AddItem(ctx context.Context, in *AddRequest, out *AddResponse) error
-		ModifyItem(ctx context.Context, in *ModifyRequest, out *ModifyResponse) error
 		ConfimItem(ctx context.Context, in *JournalRequest, out *JournalResponse) error
 		GenerateItem(ctx context.Context, in *JournalRequest, out *JournalResponse) error
 		GenerateShoukyakuItem(ctx context.Context, in *JournalRequest, out *JournalResponse) error
 		GeneratePayItem(ctx context.Context, in *JournalRequest, out *JournalResponse) error
-		InventoryItem(ctx context.Context, in *InventoryItemRequest, out *InventoryItemResponse) error
-		MutilInventoryItem(ctx context.Context, in *MutilInventoryItemRequest, out *MutilInventoryItemResponse) error
-		ResetInventoryItems(ctx context.Context, in *ResetInventoryItemsRequest, out *ResetInventoryItemsResponse) error
 		DeleteItem(ctx context.Context, in *DeleteRequest, out *DeleteResponse) error
 		DeleteDatastoreItems(ctx context.Context, in *DeleteDatastoreItemsRequest, out *DeleteResponse) error
 		DeleteItems(ctx context.Context, in *DeleteItemsRequest, out *DeleteResponse) error
 		DeleteSelectItems(ctx context.Context, stream server.Stream) error
-		ChangeOwners(ctx context.Context, in *OwnersRequest, out *OwnersResponse) error
-		ChangeSelectOwners(ctx context.Context, in *SelectOwnersRequest, out *SelectOwnersResponse) error
-		ChangeItemOwner(ctx context.Context, in *ItemOwnerRequest, out *ItemOwnerResponse) error
-		ChangeStatus(ctx context.Context, in *StatusRequest, out *StatusResponse) error
-		ChangeLabelTime(ctx context.Context, in *LabelTimeRequest, out *LabelTimeResponse) error
-		ChangeDebt(ctx context.Context, in *ChangeDebtRequest, out *ChangeDebtResponse) error
-		ContractExpire(ctx context.Context, in *ContractExpireRequest, out *ContractExpireResponse) error
-		ModifyContract(ctx context.Context, in *ModifyContractRequest, out *ModifyContractResponse) error
-		TerminateContract(ctx context.Context, in *TerminateContractRequest, out *TerminateContractResponse) error
 		ImportItem(ctx context.Context, stream server.Stream) error
-		ImportCheckItem(ctx context.Context, stream server.Stream) error
 		MappingUpload(ctx context.Context, stream server.Stream) error
 		Download(ctx context.Context, stream server.Stream) error
 		SwkDownload(ctx context.Context, stream server.Stream) error
@@ -758,10 +560,6 @@ func (h *itemServiceHandler) AddItem(ctx context.Context, in *AddRequest, out *A
 	return h.ItemServiceHandler.AddItem(ctx, in, out)
 }
 
-func (h *itemServiceHandler) ModifyItem(ctx context.Context, in *ModifyRequest, out *ModifyResponse) error {
-	return h.ItemServiceHandler.ModifyItem(ctx, in, out)
-}
-
 func (h *itemServiceHandler) ConfimItem(ctx context.Context, in *JournalRequest, out *JournalResponse) error {
 	return h.ItemServiceHandler.ConfimItem(ctx, in, out)
 }
@@ -776,18 +574,6 @@ func (h *itemServiceHandler) GenerateShoukyakuItem(ctx context.Context, in *Jour
 
 func (h *itemServiceHandler) GeneratePayItem(ctx context.Context, in *JournalRequest, out *JournalResponse) error {
 	return h.ItemServiceHandler.GeneratePayItem(ctx, in, out)
-}
-
-func (h *itemServiceHandler) InventoryItem(ctx context.Context, in *InventoryItemRequest, out *InventoryItemResponse) error {
-	return h.ItemServiceHandler.InventoryItem(ctx, in, out)
-}
-
-func (h *itemServiceHandler) MutilInventoryItem(ctx context.Context, in *MutilInventoryItemRequest, out *MutilInventoryItemResponse) error {
-	return h.ItemServiceHandler.MutilInventoryItem(ctx, in, out)
-}
-
-func (h *itemServiceHandler) ResetInventoryItems(ctx context.Context, in *ResetInventoryItemsRequest, out *ResetInventoryItemsResponse) error {
-	return h.ItemServiceHandler.ResetInventoryItems(ctx, in, out)
 }
 
 func (h *itemServiceHandler) DeleteItem(ctx context.Context, in *DeleteRequest, out *DeleteResponse) error {
@@ -842,42 +628,6 @@ func (x *itemServiceDeleteSelectItemsStream) Send(m *SelectedItemsResponse) erro
 	return x.stream.Send(m)
 }
 
-func (h *itemServiceHandler) ChangeOwners(ctx context.Context, in *OwnersRequest, out *OwnersResponse) error {
-	return h.ItemServiceHandler.ChangeOwners(ctx, in, out)
-}
-
-func (h *itemServiceHandler) ChangeSelectOwners(ctx context.Context, in *SelectOwnersRequest, out *SelectOwnersResponse) error {
-	return h.ItemServiceHandler.ChangeSelectOwners(ctx, in, out)
-}
-
-func (h *itemServiceHandler) ChangeItemOwner(ctx context.Context, in *ItemOwnerRequest, out *ItemOwnerResponse) error {
-	return h.ItemServiceHandler.ChangeItemOwner(ctx, in, out)
-}
-
-func (h *itemServiceHandler) ChangeStatus(ctx context.Context, in *StatusRequest, out *StatusResponse) error {
-	return h.ItemServiceHandler.ChangeStatus(ctx, in, out)
-}
-
-func (h *itemServiceHandler) ChangeLabelTime(ctx context.Context, in *LabelTimeRequest, out *LabelTimeResponse) error {
-	return h.ItemServiceHandler.ChangeLabelTime(ctx, in, out)
-}
-
-func (h *itemServiceHandler) ChangeDebt(ctx context.Context, in *ChangeDebtRequest, out *ChangeDebtResponse) error {
-	return h.ItemServiceHandler.ChangeDebt(ctx, in, out)
-}
-
-func (h *itemServiceHandler) ContractExpire(ctx context.Context, in *ContractExpireRequest, out *ContractExpireResponse) error {
-	return h.ItemServiceHandler.ContractExpire(ctx, in, out)
-}
-
-func (h *itemServiceHandler) ModifyContract(ctx context.Context, in *ModifyContractRequest, out *ModifyContractResponse) error {
-	return h.ItemServiceHandler.ModifyContract(ctx, in, out)
-}
-
-func (h *itemServiceHandler) TerminateContract(ctx context.Context, in *TerminateContractRequest, out *TerminateContractResponse) error {
-	return h.ItemServiceHandler.TerminateContract(ctx, in, out)
-}
-
 func (h *itemServiceHandler) ImportItem(ctx context.Context, stream server.Stream) error {
 	return h.ItemServiceHandler.ImportItem(ctx, &itemServiceImportItemStream{stream})
 }
@@ -914,7 +664,7 @@ func (x *itemServiceImportItemStream) RecvMsg(m interface{}) error {
 func (x *itemServiceImportItemStream) Send(m *ImportResponse) error {
 	return x.stream.Send(m)
 }
-
+ 
 func (x *itemServiceImportItemStream) Recv() (*ImportRequest, error) {
 	m := new(ImportRequest)
 	if err := x.stream.Recv(m); err != nil {
@@ -923,17 +673,11 @@ func (x *itemServiceImportItemStream) Recv() (*ImportRequest, error) {
 	return m, nil
 }
 
-func (h *itemServiceHandler) ImportCheckItem(ctx context.Context, stream server.Stream) error {
-	return h.ItemServiceHandler.ImportCheckItem(ctx, &itemServiceImportCheckItemStream{stream})
-}
-
 type ItemService_ImportCheckItemStream interface {
 	Context() context.Context
 	SendMsg(interface{}) error
 	RecvMsg(interface{}) error
 	Close() error
-	Send(*ImportCheckResponse) error
-	Recv() (*ImportCheckRequest, error)
 }
 
 type itemServiceImportCheckItemStream struct {
@@ -954,18 +698,6 @@ func (x *itemServiceImportCheckItemStream) SendMsg(m interface{}) error {
 
 func (x *itemServiceImportCheckItemStream) RecvMsg(m interface{}) error {
 	return x.stream.Recv(m)
-}
-
-func (x *itemServiceImportCheckItemStream) Send(m *ImportCheckResponse) error {
-	return x.stream.Send(m)
-}
-
-func (x *itemServiceImportCheckItemStream) Recv() (*ImportCheckRequest, error) {
-	m := new(ImportCheckRequest)
-	if err := x.stream.Recv(m); err != nil {
-		return nil, err
-	}
-	return m, nil
 }
 
 func (h *itemServiceHandler) MappingUpload(ctx context.Context, stream server.Stream) error {

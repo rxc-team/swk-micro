@@ -21,13 +21,10 @@ const (
 	ItemProcessName             = "Item"
 	ActionFindItems             = "FindItems"
 	ActionFindItem              = "FindItem"
-	ActionFindRishiritsu        = "FindRishiritsu"
 	ActionFindKaraCount         = "FindKaraCount"
 	ActionAddItem               = "AddItem"
-	ActionMutilAddItem          = "MutilAddItem"
-	ActionImportItem            = "ImportItem"
-	ActionImportCheckItem       = "ImportCheckItem"
 	ActionMappingImport         = "MappingImport"
+	ActionImportItem            = "ImportItem"
 	ActionDeleteItem            = "DeleteItem"
 	ActionDeleteDatastoreItems  = "DeleteDatastoreItems"
 	ActionDeleteItems           = "DeleteItems"
@@ -286,6 +283,21 @@ func (i *Item) MappingUpload(ctx context.Context, stream item.ItemService_Mappin
 	}
 
 	utils.InfoLog(ActionMappingImport, utils.MsgProcessEnded)
+
+	return nil
+}
+
+// ImportItem1 批量导入台账数据
+func (i *Item) ImportItem(ctx context.Context, stream item.ItemService_ImportItemStream) error {
+	utils.InfoLog(ActionImportItem, utils.MsgProcessStarted)
+
+	err := model.ImportItem(ctx, stream)
+	if err != nil {
+		utils.ErrorLog(ActionImportItem, err.Error())
+		return err
+	}
+
+	utils.InfoLog(ActionImportItem, utils.MsgProcessEnded)
 
 	return nil
 }

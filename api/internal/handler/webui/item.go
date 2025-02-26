@@ -39,9 +39,7 @@ import (
 	"rxcsoft.cn/pit3/api/internal/system/sessionx"
 	"rxcsoft.cn/pit3/api/internal/system/wsx"
 	"rxcsoft.cn/pit3/lib/msg"
-	"rxcsoft.cn/pit3/srv/database/proto/datastore"
 	"rxcsoft.cn/pit3/srv/database/proto/item"
-	"rxcsoft.cn/pit3/srv/manage/proto/group"
 )
 
 // Item Item
@@ -264,119 +262,6 @@ func (i *Item) AddItem(c *gin.Context) {
 	c.JSON(200, httpx.Response{
 		Status:  0,
 		Message: msg.GetMsg("ja-JP", msg.Info, msg.I004, fmt.Sprintf(httpx.Temp, ItemProcessName, ActionAddItem)),
-		Data:    response,
-	})
-}
-
-// ChangeOwners 更新所有者
-// @Router /datastores/{d_id}/items [patch]
-func (i *Item) ChangeOwners(c *gin.Context) {
-	loggerx.InfoLog(c, ActionChangeOwners, loggerx.MsgProcessStarted)
-
-	itemService := item.NewItemService("database", client.DefaultClient)
-
-	var req item.OwnersRequest
-	// 从body中获取参数
-	if err := c.BindJSON(&req); err != nil {
-		httpx.GinHTTPError(c, ActionChangeOwners, err)
-		return
-	}
-	// 从path中获取参数
-	req.DatastoreId = c.Param("d_id")
-	// 从共通中获取参数
-	req.Writer = sessionx.GetAuthUserID(c)
-	req.Database = sessionx.GetUserCustomer(c)
-
-	response, err := itemService.ChangeOwners(context.TODO(), &req)
-	if err != nil {
-		httpx.GinHTTPError(c, ActionChangeOwners, err)
-		return
-	}
-	loggerx.SuccessLog(c, ActionChangeOwners, fmt.Sprintf("Datastore[%s] ChangeOwners success", req.GetDatastoreId()))
-
-	params := make(map[string]string)
-
-	groupService := group.NewGroupService("manage", client.DefaultClient)
-
-	// 获取变更前group的名称
-	var oReq group.FindGroupRequest
-	oReq.GroupId = req.GetNewOwner()
-	oReq.Database = sessionx.GetUserCustomer(c)
-	oResponse, err := groupService.FindGroup(context.TODO(), &oReq)
-	if err != nil {
-		httpx.GinHTTPError(c, ActionChangeOwners, err)
-		return
-	}
-
-	oGroupInfo := oResponse.GetGroup()
-	// 获取变更后group的名称
-	var nReq group.FindGroupRequest
-	nReq.GroupId = req.GetNewOwner()
-	nReq.Database = sessionx.GetUserCustomer(c)
-	nResponse, err := groupService.FindGroup(context.TODO(), &nReq)
-	if err != nil {
-		httpx.GinHTTPError(c, ActionChangeOwners, err)
-		return
-	}
-
-	nGroupInfo := nResponse.GetGroup()
-
-	// 获取台账信息
-	datastoreService := datastore.NewDataStoreService("database", client.DefaultClient)
-
-	var dReq datastore.DatastoreRequest
-	// 从path获取
-	dReq.DatastoreId = c.Param("d_id")
-	dReq.Database = sessionx.GetUserCustomer(c)
-
-	dResponse, err := datastoreService.FindDatastore(context.TODO(), &dReq)
-	if err != nil {
-		httpx.GinHTTPError(c, ActionFindDatastore, err)
-		return
-	}
-
-	params["user_name"] = sessionx.GetUserName(c)
-	params["group_a"] = "{{" + oGroupInfo.GetGroupName() + "}}"
-	params["group_b"] = "{{" + nGroupInfo.GetGroupName() + "}}"
-	params["datastore_name"] = "{{" + dResponse.GetDatastore().GetDatastoreName() + "}}"
-	params["api_key"] = dResponse.GetDatastore().GetApiKey()
-
-	loggerx.ProcessLog(c, ActionChangeOwners, msg.L008, params)
-
-	loggerx.InfoLog(c, ActionChangeOwners, loggerx.MsgProcessEnded)
-	c.JSON(200, httpx.Response{
-		Status:  0,
-		Message: msg.GetMsg("ja-JP", msg.Info, msg.I005, fmt.Sprintf(httpx.Temp, ItemProcessName, ActionChangeOwners)),
-		Data:    response,
-	})
-}
-
-// ResetInventoryItems 盘点台账盘点数据盘点状态重置
-// @Router /apps/{app_id}/inventory/reset [patch]
-func (i *Item) ResetInventoryItems(c *gin.Context) {
-	loggerx.InfoLog(c, ActionResetInventoryItems, loggerx.MsgProcessStarted)
-
-	itemService := item.NewItemService("database", client.DefaultClient)
-
-	var req item.ResetInventoryItemsRequest
-
-	// 从path中获取参数
-	req.AppId = c.Param("app_id")
-	// 从共通中获取参数
-	req.Writer = sessionx.GetAuthUserID(c)
-	req.Database = sessionx.GetUserCustomer(c)
-
-	response, err := itemService.ResetInventoryItems(context.TODO(), &req)
-	if err != nil {
-		httpx.GinHTTPError(c, ActionResetInventoryItems, err)
-		return
-	}
-	loggerx.SuccessLog(c, ActionResetInventoryItems, fmt.Sprintf("APP[%s] Inventory Reset success", req.GetAppId()))
-
-	loggerx.InfoLog(c, ActionResetInventoryItems, loggerx.MsgProcessEnded)
-	c.JSON(200, httpx.Response{
-		Status:  0,
-		Message: msg.GetMsg("ja-JP", msg.Info, msg.I005, fmt.Sprintf(httpx.Temp, ItemProcessName, ActionResetInventoryItems)),
 		Data:    response,
 	})
 }

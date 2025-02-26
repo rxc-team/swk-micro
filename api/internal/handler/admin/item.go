@@ -13,9 +13,7 @@ import (
 	"rxcsoft.cn/pit3/api/internal/common/loggerx"
 	"rxcsoft.cn/pit3/api/internal/system/sessionx"
 	"rxcsoft.cn/pit3/lib/msg"
-	"rxcsoft.cn/pit3/srv/database/proto/datastore"
 	"rxcsoft.cn/pit3/srv/database/proto/item"
-	"rxcsoft.cn/pit3/srv/manage/proto/group"
 )
 
 // Item Item
@@ -108,7 +106,7 @@ func (i *Item) FindItems(c *gin.Context) {
 
 // ChangeOwners 更新所有者
 // @Router /datastores/{d_id}/items [patch]
-func (i *Item) ChangeOwners(c *gin.Context) {
+/* func (i *Item) ChangeOwners(c *gin.Context) {
 	loggerx.InfoLog(c, ActionChangeOwners, loggerx.MsgProcessStarted)
 
 	itemService := item.NewItemService("database", client.DefaultClient)
@@ -186,11 +184,11 @@ func (i *Item) ChangeOwners(c *gin.Context) {
 		Message: msg.GetMsg("ja-JP", msg.Info, msg.I005, fmt.Sprintf(httpx.Temp, ItemProcessName, ActionChangeOwners)),
 		Data:    response,
 	})
-}
+} */
 
 // ResetInventoryItems 盘点台账盘点数据盘点状态重置
 // @Router /apps/{app_id}/inventory/reset [patch]
-func (i *Item) ResetInventoryItems(c *gin.Context) {
+/* func (i *Item) ResetInventoryItems(c *gin.Context) {
 	loggerx.InfoLog(c, ActionResetInventoryItems, loggerx.MsgProcessStarted)
 
 	itemService := item.NewItemService("database", client.DefaultClient)
@@ -217,3 +215,4 @@ func (i *Item) ResetInventoryItems(c *gin.Context) {
 		Data:    response,
 	})
 }
+*/

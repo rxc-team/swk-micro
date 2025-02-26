@@ -6,10 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"path"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/goinggo/mapstructure"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -4460,4 +4462,163 @@ func convertDataType(value string, dataType string) (v interface{}) {
 	default:
 		return ""
 	}
+}
+
+func getOldItem(items []*Item, itemID string) *Item {
+	var i *Item
+Loop:
+	for _, it := range items {
+		if it.ItemID == itemID {
+			i = it
+			break Loop
+		}
+	}
+	return i
+}
+
+func compare(newValue *Value, oldValue *Value) bool {
+	switch newValue.DataType {
+	case "text", "textarea", "time":
+		if newValue.Value.(string) == oldValue.Value.(string) {
+			return false
+		}
+		return true
+	case "options":
+		if newValue.Value == nil && oldValue.Value == nil {
+			return false
+		}
+
+		if newValue.Value == nil || oldValue.Value == nil {
+			return true
+		}
+
+		if newValue.Value.(string) == oldValue.Value.(string) {
+			return false
+		}
+		return true
+	case "number":
+		new := ""
+		old := ""
+		switch newValue.Value.(type) {
+		case int:
+			new = strconv.FormatFloat(float64(newValue.Value.(int)), 'f', -1, 64)
+		case int32:
+			new = strconv.FormatFloat(float64(newValue.Value.(int32)), 'f', -1, 64)
+		case int64:
+			new = strconv.FormatFloat(float64(newValue.Value.(int64)), 'f', -1, 64)
+		case float64:
+			new = strconv.FormatFloat(float64(newValue.Value.(float64)), 'f', -1, 64)
+		}
+		switch oldValue.Value.(type) {
+		case int:
+			old = strconv.FormatFloat(float64(oldValue.Value.(int)), 'f', -1, 64)
+		case int32:
+			old = strconv.FormatFloat(float64(oldValue.Value.(int32)), 'f', -1, 64)
+		case int64:
+			old = strconv.FormatFloat(float64(oldValue.Value.(int64)), 'f', -1, 64)
+		case float64:
+			old = strconv.FormatFloat(float64(oldValue.Value.(float64)), 'f', -1, 64)
+		}
+
+		if new == old {
+			return false
+		}
+		return true
+	case "date":
+		var newDate time.Time
+		var oldDate time.Time
+		switch newValue.Value.(type) {
+		case primitive.DateTime:
+			newDate = newValue.Value.(primitive.DateTime).Time()
+		case time.Time:
+			newDate = newValue.Value.(time.Time)
+		default:
+			newDate = newValue.Value.(time.Time)
+		}
+		switch oldValue.Value.(type) {
+		case primitive.DateTime:
+			oldDate = oldValue.Value.(primitive.DateTime).Time()
+		case time.Time:
+			oldDate = oldValue.Value.(time.Time)
+		default:
+			oldDate = oldValue.Value.(time.Time)
+		}
+		new := newDate.Format("2006-01-02")
+		old := oldDate.Format("2006-01-02")
+		if new == old {
+			return false
+		}
+		return true
+	case "switch":
+		new := strconv.FormatBool(newValue.Value.(bool))
+		old := strconv.FormatBool(oldValue.Value.(bool))
+		if new == old {
+			return false
+		}
+		return true
+	case "user":
+		new := newValue.Value.([]string)
+		var old []string
+		err := mapstructure.Decode(oldValue.Value, &old)
+		if err != nil {
+			return false
+		}
+		if reflect.DeepEqual(new, old) {
+			return false
+		}
+		return true
+	case "file":
+		var new []File
+		err := json.Unmarshal([]byte(newValue.Value.(string)), &new)
+		if err != nil {
+			return false
+		}
+		var old []File
+		err = json.Unmarshal([]byte(oldValue.Value.(string)), &old)
+		if err != nil {
+			return false
+		}
+
+		return !fileSliceEqual(new, old)
+	case "lookup":
+		if newValue.Value == nil && oldValue.Value == nil {
+			return false
+		}
+
+		if newValue.Value == nil || oldValue.Value == nil {
+			return true
+		}
+		if newValue.Value.(string) == oldValue.Value.(string) {
+			return false
+		}
+		return true
+	default:
+		return false
+	}
+}
+
+func fileSliceEqual(a, b []File) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	if (a == nil) != (b == nil) {
+		return false
+	}
+
+	for _, ai := range a {
+		exist := false
+
+		for _, bj := range b {
+			if ai.URL == bj.URL && ai.Name == bj.Name {
+				exist = true
+			}
+		}
+
+		if !exist {
+			return false
+		}
+	}
+
+	return true
 }

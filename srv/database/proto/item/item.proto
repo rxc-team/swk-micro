@@ -12,26 +12,12 @@ service ItemService {
 	rpc GenerateItem(JournalRequest) returns (JournalResponse) {}
 	rpc GenerateShoukyakuItem(JournalRequest) returns (JournalResponse) {}
 	rpc GeneratePayItem(JournalRequest) returns (JournalResponse) {}
-	rpc InventoryItem(InventoryItemRequest) returns (InventoryItemResponse) {}
-	rpc MutilInventoryItem(MutilInventoryItemRequest) returns (MutilInventoryItemResponse) {}
-	rpc ResetInventoryItems(ResetInventoryItemsRequest) returns (ResetInventoryItemsResponse) {}
 	rpc DeleteItem(DeleteRequest) returns (DeleteResponse) {}
 	rpc DeleteDatastoreItems(DeleteDatastoreItemsRequest) returns (DeleteResponse) {}
 	rpc DeleteItems(DeleteItemsRequest) returns (DeleteResponse) {}
 	rpc DeleteSelectItems(SelectedItemsRequest) returns ( stream SelectedItemsResponse) {}
-	rpc ChangeOwners(OwnersRequest) returns (OwnersResponse) {}
-	rpc ChangeSelectOwners(SelectOwnersRequest) returns (SelectOwnersResponse) {}
-	rpc ChangeItemOwner(ItemOwnerRequest) returns (ItemOwnerResponse) {}
-	rpc ChangeStatus(StatusRequest) returns (StatusResponse) {}
-	rpc ChangeLabelTime(LabelTimeRequest) returns (LabelTimeResponse) {}
-	rpc ChangeDebt(ChangeDebtRequest) returns (ChangeDebtResponse) {}
-	rpc ContractExpire(ContractExpireRequest) returns (ContractExpireResponse) {}
-	rpc ModifyContract(ModifyContractRequest) returns (ModifyContractResponse) {}
-	rpc TerminateContract(TerminateContractRequest) returns (TerminateContractResponse) {}
-
-	// double stream
 	rpc ImportItem(stream ImportRequest) returns (stream ImportResponse) {}
-	rpc ImportCheckItem(stream ImportCheckRequest) returns (stream ImportCheckResponse) {}
+	// double stream
 	rpc MappingUpload(stream MappingUploadRequest) returns (stream MappingUploadResponse) {}
 	// single stream
 	rpc Download(DownloadRequest) returns (stream DownloadResponse) {} 
@@ -192,8 +178,6 @@ message AttachItems {
 	string datastore_id = 2; // 所属台账
 }
 
-
-
 message ChangeData {
 	map<string, Value> query = 1; // 查询条件
 	map<string, Value> change = 2; // 更新数据
@@ -253,32 +237,6 @@ message ImportData {
 	repeated AttachItems attach_items = 2; // 附加数据
 }
 
-message ImportRequest{
-	SendStatus status = 1;
-	oneof request {
-		ImportMetaData meta = 2;
-		ImportData data = 3;
-	}
-}
-
-message ImportResponse{
-	Status status = 1;
-	ImportResult result = 2;// 返回错误结果
-}
-
-message ImportCheckRequest{
-	SendStatus status = 1;
-	oneof request {
-		ImportMetaData meta = 2;
-		ChangeData data = 3;
-	}
-}
-
-message ImportCheckResponse{
-	Status status = 1;
-	ImportResult result = 2;// 返回错误结果
-}
-
 
 // 行错误
 message Error {
@@ -297,41 +255,6 @@ message ImportResult {
  	repeated Error errors =3; // 错误
 }
 
-message InventoryItemRequest{
-	string item_id =1; // 盘点数据ID
-	string app_id = 7; // 所属APP
-	string datastore_id =2;  // 盘点的台账
-	string image =3; // 盘点的图片
-	string check_field =8; // 盘点的图片
-	string check_type =5; // 盘点种类
-	string writer = 4; // 盘点者
-	string database = 6; // 数据库
-}
-
-message InventoryItemResponse{
-}
-
-message ResetInventoryItemsRequest{
-	string app_id = 1; // 所属APP
-	string writer = 2; // 重置盘点者
-	string database = 3; // 数据库
-}
-
-message ResetInventoryItemsResponse{
-}
-
-message MutilInventoryItemRequest{
-	repeated string item_id_list = 1; // 盘点数据ID集合
-	string datastore_id = 2;  // 盘点的台账
-	string check_type = 4;  // 盘点的台账
-	string writer = 3; // 盘点者
-	string app_id = 6; // 所属APP
-	string database = 5; // 数据库
-}
-
-message MutilInventoryItemResponse{
-}
-
 // 确定记录
 message JournalRequest{
 	string datastore_id = 1; // 所属台账
@@ -341,59 +264,6 @@ message JournalRequest{
 }
 
 message JournalResponse{
-}
-
-// 更新记录
-message StatusRequest{
-	string app_id = 1; // 所属APP
-	string item_id = 2; // 数据ID
-	string datastore_id = 3; // 所属台账
-	string status = 4; //  当前数据的状态（1默认状态，2表示审批中，不能更改数据）
-	string writer = 5; // 更新者
-	string database = 6; // 数据库
-}
-
-message StatusResponse{
-}
-
-// 更新记录
-message OwnersRequest{
-	string datastore_id =1; // 所属台账
-	string old_owner = 2; // 原所有者
-	string new_owner = 3; // 新所有者
-	string writer = 4; // 更新者
-	string database = 5; // 数据库
-}
-
-message OwnersResponse{
-}
-
-// 更新记录
-message SelectOwnersRequest{
-	string app_id = 1; // 所属APP
-	string datastore_id = 2; // 所属台账
-	repeated Condition condition_list = 3; // 字段条件
-	string condition_type = 4; // 字段条件(or或者and)
-	string owner = 5; // 新所有者
-	string writer = 6; // 更新者
-	string database = 7; // 数据库
-	repeated string old_owners =8; // 原所有者
-}
-
-message SelectOwnersResponse{
-}
-
-// 更新单条记录所属组织
-message ItemOwnerRequest{
-	string app_id = 1; // 所属APP
-	string datastore_id = 2; // 所属台账
-	string item_id = 3; // 数据ID
-	string owner = 4; // 新所有者
-	string writer = 5; // 更新者
-	string database = 6; // 数据库
-}
-
-message ItemOwnerResponse{
 }
 
 // 删除数据记录
@@ -445,76 +315,15 @@ message SelectedItemsResponse{
 	string delete_url = 1;
 }
 
-// 修改标签出力时间
-message LabelTimeRequest{
-	repeated string item_id_list =1; // 数据ID集合
-	string datastore_id = 2; // 台账ID
-	string database = 3; // 数据库
+message ImportRequest{
+	SendStatus status = 1;
+	oneof request {
+		ImportMetaData meta = 2;
+		ImportData data = 3;
+	}
 }
-
-message LabelTimeResponse{
-}
-
-// 债务变更
-message ChangeDebtRequest{
-	string app_id = 6; // 所属APP
-	string item_id =1; // 数据ID
-	string datastore_id =2; // 所属台账
-	map<string, Value> items = 3; // 字段对应的值
-	repeated string owners = 4; // 更新者权限
-	string writer = 5; // 更新者
-	string database = 7; // 数据库
-	string lang_cd = 8; // 语言
-	string domain = 9; // domain
-}
-
-message ChangeDebtResponse{
-}
-
-// 契约满了
-message ContractExpireRequest{
-	string app_id = 1; // 所属APP
-	string item_id =2; // 数据ID
-	string datastore_id =3; // 所属台账
-	string writer = 4; // 更新者
-	map<string, Value> items = 6; // 字段对应的值
-	repeated string owners = 7; // 更新者权限
-	string database = 5; // 数据库
-	string lang_cd = 8; // 语言
-	string domain = 9; // domain
-}
-
-message ContractExpireResponse{
-}
-
-// 契约情报变更
-message ModifyContractRequest{
-	string app_id = 6; // 所属APP
-	string item_id =1; // 数据ID
-	string datastore_id =2; // 所属台账
-	map<string, Value> items = 3; // 字段对应的值
-	repeated string owners = 4; // 更新者权限
-	string writer = 5; // 更新者
-	string database = 7; // 数据库
-	string lang_cd = 8; // 语言
-	string domain = 9; // domain
-}
-
-message ModifyContractResponse{
-}
-
-// 中途解约
-message TerminateContractRequest{
-	string app_id = 6; // 所属APP
-	string item_id =1; // 数据ID
-	string datastore_id =2; // 所属台账
-	map<string, Value> items = 3; // 字段对应的值
-	repeated string owners = 4; // 更新者权限
-	string writer = 5; // 更新者
-	string database = 7; // 数据库
-	string lang_cd = 8; // 语言
-	string domain = 9; // domain
-}
-
-message TerminateContractResponse{
+ 
+message ImportResponse{
+	Status status = 1;
+	ImportResult result = 2;// 返回错误结果
 }
