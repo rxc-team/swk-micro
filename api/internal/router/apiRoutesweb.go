@@ -144,32 +144,6 @@ func initAuthRouterWeb(router *gin.Engine) {
 		groupRoute.GET("/groups", group.FindGroups)
 	}
 
-	// file
-	file := new(webui.File)
-	{
-		fileRoute := v1.Group("/file")
-		// 文件上传
-		fileRoute.POST("/folders/:fo_id/upload", file.Upload)
-		// 台账数据中的文件字段上传数据
-		fileRoute.POST("/item/upload", file.ItemUpload)
-		// 头像文件上传
-		fileRoute.POST("/header/upload", file.HeaderFileUpload)
-		// 删除头像或LOGO文件
-		fileRoute.DELETE("/public/header/file", file.DeletePublicHeaderFile)
-		// 删除文件类型字段数据的文件
-		fileRoute.DELETE("/public/data/file", file.DeletePublicDataFile)
-		// 删除多个文件类型字段数据的文件
-		fileRoute.DELETE("/public/data/files", file.DeletePublicDataFiles)
-		// 下载
-		fileRoute.GET("/download/folders/:fo_id/files/:file_id", file.Download)
-		// 查找多个文件
-		fileRoute.GET("/folders/:fo_id/files", file.FindFiles)
-		// 硬删除单个文件
-		fileRoute.DELETE("/folders/:fo_id/files/:file_id", file.HardDeleteFile)
-		// 拷贝文件类型字段单个数据文件
-		fileRoute.GET("/public/data/file/copy", file.CopyPublicDataFile)
-	}
-
 	// Validation
 	validation := new(webui.Validation)
 	{
