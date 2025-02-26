@@ -19,7 +19,6 @@ import (
 	"rxcsoft.cn/pit3/srv/database/proto/field"
 	"rxcsoft.cn/pit3/srv/database/proto/option"
 	"rxcsoft.cn/pit3/srv/database/proto/print"
-	"rxcsoft.cn/pit3/srv/database/proto/query"
 	"rxcsoft.cn/pit3/srv/global/proto/language"
 	"rxcsoft.cn/pit3/srv/manage/proto/permission"
 	"rxcsoft.cn/pit3/srv/manage/proto/role"
@@ -508,69 +507,6 @@ func CopyApp(params CopyParams) error {
 						Database: params.DB,
 					}, params.UserID)
 					return
-				}
-			}
-			// 恢复台账快捷方式
-			queryService := query.NewQueryService("database", client.DefaultClient)
-			var reqQuery query.FindQueriesRequest
-			// 取到快捷方式的初始值
-			reqQuery.DatastoreId = ds.GetDatastoreId()
-			reqQuery.AppId = params.AppID
-			reqQuery.Database = params.DB
-			resQuery, err := queryService.FindQueries(context.TODO(), &reqQuery, opss)
-			if err != nil {
-				er := merrors.Parse(err.Error())
-				if er.GetDetail() != mongo.ErrNoDocuments.Error() {
-					loggerx.ErrorLog("copy", err.Error())
-					path := filex.WriteAndSaveFile(params.Domain, params.AppID, []string{err.Error()})
-					// 发送消息 获取数据失败，终止任务
-					jobx.ModifyTask(task.ModifyRequest{
-						JobId:       params.JobID,
-						Message:     err.Error(),
-						CurrentStep: "restore",
-						EndTime:     time.Now().UTC().Format("2006-01-02 15:04:05"),
-						ErrorFile: &task.File{
-							Url:  path.MediaLink,
-							Name: path.Name,
-						},
-						Database: params.DB,
-					}, params.UserID)
-					return
-				}
-			}
-			// 恢复快捷方式
-			if len(resQuery.GetQueryList()) != 0 {
-				var reqQue query.AddRequest
-				reqQue.Database = params.DB
-				reqQue.DatastoreId = dsRes.GetDatastoreId()
-				for _, que := range resQuery.GetQueryList() {
-					queryService := query.NewQueryService("database", client.DefaultClient)
-					reqQue.Writer = que.GetCreatedBy()
-					reqQue.UserId = que.GetUserId()
-					reqQue.AppId = params.CurrentAppID
-					reqQue.ConditionType = que.GetConditionType()
-					reqQue.Conditions = que.GetConditions()
-					reqQue.Description = que.GetDescription()
-					reqQue.Fields = que.GetFields()
-					reqQue.QueryName = que.GetQueryName()
-					_, err := queryService.AddQuery(context.TODO(), &reqQue, opss)
-					if err != nil {
-						loggerx.ErrorLog("copy", err.Error())
-						path := filex.WriteAndSaveFile(params.Domain, params.AppID, []string{err.Error()})
-						// 发送消息 获取数据失败，终止任务
-						jobx.ModifyTask(task.ModifyRequest{
-							JobId:       params.JobID,
-							Message:     err.Error(),
-							CurrentStep: "restore",
-							EndTime:     time.Now().UTC().Format("2006-01-02 15:04:05"),
-							ErrorFile: &task.File{
-								Url:  path.MediaLink,
-								Name: path.Name,
-							},
-							Database: params.DB,
-						}, params.UserID)
-						return
-					}
 				}
 			}
 		}

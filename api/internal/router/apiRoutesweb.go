@@ -170,20 +170,6 @@ func initAuthRouterWeb(router *gin.Engine) {
 		fileRoute.GET("/public/data/file/copy", file.CopyPublicDataFile)
 	}
 
-	// query
-	query := new(webui.Query)
-	{
-		queryRoute := v1.Group("/query")
-		// 查找多个query
-		queryRoute.GET("/queries", query.FindQueries)
-		// 查找单个query
-		queryRoute.GET("/queries/:q_id", query.FindQuery)
-		// 添加单个query
-		queryRoute.POST("/queries", query.AddQuery)
-		// 删除单个query
-		queryRoute.DELETE("/queries/:q_id", query.DeleteQuery)
-	}
-
 	// Validation
 	validation := new(webui.Validation)
 	{
@@ -193,8 +179,6 @@ func initAuthRouterWeb(router *gin.Engine) {
 		v1.POST("/validation/datastores/:id/items/unique", validation.ItemUniqueValidation)
 		// 验证特殊字符
 		v1.POST("/validation/specialchar", validation.ValidSpecialChar)
-		// 验证快捷方式名称唯一性
-		v1.POST("/validation/queryname", validation.QueryNameDuplicated)
 		// 验证文件名称唯一性
 		v1.POST("/validation/filename", validation.FileNameDuplicated)
 		// 验证问题标题唯一性

@@ -14,7 +14,6 @@ import (
 	"rxcsoft.cn/pit3/api/internal/system/sessionx"
 	"rxcsoft.cn/pit3/lib/msg"
 	"rxcsoft.cn/pit3/srv/database/proto/item"
-	"rxcsoft.cn/pit3/srv/database/proto/query"
 	"rxcsoft.cn/pit3/srv/global/proto/question"
 	"rxcsoft.cn/pit3/srv/manage/proto/app"
 	"rxcsoft.cn/pit3/srv/manage/proto/user"
@@ -154,55 +153,6 @@ func (a *Validation) ValidSpecialChar(c *gin.Context) {
 		Status:  0,
 		Message: msg.GetMsg("ja-JP", msg.Info, msg.I004, fmt.Sprintf(httpx.Temp, ValidProcessName, ActionValidSpecial)),
 		Data:    special,
-	})
-}
-
-// UniqueValidation 验证快捷方式名称唯一性
-// @Router /validation/queryname [post]
-func (a *Validation) QueryNameDuplicated(c *gin.Context) {
-	loggerx.InfoLog(c, ActionQueryNameDuplicated, loggerx.MsgProcessStarted)
-
-	type ReqParam struct {
-		Name string `json:"name"`
-	}
-	var valid bool = true
-	var param ReqParam
-	err := c.BindJSON(&param)
-	if err != nil {
-		httpx.GinHTTPError(c, ActionQueryNameDuplicated, err)
-		return
-	}
-
-	queryService := query.NewQueryService("database", client.DefaultClient)
-
-	var req query.FindQueriesRequest
-	// 从共通中获取参数
-	req.AppId = sessionx.GetCurrentApp(c)
-	req.UserId = sessionx.GetAuthUserID(c)
-	req.Database = sessionx.GetUserCustomer(c)
-	response, err := queryService.FindQueries(context.TODO(), &req)
-	if err != nil {
-		c.JSON(200, httpx.Response{
-			Status:  0,
-			Message: msg.GetMsg("ja-JP", msg.Info, msg.I003, fmt.Sprintf(httpx.Temp, ValidationProcessName, ActionQueryNameDuplicated)),
-			Data:    valid,
-		})
-		return
-	}
-	if len(response.GetQueryList()) > 0 {
-		for _, query := range response.GetQueryList() {
-			if query.QueryName == param.Name {
-				valid = false
-				break
-			}
-		}
-	}
-
-	loggerx.InfoLog(c, ActionQueryNameDuplicated, loggerx.MsgProcessEnded)
-	c.JSON(200, httpx.Response{
-		Status:  0,
-		Message: msg.GetMsg("ja-JP", msg.Info, msg.I003, fmt.Sprintf(httpx.Temp, ValidationProcessName, ActionQueryNameDuplicated)),
-		Data:    valid,
 	})
 }
 

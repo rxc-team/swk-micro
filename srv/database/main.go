@@ -20,7 +20,6 @@ import (
 	"rxcsoft.cn/pit3/srv/database/proto/item"
 	"rxcsoft.cn/pit3/srv/database/proto/option"
 	"rxcsoft.cn/pit3/srv/database/proto/print"
-	"rxcsoft.cn/pit3/srv/database/proto/query"
 	"rxcsoft.cn/pit3/srv/database/server"
 	myLogger "rxcsoft.cn/utils/logger"
 	utilsServer "rxcsoft.cn/utils/server"
@@ -62,7 +61,6 @@ func main() {
 	field.RegisterFieldServiceHandler(service.Server(), new(handler.Field))
 	print.RegisterPrintServiceHandler(service.Server(), new(handler.Print))
 	option.RegisterOptionServiceHandler(service.Server(), new(handler.Option))
-	query.RegisterQueryServiceHandler(service.Server(), new(handler.Query))
 	feed.RegisterImportServiceHandler(service.Server(), new(handler.Import))
 	approve.RegisterApproveServiceHandler(service.Server(), new(av.Approve))
 	copy.RegisterCopyServiceHandler(service.Server(), new(handler.Copy))

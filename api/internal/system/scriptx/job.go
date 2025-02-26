@@ -36,7 +36,7 @@ func (j *ScriptJob) ExecJob() {
 
 func Init() {
 	var list []script.AddRequest
-	var scriptIDs []string
+	/* var scriptIDs []string */
 
 	// 2021-09-29 追加了用户权限的相关后台验证，需要追加用户与角色关系
 	list = append(list, script.AddRequest{
@@ -446,14 +446,14 @@ func Init() {
 	})
 
 	// 去除重复数据并生成唯一索引
-	for _, script := range list {
+	/* for _, script := range list {
 		scriptIDs = append(scriptIDs, script.GetScriptId())
 	}
 	err = deleteDuplicateAndAddIndex(scriptIDs)
 	if err != nil {
 		loggerx.ErrorLog("deleteDuplicateAndAddIndex", err.Error())
 		return
-	}
+	} */
 
 	// 执行命令
 	for _, req := range list {
