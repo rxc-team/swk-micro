@@ -62,7 +62,7 @@ func (f *Task) FindTasks(c *gin.Context) {
 	})
 }
 
-//FindTask 获取任务
+// FindTask 获取任务
 // @Router /tasks/{j_id} [get]
 func (f *Task) FindTask(c *gin.Context) {
 	loggerx.InfoLog(c, ActionFindTask, loggerx.MsgProcessStarted)
@@ -86,7 +86,7 @@ func (f *Task) FindTask(c *gin.Context) {
 	})
 }
 
-//AddTask 添加任务
+// AddTask 添加任务
 // @Router /tasks [post]
 func (f *Task) AddTask(c *gin.Context) {
 	loggerx.InfoLog(c, ActionAddTask, loggerx.MsgProcessStarted)
