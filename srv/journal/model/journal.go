@@ -78,6 +78,11 @@ type (
 		ElseValue         string            `json:"else_value" bson:"else_value"`
 		ElseType          string            `json:"else_type" bson:"else_type"`
 		ElseValueDataType string            `json:"else_value_data_type" bson:"else_value_data_type"`
+		KoteiType         string            `json:"kotei_type" bson:"kotei_type"`
+		KoteiKetasu       int64             `json:"kotei_ketasu" bson:"kotei_ketasu"`
+		KoteiPosition     string            `json:"kotei_position" bson:"kotei_position"`
+		KoteiChar         string            `json:"kotei_char" bson:"kotei_char"`
+		CustomFieldId     string            `json:"custom_field_id" bson:"custom_field_id"`
 	}
 
 	FieldCondition struct {
@@ -299,6 +304,11 @@ func (f *FieldRule) ToProto() *journal.FieldRule {
 		ElseValue:         f.ElseValue,
 		ElseType:          f.ElseType,
 		ElseValueDataType: f.ElseValueDataType,
+		KoteiType:         f.KoteiType,
+		KoteiKetasu:       f.KoteiKetasu,
+		KoteiPosition:     f.KoteiPosition,
+		KoteiChar:         f.KoteiChar,
+		CustomFieldId:     f.CustomFieldId,
 	}
 }
 

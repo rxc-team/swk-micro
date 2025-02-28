@@ -237,6 +237,11 @@ func (f *Journal) AddDownloadSetting(ctx context.Context, req *journal.AddDownlo
 			ElseValue:         rule.ElseValue,
 			ElseType:          rule.ElseType,
 			ElseValueDataType: rule.ElseValueDataType,
+			KoteiType:         rule.KoteiType,
+			KoteiKetasu:       rule.KoteiKetasu,
+			KoteiPosition:     rule.KoteiPosition,
+			KoteiChar:         rule.KoteiChar,
+			CustomFieldId:     rule.CustomFieldId,
 		})
 	}
 

@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kataras/i18n"
@@ -795,18 +796,26 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 		for _, rule := range downloadInfo.FieldRule {
 			if rule.SettingMethod == "1" {
 				fields = append(fields, &typesx.DownloadField{
-					FieldName: rule.DownloadName,
-					FieldType: "text",
-					FieldId:   "#",
-					Prefix:    rule.EditContent,
+					FieldName:     rule.DownloadName,
+					FieldType:     "text",
+					FieldId:       "#",
+					Prefix:        rule.EditContent,
+					KoteiType:     rule.KoteiType,
+					KoteiKetasu:   rule.KoteiKetasu,
+					KoteiPosition: rule.KoteiPosition,
+					KoteiChar:     rule.KoteiChar,
 				})
 			} else {
 				fields = append(fields, &typesx.DownloadField{
-					FieldName: rule.DownloadName,
-					FieldType: rule.FieldType,
-					FieldId:   rule.FieldId,
-					Prefix:    "",
-					Format:    rule.Format,
+					FieldName:     rule.DownloadName,
+					FieldType:     rule.FieldType,
+					FieldId:       rule.FieldId,
+					Prefix:        "",
+					Format:        rule.Format,
+					KoteiType:     rule.KoteiType,
+					KoteiKetasu:   rule.KoteiKetasu,
+					KoteiPosition: rule.KoteiPosition,
+					KoteiChar:     rule.KoteiChar,
 				})
 			}
 		}
@@ -1016,7 +1025,11 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 				for _, fl := range fields {
 					// 使用默认的值的情况
 					if fl.FieldId == "#" {
-						itemData = append(itemData, fl.Prefix)
+						var paddingPrefix string
+						if fl.KoteiType == "kotei" {
+							paddingPrefix = paddingStr(fl.Prefix, int(fl.KoteiKetasu), fl.KoteiPosition, fl.KoteiChar)
+						}
+						itemData = append(itemData, paddingPrefix)
 					} else {
 						itemMap := dt.GetItems()
 						if value, ok := itemMap[fl.FieldId]; ok {
@@ -1037,11 +1050,17 @@ func (f *Journal) SwkDownload(c *gin.Context) {
 								} else {
 									result = value.GetValue()
 								}
+								if fl.KoteiType == "kotei" {
+									result = paddingStr(result, int(fl.KoteiKetasu), fl.KoteiPosition, fl.KoteiChar)
+								}
 							case "number":
 								if len(fl.Format) > 0 {
 									result = formatNumber(value.GetValue(), fl.Format)
 								} else {
 									result = value.GetValue()
+								}
+								if fl.KoteiType == "kotei" {
+									result = paddingStr(result, int(fl.KoteiKetasu), fl.KoteiPosition, fl.KoteiChar)
 								}
 							case "date":
 								if value.GetValue() == "0001-01-01" {
@@ -1490,6 +1509,12 @@ func (f *Journal) DeleteConditionTemplate(c *gin.Context) {
 
 // 数字类型格式转换
 func formatNumber(numStr string, format string) string {
+	// 如果不是数字不进行转换
+	_, err := strconv.ParseFloat(numStr, 64)
+	if err != nil {
+		return numStr
+	}
+
 	// 分割整数部分和小数部分
 	parts := strings.Split(numStr, ".")
 	integerPart := parts[0]
@@ -1536,4 +1561,41 @@ func formatNumber(numStr string, format string) string {
 		return formattedInteger + "." + decimalPart
 	}
 	return formattedInteger
+}
+
+// 字符串填充
+func paddingStr(pStr string, ketasu int, position string, pChar string) string {
+	var paddedStr string
+	var paddingChar string
+	switch pChar {
+	case "zero":
+		paddingChar = "0"
+	case "halfSpace":
+		paddingChar = " "
+	}
+	// 计算字节数
+	byteCount := 0
+	runes := []rune(pStr)
+	for i, r := range runes {
+		byteCount += utf8.RuneLen(r) // 累积每个字符占用的字节数
+		if byteCount > ketasu {
+			fmt.Println(byteCount)
+			runes = runes[:i] // 如果字节数超过了限制，截断
+			break             // 中断后续字符解析
+		}
+	}
+	strLength := len(string(runes))
+	if strLength == ketasu {
+		paddedStr = string(runes)
+	} else if strLength == 0 {
+		paddedStr = strings.Repeat(paddingChar, ketasu)
+	} else {
+		if position == "left" {
+			paddedStr = strings.Repeat(paddingChar, ketasu-strLength) + string(runes)
+		} else if position == "right" {
+			paddedStr = string(runes) + strings.Repeat(paddingChar, ketasu-strLength)
+		}
+	}
+
+	return paddedStr
 }

@@ -12,6 +12,10 @@ type DownloadField struct {
 	Precision     int64  `json:"precision"`
 	Prefix        string `json:"prefix"`
 	Format        string `json:"fromat"`
+	KoteiType     string `json:"kotei_type"`
+	KoteiKetasu   int64  `json:"kotei_ketasu"`
+	KoteiPosition string `json:"kotei_position"`
+	KoteiChar     string `json:"kotei_char"`
 }
 
 // FieldList 字段排序
