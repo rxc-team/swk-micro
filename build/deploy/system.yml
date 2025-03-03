@@ -31,7 +31,7 @@ spec:
             value: {{ ENV }}
           - name: TZ
             value: Asia/Tokyo
-          image: us-docker.pkg.dev/{{ PROJECT_ID }}/gcr.io//system:{{ IMAGE }}
+          image: us-docker.pkg.dev/{{ PROJECT_ID }}/gcr.io/system:{{ IMAGE }}
           imagePullPolicy: Always
           ports:
           - containerPort: 8080
