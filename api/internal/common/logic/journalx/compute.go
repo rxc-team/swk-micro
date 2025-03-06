@@ -381,11 +381,6 @@ func getSubjectMap(db, appID, datastoreID string, accesskeys []string) (asSubMap
 					if len(sub.SubjectName) == 0 {
 						if val, ok := def[sub.SubjectKey]; ok && len(val) > 0 {
 							subMap[sub.SubjectKey] = val
-						} else {
-							ch <- AssetsSubject{
-								Error: fmt.Errorf("default subject not found value, key:[%s], defaultName:[%s]", sub.SubjectKey, sub.DefaultName),
-							}
-							return
 						}
 					} else {
 						subMap[sub.SubjectKey] = sub.SubjectName
@@ -852,28 +847,28 @@ func buildObtainData(p InsertParam) (e error) {
 		index := 1
 		for count, obtainItem := range itemResp.GetItems() {
 			var pattern *journal.Pattern
-			if obtainItem.Items["setteikubun"].GetValue() == "固定資産取得" {
+			if obtainItem.Items["setteikubunname"].GetValue() == "固定資産取得" {
 				if p.journalType == "primary" {
-					pattern = getPattern("04001", p.jouDataMap["04"])
+					pattern = getPattern("01010", p.jouDataMap["01"])
 				} else {
-					pattern = getPattern("040001", p.jouDataMap["04"])
+					pattern = getPattern("010010", p.jouDataMap["01"])
 				}
 			}
-			if obtainItem.Items["setteikubun"].GetValue() == "固定資産移動" {
+			if obtainItem.Items["setteikubunname"].GetValue() == "固定資産移動" {
 				if p.journalType == "primary" {
-					pattern = getPattern("05001", p.jouDataMap["05"])
+					pattern = getPattern("01011", p.jouDataMap["01"])
 				} else {
-					pattern = getPattern("050001", p.jouDataMap["05"])
+					pattern = getPattern("010011", p.jouDataMap["01"])
 				}
 			}
-			if obtainItem.Items["setteikubun"].GetValue() == "固定資産除却" {
+			if obtainItem.Items["setteikubunname"].GetValue() == "固定資産除却" {
 				if p.journalType == "primary" {
-					pattern = getPattern("06001", p.jouDataMap["06"])
+					pattern = getPattern("01012", p.jouDataMap["01"])
 				} else {
-					pattern = getPattern("060001", p.jouDataMap["06"])
+					pattern = getPattern("010012", p.jouDataMap["01"])
 				}
 			}
-			if obtainItem.Items["setteikubun"].GetValue() == "固定資産売却" {
+			if obtainItem.Items["setteikubunname"].GetValue() == "固定資産売却" {
 				baikyakuchoubokagakuValue, err := strconv.ParseFloat(obtainItem.Items["baikyakuchoubokagaku"].GetValue(), 64)
 				if err != nil {
 					loggerx.ErrorLog("getObtainData", err.Error())
@@ -888,15 +883,15 @@ func buildObtainData(p InsertParam) (e error) {
 
 				if baikyakukagakuValue-baikyakuchoubokagakuValue < 0 {
 					if p.journalType == "primary" {
-						pattern = getPattern("07001", p.jouDataMap["07"])
+						pattern = getPattern("01013", p.jouDataMap["01"])
 					} else {
-						pattern = getPattern("070001", p.jouDataMap["07"])
+						pattern = getPattern("010013", p.jouDataMap["01"])
 					}
 				} else {
 					if p.journalType == "primary" {
-						pattern = getPattern("07002", p.jouDataMap["07"])
+						pattern = getPattern("01014", p.jouDataMap["01"])
 					} else {
-						pattern = getPattern("070002", p.jouDataMap["07"])
+						pattern = getPattern("010014", p.jouDataMap["01"])
 					}
 				}
 			}
