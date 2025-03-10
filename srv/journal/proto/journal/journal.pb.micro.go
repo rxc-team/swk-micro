@@ -54,6 +54,8 @@ type JournalService interface {
 	FindConditionTemplates(ctx context.Context, in *FindConditionTemplatesRequest, opts ...client.CallOption) (*FindConditionTemplatesResponse, error)
 	AddConditionTemplate(ctx context.Context, in *AddConditionTemplateRequest, opts ...client.CallOption) (*AddConditionTemplateResponse, error)
 	DeleteConditionTemplate(ctx context.Context, in *DeleteConditionTemplateRequest, opts ...client.CallOption) (*DeleteConditionTemplateResponse, error)
+	SearchSelectJournals(ctx context.Context, in *SearchSelectJournalsRequest, opts ...client.CallOption) (*JournalsResponse, error)
+	DeleteJournalPattern(ctx context.Context, in *DeleteJournalPatternRequest, opts ...client.CallOption) (*DeleteJournalPatternResponse, error)
 }
 
 type journalService struct {
@@ -188,6 +190,26 @@ func (c *journalService) DeleteConditionTemplate(ctx context.Context, in *Delete
 	return out, nil
 }
 
+func (c *journalService) SearchSelectJournals(ctx context.Context, in *SearchSelectJournalsRequest, opts ...client.CallOption) (*JournalsResponse, error) {
+	req := c.c.NewRequest(c.name, "JournalService.SearchSelectJournals", in)
+	out := new(JournalsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *journalService) DeleteJournalPattern(ctx context.Context, in *DeleteJournalPatternRequest, opts ...client.CallOption) (*DeleteJournalPatternResponse, error) {
+	req := c.c.NewRequest(c.name, "JournalService.DeleteJournalPattern", in)
+	out := new(DeleteJournalPatternResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for JournalService service
 
 type JournalServiceHandler interface {
@@ -203,6 +225,8 @@ type JournalServiceHandler interface {
 	FindConditionTemplates(context.Context, *FindConditionTemplatesRequest, *FindConditionTemplatesResponse) error
 	AddConditionTemplate(context.Context, *AddConditionTemplateRequest, *AddConditionTemplateResponse) error
 	DeleteConditionTemplate(context.Context, *DeleteConditionTemplateRequest, *DeleteConditionTemplateResponse) error
+	SearchSelectJournals(context.Context, *SearchSelectJournalsRequest, *JournalsResponse) error
+	DeleteJournalPattern(context.Context, *DeleteJournalPatternRequest, *DeleteJournalPatternResponse) error
 }
 
 func RegisterJournalServiceHandler(s server.Server, hdlr JournalServiceHandler, opts ...server.HandlerOption) error {
@@ -219,6 +243,8 @@ func RegisterJournalServiceHandler(s server.Server, hdlr JournalServiceHandler, 
 		FindConditionTemplates(ctx context.Context, in *FindConditionTemplatesRequest, out *FindConditionTemplatesResponse) error
 		AddConditionTemplate(ctx context.Context, in *AddConditionTemplateRequest, out *AddConditionTemplateResponse) error
 		DeleteConditionTemplate(ctx context.Context, in *DeleteConditionTemplateRequest, out *DeleteConditionTemplateResponse) error
+		SearchSelectJournals(ctx context.Context, in *SearchSelectJournalsRequest, out *JournalsResponse) error
+		DeleteJournalPattern(ctx context.Context, in *DeleteJournalPatternRequest, out *DeleteJournalPatternResponse) error
 	}
 	type JournalService struct {
 		journalService
@@ -277,4 +303,12 @@ func (h *journalServiceHandler) AddConditionTemplate(ctx context.Context, in *Ad
 
 func (h *journalServiceHandler) DeleteConditionTemplate(ctx context.Context, in *DeleteConditionTemplateRequest, out *DeleteConditionTemplateResponse) error {
 	return h.JournalServiceHandler.DeleteConditionTemplate(ctx, in, out)
+}
+
+func (h *journalServiceHandler) SearchSelectJournals(ctx context.Context, in *SearchSelectJournalsRequest, out *JournalsResponse) error {
+	return h.JournalServiceHandler.SearchSelectJournals(ctx, in, out)
+}
+
+func (h *journalServiceHandler) DeleteJournalPattern(ctx context.Context, in *DeleteJournalPatternRequest, out *DeleteJournalPatternResponse) error {
+	return h.JournalServiceHandler.DeleteJournalPattern(ctx, in, out)
 }

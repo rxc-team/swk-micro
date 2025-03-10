@@ -91,6 +91,10 @@ func initAuthRouterWeb(router *gin.Engine) {
 		journalRoute.POST("/add/condition/template", journal.AddConditionTemplate)
 		// 删除自定义条件模板
 		journalRoute.DELETE("/delete/condition/template", journal.DeleteConditionTemplate)
+		// 检索用户分录
+		journalRoute.POST("/search/select/journals", journal.SearchSelectJournals)
+		// 删除单条用户分录pattern
+		journalRoute.DELETE("/delete/journal/pattern", journal.DeleteJournalPattern)
 	}
 
 	subject := new(webui.Subject)

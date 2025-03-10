@@ -59,6 +59,8 @@ const (
 	ActionFindConditionTemplates  = "FindConditionTemplates"
 	ActionAddConditionTemplate    = "AddConditionTemplate"
 	ActionDeleteConditionTemplate = "DeleteConditionTemplate"
+	ActionSearchSelectJournals    = "SearchSelectJournals"
+	ActionDeleteJournalPattern    = "DeleteJournalPattern"
 )
 
 // FindJournals 获取当前用户的所有分录
@@ -1579,7 +1581,6 @@ func paddingStr(pStr string, ketasu int, position string, pChar string) string {
 	for i, r := range runes {
 		byteCount += utf8.RuneLen(r) // 累积每个字符占用的字节数
 		if byteCount > ketasu {
-			fmt.Println(byteCount)
 			runes = runes[:i] // 如果字节数超过了限制，截断
 			break             // 中断后续字符解析
 		}
@@ -1598,4 +1599,68 @@ func paddingStr(pStr string, ketasu int, position string, pChar string) string {
 	}
 
 	return paddedStr
+}
+
+// SearchSelectJournals 检索用户分录
+// @Router /search/select/journals[post]
+func (f *Journal) SearchSelectJournals(c *gin.Context) {
+	loggerx.InfoLog(c, ActionSearchSelectJournals, loggerx.MsgProcessStarted)
+
+	journalService := journal.NewJournalService("journal", client.DefaultClient)
+
+	var req journal.SearchSelectJournalsRequest
+	req.Database = sessionx.GetUserCustomer(c)
+	req.AppId = sessionx.GetCurrentApp(c)
+
+	// 从body中获取
+	if err := c.BindJSON(&req); err != nil {
+		httpx.GinHTTPError(c, ActionSearchSelectJournals, err)
+		return
+	}
+
+	response, err := journalService.SearchSelectJournals(context.TODO(), &req)
+	if err != nil {
+		httpx.GinHTTPError(c, ActionSearchSelectJournals, err)
+		return
+	}
+
+	loggerx.InfoLog(c, ActionSearchSelectJournals, loggerx.MsgProcessEnded)
+	c.JSON(200, httpx.Response{
+		Status:  0,
+		Message: msg.GetMsg("ja-JP", msg.Info, msg.I003, fmt.Sprintf(httpx.Temp, JournalProcessName, ActionSearchSelectJournals)),
+		Data:    response.GetJournals(),
+	})
+}
+
+// DeleteJournalPattern 删除单条用户分录pattern
+// @Router /delete/select/journal[delete]
+func (f *Journal) DeleteJournalPattern(c *gin.Context) {
+	loggerx.InfoLog(c, ActionDeleteJournalPattern, loggerx.MsgProcessStarted)
+
+	journalService := journal.NewJournalService("journal", client.DefaultClient)
+
+	var req journal.DeleteJournalPatternRequest
+
+	// 从URL中获取pattern_id 绑定到req
+	patternId := c.Query("pattern_id")
+	req.PatternId = patternId
+
+	// 从共通获取
+	req.AppId = sessionx.GetCurrentApp(c)
+	req.Database = sessionx.GetUserCustomer(c)
+
+	response, err := journalService.DeleteJournalPattern(context.TODO(), &req)
+	if err != nil {
+		httpx.GinHTTPError(c, ActionDeleteJournalPattern, err)
+
+		return
+	}
+	loggerx.SuccessLog(c, ActionDeleteJournalPattern, fmt.Sprintf(loggerx.MsgProcesSucceed, ActionDeleteJournalPattern))
+
+	loggerx.InfoLog(c, ActionDeleteJournalPattern, loggerx.MsgProcessEnded)
+	c.JSON(200, httpx.Response{
+		Status:  0,
+		Message: msg.GetMsg("ja-JP", msg.Info, msg.I004, fmt.Sprintf(httpx.Temp, DatastoreProcessName, ActionDeleteJournalPattern)),
+		Data:    response,
+	})
 }

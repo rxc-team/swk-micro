@@ -849,23 +849,29 @@ func buildObtainData(p InsertParam) (e error) {
 			var pattern *journal.Pattern
 			if obtainItem.Items["setteikubunname"].GetValue() == "固定資産取得" {
 				if p.journalType == "primary" {
-					pattern = getPattern("01010", p.jouDataMap["01"])
+					// pattern = getPattern("01010", p.jouDataMap["01"])
+					p.jouData = p.jouDataMap["01"]
 				} else {
-					pattern = getPattern("010010", p.jouDataMap["01"])
+					// pattern = getPattern("01010", p.jouDataMap["01"])
+					p.jouData = p.jouDataMap["01"]
 				}
 			}
 			if obtainItem.Items["setteikubunname"].GetValue() == "固定資産移動" {
 				if p.journalType == "primary" {
-					pattern = getPattern("01011", p.jouDataMap["01"])
+					// pattern = getPattern("01011", p.jouDataMap["01"])
+					p.jouData = p.jouDataMap["01"]
 				} else {
-					pattern = getPattern("010011", p.jouDataMap["01"])
+					// pattern = getPattern("01011", p.jouDataMap["01"])
+					p.jouData = p.jouDataMap["01"]
 				}
 			}
 			if obtainItem.Items["setteikubunname"].GetValue() == "固定資産除却" {
 				if p.journalType == "primary" {
-					pattern = getPattern("01012", p.jouDataMap["01"])
+					// pattern = getPattern("01012", p.jouDataMap["01"])
+					p.jouData = p.jouDataMap["01"]
 				} else {
-					pattern = getPattern("010012", p.jouDataMap["01"])
+					// pattern = getPattern("01012", p.jouDataMap["01"])
+					p.jouData = p.jouDataMap["01"]
 				}
 			}
 			if obtainItem.Items["setteikubunname"].GetValue() == "固定資産売却" {
@@ -883,15 +889,19 @@ func buildObtainData(p InsertParam) (e error) {
 
 				if baikyakukagakuValue-baikyakuchoubokagakuValue < 0 {
 					if p.journalType == "primary" {
-						pattern = getPattern("01013", p.jouDataMap["01"])
+						// pattern = getPattern("01013", p.jouDataMap["01"])
+						p.jouData = p.jouDataMap["01"]
 					} else {
-						pattern = getPattern("010013", p.jouDataMap["01"])
+						// pattern = getPattern("01013", p.jouDataMap["01"])
+						p.jouData = p.jouDataMap["01"]
 					}
 				} else {
 					if p.journalType == "primary" {
-						pattern = getPattern("01014", p.jouDataMap["01"])
+						// pattern = getPattern("01014", p.jouDataMap["01"])
+						p.jouData = p.jouDataMap["01"]
 					} else {
-						pattern = getPattern("010014", p.jouDataMap["01"])
+						// pattern = getPattern("01014", p.jouDataMap["01"])
+						p.jouData = p.jouDataMap["01"]
 					}
 				}
 			}
@@ -1179,14 +1189,14 @@ func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e
 	for no, hs := range hsData {
 		// 契约登录的场合
 		if len(hs) == 1 {
-			pattern := getPattern("01001", p.jouData)
+			// pattern := getPattern("01001", p.jouData)
 			itemMap := hs[0]
 			itemMap["historyno"] = &item.Value{
 				DataType: "text",
 				Value:    no,
 			}
 			branchCount := 1
-			for line, sub := range pattern.GetSubjects() {
+			for line, sub := range p.jouData.GetSubjects() {
 				expression := formula.NewExpression(sub.AmountField)
 				params := getParam(sub.AmountField)
 				for _, pm := range params {
@@ -1241,7 +1251,7 @@ func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e
 				}
 				itemsData["partten"] = &item.Value{
 					DataType: "text",
-					Value:    pattern.PatternId,
+					Value:    p.jouData.PatternId,
 				}
 				itemsData["lineno"] = &item.Value{
 					DataType: "number",
@@ -1273,7 +1283,7 @@ func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e
 				}
 				itemsData["remark"] = &item.Value{
 					DataType: "text",
-					Value:    keiyakuno + "_" + pattern.PatternName,
+					Value:    keiyakuno + "_" + p.jouData.PatternName,
 				}
 				itemsData["index"] = &item.Value{
 					DataType: "number",
@@ -1323,12 +1333,12 @@ func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e
 				continue
 			}
 
-			pattern := getPattern("01002", p.jouData)
+			// pattern := getPattern("01002", p.jouData)
 
 			var itemMap map[string]*item.Value
 
 			branchCount := 1
-			for line, sub := range pattern.GetSubjects() {
+			for line, sub := range p.jouData.GetSubjects() {
 				// LendingDivision = "1" == 借方
 				// ChangeFlag = "new" == 使用变更后的数据newItemMap
 				// LendingDivision = "2" == 贷方
@@ -1399,7 +1409,7 @@ func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e
 				}
 				itemsData["partten"] = &item.Value{
 					DataType: "text",
-					Value:    pattern.PatternId,
+					Value:    p.jouData.PatternId,
 				}
 				itemsData["lineno"] = &item.Value{
 					DataType: "number",
@@ -1431,7 +1441,7 @@ func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e
 				}
 				itemsData["remark"] = &item.Value{
 					DataType: "text",
-					Value:    keiyakuno + "_" + pattern.PatternName,
+					Value:    keiyakuno + "_" + p.jouData.PatternName,
 				}
 				itemsData["index"] = &item.Value{
 					DataType: "number",
@@ -1459,12 +1469,12 @@ func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e
 				// 如果行使权存在的情况下，按比例减少处理。
 				if cancellationrightoption == "true" {
 					// 比例减少的场合
-					pattern := getPattern("01006", p.jouData)
+					// pattern := getPattern("01006", p.jouData)
 
 					var itemMap map[string]*item.Value
 
 					branchCount := 1
-					for line, sub := range pattern.GetSubjects() {
+					for line, sub := range p.jouData.GetSubjects() {
 						// LendingDivision = "1" == 借方
 						// ChangeFlag = "new" == 使用变更后的数据newItemMap
 						// LendingDivision = "2" == 贷方
@@ -1535,7 +1545,7 @@ func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e
 						}
 						itemsData["partten"] = &item.Value{
 							DataType: "text",
-							Value:    pattern.PatternId,
+							Value:    p.jouData.PatternId,
 						}
 						itemsData["lineno"] = &item.Value{
 							DataType: "number",
@@ -1567,7 +1577,7 @@ func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e
 						}
 						itemsData["remark"] = &item.Value{
 							DataType: "text",
-							Value:    keiyakuno + "_" + pattern.PatternName,
+							Value:    keiyakuno + "_" + p.jouData.PatternName,
 						}
 						itemsData["index"] = &item.Value{
 							DataType: "number",
@@ -1588,12 +1598,12 @@ func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e
 				}
 
 				// 没有行使权的场合，按照普通债务变更处理。
-				pattern := getPattern("01007", p.jouData)
+				// pattern := getPattern("01007", p.jouData)
 
 				var itemMap map[string]*item.Value
 
 				branchCount := 1
-				for line, sub := range pattern.GetSubjects() {
+				for line, sub := range p.jouData.GetSubjects() {
 					// LendingDivision = "1" == 借方
 					// ChangeFlag = "new" == 使用变更后的数据newItemMap
 					// LendingDivision = "2" == 贷方
@@ -1664,7 +1674,7 @@ func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e
 					}
 					itemsData["partten"] = &item.Value{
 						DataType: "text",
-						Value:    pattern.PatternId,
+						Value:    p.jouData.PatternId,
 					}
 					itemsData["lineno"] = &item.Value{
 						DataType: "number",
@@ -1696,7 +1706,7 @@ func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e
 					}
 					itemsData["remark"] = &item.Value{
 						DataType: "text",
-						Value:    keiyakuno + "_" + pattern.PatternName,
+						Value:    keiyakuno + "_" + p.jouData.PatternName,
 					}
 					itemsData["index"] = &item.Value{
 						DataType: "number",
@@ -1724,12 +1734,12 @@ func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e
 			// 比率未发生变更的场合，即普通的债务变更
 			if oldPercentage == newPercentage {
 
-				pattern := getPattern("01003", p.jouData)
+				// pattern := getPattern("01003", p.jouData)
 
 				var itemMap map[string]*item.Value
 
 				branchCount := 1
-				for line, sub := range pattern.GetSubjects() {
+				for line, sub := range p.jouData.GetSubjects() {
 					// LendingDivision = "1" == 借方
 					// ChangeFlag = "new" == 使用变更后的数据newItemMap
 					// LendingDivision = "2" == 贷方
@@ -1800,7 +1810,7 @@ func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e
 					}
 					itemsData["partten"] = &item.Value{
 						DataType: "text",
-						Value:    pattern.PatternId,
+						Value:    p.jouData.PatternId,
 					}
 					itemsData["lineno"] = &item.Value{
 						DataType: "number",
@@ -1832,7 +1842,7 @@ func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e
 					}
 					itemsData["remark"] = &item.Value{
 						DataType: "text",
-						Value:    keiyakuno + "_" + pattern.PatternName,
+						Value:    keiyakuno + "_" + p.jouData.PatternName,
 					}
 					itemsData["index"] = &item.Value{
 						DataType: "number",
@@ -1853,12 +1863,12 @@ func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e
 			}
 
 			// 比例减少的场合
-			pattern := getPattern("01005", p.jouData)
+			// pattern := getPattern("01005", p.jouData)
 
 			var itemMap map[string]*item.Value
 
 			branchCount := 1
-			for line, sub := range pattern.GetSubjects() {
+			for line, sub := range p.jouData.GetSubjects() {
 				// LendingDivision = "1" == 借方
 				// ChangeFlag = "new" == 使用变更后的数据newItemMap
 				// LendingDivision = "2" == 贷方
@@ -1929,7 +1939,7 @@ func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e
 				}
 				itemsData["partten"] = &item.Value{
 					DataType: "text",
-					Value:    pattern.PatternId,
+					Value:    p.jouData.PatternId,
 				}
 				itemsData["lineno"] = &item.Value{
 					DataType: "number",
@@ -1961,7 +1971,7 @@ func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e
 				}
 				itemsData["remark"] = &item.Value{
 					DataType: "text",
-					Value:    keiyakuno + "_" + pattern.PatternName,
+					Value:    keiyakuno + "_" + p.jouData.PatternName,
 				}
 				itemsData["index"] = &item.Value{
 					DataType: "number",
@@ -1983,12 +1993,12 @@ func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e
 		// 如果操作是中途解约的场合
 		if actkbn == "midcancel" {
 			// 比例减少的场合
-			pattern := getPattern("01008", p.jouData)
+			// pattern := getPattern("01008", p.jouData)
 
 			var itemMap map[string]*item.Value
 
 			branchCount := 1
-			for line, sub := range pattern.GetSubjects() {
+			for line, sub := range p.jouData.GetSubjects() {
 				// LendingDivision = "1" == 借方
 				// ChangeFlag = "new" == 使用变更后的数据newItemMap
 				// LendingDivision = "2" == 贷方
@@ -2059,7 +2069,7 @@ func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e
 				}
 				itemsData["partten"] = &item.Value{
 					DataType: "text",
-					Value:    pattern.PatternId,
+					Value:    p.jouData.PatternId,
 				}
 				itemsData["lineno"] = &item.Value{
 					DataType: "number",
@@ -2091,7 +2101,7 @@ func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e
 				}
 				itemsData["remark"] = &item.Value{
 					DataType: "text",
-					Value:    keiyakuno + "_" + pattern.PatternName,
+					Value:    keiyakuno + "_" + p.jouData.PatternName,
 				}
 				itemsData["index"] = &item.Value{
 					DataType: "number",
@@ -2127,14 +2137,14 @@ func getParam(f string) []string {
 	return result
 }
 
-func getPattern(pid string, j *journal.Journal) *journal.Pattern {
-	for _, p := range j.GetPatterns() {
-		if p.PatternId == pid {
-			return p
-		}
-	}
-	return nil
-}
+// func getPattern(pid string, j *journal.Journal) *journal.Pattern {
+// 	for _, p := range j.GetPatterns() {
+// 		if p.PatternId == pid {
+// 			return p
+// 		}
+// 	}
+// 	return nil
+// }
 
 func copyMap(m map[string]*item.Value) map[string]*item.Value {
 	result := make(map[string]*item.Value, len(m))
@@ -2459,11 +2469,11 @@ func buildPayData(p InsertParam) (e error) {
 		index := 1
 		for count, payItem := range data {
 			var pattern *journal.Pattern
-			if p.journalType == "primary" {
-				pattern = getPattern("03001", p.jouData)
-			} else {
-				pattern = getPattern("030001", p.jouData)
-			}
+			// if p.journalType == "primary" {
+			// 	pattern = getPattern("03001", p.jouData)
+			// } else {
+			// 	pattern = getPattern("030001", p.jouData)
+			// }
 			keiyakuno := payItem["keiyakuno"].GetValue()
 			keiyakuAccesskeys := sessionx.GetAccessKeys(p.db, p.userID, p.dsMap["keiyakudaicho"], "R")
 			itemMap, err := getKeiyakuData(p.db, p.appID, p.dsMap["keiyakudaicho"], keiyakuno, keiyakuAccesskeys)
@@ -3180,11 +3190,11 @@ func buildRepaymentData(p InsertParam) (e error) {
 			}
 
 			var pattern *journal.Pattern
-			if p.journalType == "primary" {
-				pattern = getPattern("02001", p.jouData)
-			} else {
-				pattern = getPattern("020001", p.jouData)
-			}
+			// if p.journalType == "primary" {
+			// 	pattern = getPattern("02001", p.jouData)
+			// } else {
+			// 	pattern = getPattern("020001", p.jouData)
+			// }
 
 			branchCount := 1
 

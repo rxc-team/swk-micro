@@ -29,6 +29,8 @@ const (
 	ActionFindConditionTemplates  = "FindConditionTemplates"
 	ActionAddConditionTemplate    = "AddConditionTemplate"
 	ActionDeleteConditionTemplate = "DeleteConditionTemplate"
+	ActionSearchSelectJournals    = "SearchSelectJournals"
+	ActionDeleteJournalPattern    = "DeleteJournalPattern"
 )
 
 // FindJournals 获取多个仕訳
@@ -75,33 +77,26 @@ func (f *Journal) ImportJournal(ctx context.Context, req *journal.ImportRequest,
 	var journals []*model.Journal
 
 	for _, j := range req.Journals {
-		var patterns []*model.Pattern
-		for _, p := range j.GetPatterns() {
-			var subs []*model.JSubject
-			for _, s := range p.GetSubjects() {
-				subs = append(subs, &model.JSubject{
-					SubjectKey:      s.GetSubjectKey(),
-					LendingDivision: s.GetLendingDivision(),
-					ChangeFlag:      s.GetChangeFlag(),
-					DefaultName:     s.GetDefaultName(),
-					AmountName:      s.GetAmountName(),
-					AmountField:     s.GetAmountField(),
-					SubjectName:     s.GetSubjectName(),
-				})
-			}
-
-			patterns = append(patterns, &model.Pattern{
-				PatternID:   p.GetPatternId(),
-				PatternName: p.GetPatternName(),
-				Subjects:    subs,
+		var subs []*model.JSubject
+		for _, s := range j.GetSubjects() {
+			subs = append(subs, &model.JSubject{
+				SubjectKey:      s.GetSubjectKey(),
+				LendingDivision: s.GetLendingDivision(),
+				ChangeFlag:      s.GetChangeFlag(),
+				DefaultName:     s.GetDefaultName(),
+				AmountName:      s.GetAmountName(),
+				AmountField:     s.GetAmountField(),
+				SubjectName:     s.GetSubjectName(),
 			})
 		}
 
 		journals = append(journals, &model.Journal{
 			JournalID:   j.GetJournalId(),
 			JournalName: j.GetJournalName(),
+			PatternID:   j.GetPatternId(),
+			PatternName: j.GetPatternName(),
+			Subjects:    subs,
 			AppID:       j.GetAppId(),
-			Patterns:    patterns,
 			CreatedAt:   time.Now(),
 			CreatedBy:   req.GetWriter(),
 			UpdatedAt:   time.Now(),
@@ -305,7 +300,7 @@ func (f *Journal) FindDownloadSettings(ctx context.Context, req *journal.FindDow
 // 添加选择分录
 func (f *Journal) AddSelectJournals(ctx context.Context, req *journal.AddSelectJournalsRequest, rsp *journal.AddSelectJournalsResponse) error {
 
-	err := model.AddSelectJournals(req.GetSelectedJournal(), req.GetDatabase(), req.GetAppId())
+	err := model.AddSelectJournals(req.GetSelectedJournal(), req.GetCoverFlag(), req.GetDatabase(), req.GetAppId())
 	if err != nil {
 		utils.ErrorLog(ActionFindDownloadSetting, err.Error())
 		return err
@@ -445,6 +440,60 @@ func (f *Journal) DeleteConditionTemplate(ctx context.Context, req *journal.Dele
 	}
 
 	utils.InfoLog(ActionDeleteConditionTemplate, utils.MsgProcessEnded)
+
+	return nil
+}
+
+// 检索用户分录
+func (f *Journal) SearchSelectJournals(ctx context.Context, req *journal.SearchSelectJournalsRequest, rsp *journal.JournalsResponse) error {
+
+	utils.InfoLog(ActionSearchSelectJournals, utils.MsgProcessStarted)
+
+	var conditions []*model.FieldCon
+
+	for _, con := range req.Conditions {
+		conditions = append(conditions, &model.FieldCon{
+			ConField:    con.GetConField(),
+			ConOperator: con.GetConOperator(),
+			ConValue:    con.GetConValue(),
+		})
+
+	}
+
+	param := model.JournalSearchParam{
+		ConditionType: req.GetConditionType(),
+		Conditions:    conditions,
+	}
+
+	journals, err := model.SearchSelectJournals(req.GetDatabase(), req.GetAppId(), param)
+
+	if err != nil {
+		utils.ErrorLog(ActionSearchSelectJournals, err.Error())
+		return err
+	}
+
+	res := &journal.JournalsResponse{}
+	for _, t := range journals {
+		res.Journals = append(res.Journals, t.ToProto())
+	}
+
+	*rsp = *res
+
+	utils.InfoLog(ActionSearchSelectJournals, utils.MsgProcessEnded)
+	return nil
+
+}
+
+// 删除单个用户分录pattern
+func (f *Journal) DeleteJournalPattern(ctx context.Context, req *journal.DeleteJournalPatternRequest, rsp *journal.DeleteJournalPatternResponse) error {
+	err := model.DeleteJournalPattern(req.GetDatabase(), req.GetAppId(), req.GetPatternId())
+
+	if err != nil {
+		utils.ErrorLog(ActionDeleteJournalPattern, err.Error())
+		return err
+	}
+
+	utils.InfoLog(ActionDeleteJournalPattern, utils.MsgProcessEnded)
 
 	return nil
 }

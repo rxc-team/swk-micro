@@ -15,19 +15,25 @@ service JournalService {
 	rpc FindConditionTemplates(FindConditionTemplatesRequest) returns (FindConditionTemplatesResponse) {}
 	rpc AddConditionTemplate(AddConditionTemplateRequest) returns (AddConditionTemplateResponse) {}
 	rpc DeleteConditionTemplate(DeleteConditionTemplateRequest) returns (DeleteConditionTemplateResponse) {}
+	rpc SearchSelectJournals(SearchSelectJournalsRequest) returns (JournalsResponse) {}
+	rpc DeleteJournalPattern(DeleteJournalPatternRequest) returns (DeleteJournalPatternResponse) {}
 }
 
 // 分录
 message Journal {
 	string journal_id =1; // 仕訳ID
 	string journal_name =2; // 仕訳名称
-	repeated Pattern patterns =3; // 会计处理pattern
-	string app_id =4; // 所属APP
-	string created_at =5; // 创建时间
-	string created_by =6; // 创建者
-	string updated_at =7; // 更新时间
-	string updated_by =8; // 更新者
+	string journal_type =3; // 分录结构
+	string pattern_id =4; // 会计处理分类ID
+	string pattern_name =5; // 会计处理名称
+	repeated Subject subjects =6; // 出力科目
+	string app_id =7; // 所属APP
+	string created_at =8; // 创建时间
+	string created_by =9; // 创建者
+	string updated_at =10; // 更新时间
+	string updated_by =11; // 更新者
 }
+
 // 分录pattern
 message Pattern {
 	string pattern_id =1; // 会计处理分类ID
@@ -213,6 +219,7 @@ message AddSelectJournalsRequest{
 	string app_id = 1;
 	string database = 2; // 数据库
 	repeated string selected_journal = 3;
+	bool cover_flag = 4; // 覆盖标识符
 }
  
 message AddSelectJournalsResponse{                 
@@ -259,3 +266,20 @@ message DeleteConditionTemplateRequest{
 message DeleteConditionTemplateResponse{
 }
 
+// 检索用户分录pattern
+message SearchSelectJournalsRequest {
+	string app_id =1; // 所属APP
+	string database =2; // 数据库
+	string condition_type =3; // 条件连接类型
+	repeated FieldCon conditions =4; // 条件数组
+}
+
+// 删除单个用户分录pattern
+message DeleteJournalPatternRequest {
+	string app_id = 1;
+	string database = 2; // 数据库
+	string pattern_id =3; 
+}
+
+message DeleteJournalPatternResponse {
+}

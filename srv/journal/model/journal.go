@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -26,13 +27,17 @@ type (
 		ID          primitive.ObjectID `json:"id" bson:"_id"`
 		JournalID   string             `json:"journal_id" bson:"journal_id"`
 		JournalName string             `json:"journal_name" bson:"journal_name"`
+		PatternID   string             `json:"pattern_id" bson:"pattern_id"`
+		PatternName string             `json:"pattern_name" bson:"pattern_name"`
+		JournalType string             `json:"journal_type" bson:"journal_type"`
+		Subjects    []*JSubject        `json:"subjects" bson:"subjects"`
 		AppID       string             `json:"app_id" bson:"app_id"`
-		Patterns    []*Pattern         `json:"patterns" bson:"patterns"`
 		CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
 		CreatedBy   string             `json:"created_by" bson:"created_by"`
 		UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
 		UpdatedBy   string             `json:"updated_by" bson:"updated_by"`
 	}
+
 	// Journal Pattern
 	Pattern struct {
 		PatternID   string      `json:"pattern_id" bson:"pattern_id"`
@@ -139,16 +144,19 @@ type (
 // ToProto 转换为proto数据
 func (w *Journal) ToProto() *journal.Journal {
 
-	var patterns []*journal.Pattern
+	var sbujects []*journal.Subject
 
-	for _, pt := range w.Patterns {
-		patterns = append(patterns, pt.ToProto())
+	for _, sb := range w.Subjects {
+		sbujects = append(sbujects, sb.ToProto())
 	}
 
 	return &journal.Journal{
 		JournalId:   w.JournalID,
 		JournalName: w.JournalName,
-		Patterns:    patterns,
+		PatternId:   w.PatternID,
+		PatternName: w.PatternName,
+		JournalType: w.JournalType,
+		Subjects:    sbujects,
 		AppId:       w.AppID,
 		CreatedAt:   w.CreatedAt.String(),
 		CreatedBy:   w.CreatedBy,
@@ -453,6 +461,12 @@ type JournalParam struct {
 	AmountField     string
 }
 
+// 分录检索用参数
+type JournalSearchParam struct {
+	ConditionType string
+	Conditions    []*FieldCon
+}
+
 // ModifyJournal 更新流程实例数据
 func ModifyJournal(db, writer string, param JournalParam) (err error) {
 	client := database.New()
@@ -614,7 +628,7 @@ func FindDownloadSettings(db string, appID string) (fd []FieldConf, err error) {
 }
 
 // 添加选择分录
-func AddSelectJournals(journal_ids []string, db string, appID string) (err error) {
+func AddSelectJournals(journal_ids []string, cover_flag bool, db string, appID string) (err error) {
 	client := database.New()
 	c := client.Database(database.GetDBName(db)).Collection("journals")
 	ct := client.Database(database.GetDBName(db)).Collection("journals_select")
@@ -622,17 +636,18 @@ func AddSelectJournals(journal_ids []string, db string, appID string) (err error
 	defer cancel()
 
 	// 查询条件，匹配journal_ids和app_id
-
 	filter := bson.M{
 		"journal_id": bson.M{"$in": journal_ids},
 		"app_id":     appID,
 	}
 
-	_, err = ct.DeleteMany(ctx, bson.M{})
-	if err != nil {
-		if err.Error() != "ns not found" {
-			utils.ErrorLog("AddSelectJournals", err.Error())
-			return err
+	if cover_flag {
+		_, err = ct.DeleteMany(ctx, filter)
+		if err != nil {
+			if err.Error() != "ns not found" {
+				utils.ErrorLog("AddSelectJournals", err.Error())
+				return err
+			}
 		}
 	}
 
@@ -670,7 +685,7 @@ func AddSelectJournals(journal_ids []string, db string, appID string) (err error
 	return
 }
 
-// FindJournals 获取APP下的当前分类的分录
+// FindSelectJournals 获取APP下的当前分类的分录
 func FindSelectJournals(db, appId string) (items []Journal, err error) {
 	client := database.New()
 	c := client.Database(database.GetDBName(db)).Collection("journals_select")
@@ -781,6 +796,108 @@ func DeleteConditionTemplate(db string, appID string, templateID string) (err er
 
 	if err != nil {
 		utils.ErrorLog("DeleteConditionTemplate", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// 检索用户分录
+func SearchSelectJournals(db string, appID string, param JournalSearchParam) (fd []Journal, err error) {
+	client := database.New()
+	c := client.Database(database.GetDBName(db)).Collection("journals_select")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	query := bson.M{
+		"app_id": appID,
+	}
+
+	logicCons := []bson.M{}
+	for _, condition := range param.Conditions {
+		if condition.ConOperator == "like" {
+			// 特殊字符转义
+			value := regexp.QuoteMeta(condition.ConValue)
+			// 模糊查询
+			logicCons = append(logicCons, bson.M{
+				condition.ConField: bson.M{
+					"$regex":   value,
+					"$options": "i",
+				},
+			})
+
+		} else if condition.ConOperator == "ne" {
+			value := condition.ConValue
+			// 不等于
+			logicCons = append(logicCons, bson.M{
+				condition.ConField: bson.M{
+					"$ne": value,
+				},
+			})
+		} else if condition.ConOperator == "eq" {
+			value := condition.ConValue
+			// 等于
+			logicCons = append(logicCons, bson.M{
+				condition.ConField: value,
+			})
+		}
+	}
+
+	if len(logicCons) > 0 {
+		if param.ConditionType == "and" {
+			query["$and"] = logicCons
+		} else if param.ConditionType == "or" {
+			query["$or"] = logicCons
+		}
+	}
+
+	// 定义一个切片用于存储查询结果
+	var results []Journal
+
+	// 使用 Find 查询所有符合条件的文档
+	cursor, err := c.Find(ctx, query)
+
+	if err != nil {
+		utils.ErrorLog("SearchSelectJournals", err.Error())
+		return nil, err
+	}
+
+	// 确保在函数返回之前关闭游标
+	defer cursor.Close(ctx)
+
+	// 将游标中的所有数据解码到 results 切片中
+	for cursor.Next(ctx) {
+		var item Journal
+		if err := cursor.Decode(&item); err != nil {
+			return nil, fmt.Errorf("failed to decode document: %v", err)
+		}
+		results = append(results, item)
+	}
+
+	// 如果没有找到任何数据，返回空切片
+	if len(results) == 0 {
+		return nil, nil
+	}
+
+	return results, nil
+}
+
+// 删除单个用户分录型
+func DeleteJournalPattern(db string, appID string, patternID string) (err error) {
+	client := database.New()
+	c := client.Database(database.GetDBName(db)).Collection("journals_select")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	query := bson.M{
+		"app_id":     appID,
+		"pattern_id": patternID,
+	}
+
+	_, err = c.DeleteOne(ctx, query)
+
+	if err != nil {
+		utils.ErrorLog("DeleteJournalPattern", err.Error())
 		return err
 	}
 
