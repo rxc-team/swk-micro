@@ -106,6 +106,10 @@ func initAuthRouterWeb(router *gin.Engine) {
 		subjectRoute.POST("/subjects", subject.ImportSubject)
 		// 修改科目记录
 		subjectRoute.PUT("/subjects/:s_key", subject.ModifySubject)
+		// 查找科目一览
+		subjectRoute.POST("/get/subjects", subject.GetSubjects)
+		// 删除科目
+		subjectRoute.POST("/delete/subjects", subject.DeleteSubject)
 	}
 
 	// app

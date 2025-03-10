@@ -8,6 +8,7 @@ service SubjectService {
 	rpc ImportSubject(ImportRequest) returns (ImportResponse) {}
 	rpc ModifySubject(ModifyRequest) returns (ModifyResponse) {}
 	rpc DeleteSubject(DeleteRequest) returns (DeleteResponse) {}
+	rpc GetSubjects(GetSubjectsRequest) returns (GetSubjectsResponse) {}
 }
 
 // 科目
@@ -76,11 +77,29 @@ message ModifyResponse{
 
 // 删除数据记录
 message DeleteRequest{
-	string subject_key =1; // 科目KEY
-	string assets_type =2; // 资产类型
-	string app_id =3; // 所属APP
-	string database =4; // 数据库
+	string assets_type =1; // 资产类型
+	string app_id =2; // 所属APP
+	string database =3; // 数据库
 }
 
 message DeleteResponse{
+}
+
+// 查询科目一览
+message GetSubjectsRequest{
+	string app_id = 1;
+	repeated Condition condition_list = 2; 
+	string condition_type = 3; 
+	string database =4; // 数据库
+}
+
+message GetSubjectsResponse{
+	repeated Subject subjects = 1;
+}
+
+// 条件
+message Condition {
+	string field_id = 1; // 检索字段ID
+    string search_value = 2; // 检索值
+	string operator = 3; // 检索连接操作符
 }

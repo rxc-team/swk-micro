@@ -14,38 +14,18 @@ type Subject struct{}
 
 // log出力使用
 const (
-	SubjectProcessName = "Subject"
-
+	SubjectProcessName  = "Subject"
 	ActionFindSubjects  = "FindSubjects"
 	ActionFindSubject   = "FindSubject"
 	ActionImportSubject = "ImportSubject"
 	ActionModifySubject = "ModifySubject"
 	ActionDeleteSubject = "DeleteSubject"
+	ActionGetSubjects   = "GetSubjects"
 )
 
 // FindSubjects 获取多个科目
 func (f *Subject) FindSubjects(ctx context.Context, req *subject.SubjectsRequest, rsp *subject.SubjectsResponse) error {
 	utils.InfoLog(ActionFindSubjects, utils.MsgProcessStarted)
-
-	assetsType := req.GetAssetsType()
-	// 类型为空的情况下，获取系统默认的科目
-	if len(assetsType) == 0 {
-		subjects, err := model.FindDefaultSubjects(req.GetDatabase(), req.GetAppId())
-		if err != nil {
-			utils.ErrorLog(ActionFindSubjects, err.Error())
-			return err
-		}
-
-		res := &subject.SubjectsResponse{}
-		for _, t := range subjects {
-			res.Subjects = append(res.Subjects, t.ToProto())
-		}
-
-		*rsp = *res
-
-		utils.InfoLog(ActionFindSubjects, utils.MsgProcessEnded)
-		return nil
-	}
 
 	subjects, err := model.FindSubjects(req.GetDatabase(), req.GetAppId(), req.GetAssetsType())
 	if err != nil {
@@ -129,12 +109,42 @@ func (f *Subject) ModifySubject(ctx context.Context, req *subject.ModifyRequest,
 func (f *Subject) DeleteSubject(ctx context.Context, req *subject.DeleteRequest, rsp *subject.DeleteResponse) error {
 	utils.InfoLog(ActionDeleteSubject, utils.MsgProcessStarted)
 
-	err := model.DeleteSubject(req.GetDatabase(), req.GetAppId(), req.GetAssetsType(), req.GetSubjectKey())
+	err := model.DeleteSubject(req.GetDatabase(), req.GetAppId(), req.GetAssetsType())
 	if err != nil {
 		utils.ErrorLog(ActionDeleteSubject, err.Error())
 		return err
 	}
 
 	utils.InfoLog(ActionDeleteSubject, utils.MsgProcessEnded)
+	return nil
+}
+
+// GetSubjects 查找科目一览
+func (f *Subject) GetSubjects(ctx context.Context, req *subject.GetSubjectsRequest, rsp *subject.GetSubjectsResponse) error {
+	utils.InfoLog(ActionGetSubjects, utils.MsgProcessStarted)
+
+	var conditions []*model.Condition
+	for _, condition := range req.GetConditionList() {
+		conditions = append(conditions, &model.Condition{
+			FieldID:     condition.GetFieldId(),
+			SearchValue: condition.GetSearchValue(),
+			Operator:    condition.GetOperator(),
+		})
+	}
+
+	subjects, err := model.GetSubjects(req.GetDatabase(), req.GetAppId(), req.GetConditionType(), conditions)
+	if err != nil {
+		utils.ErrorLog(ActionGetSubjects, err.Error())
+		return err
+	}
+
+	res := &subject.GetSubjectsResponse{}
+	for _, t := range subjects {
+		res.Subjects = append(res.Subjects, t.ToProto())
+	}
+
+	*rsp = *res
+
+	utils.InfoLog(ActionGetSubjects, utils.MsgProcessEnded)
 	return nil
 }

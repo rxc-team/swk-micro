@@ -29,6 +29,7 @@ const (
 	ActionImportSubject = "ImportSubject"
 	ActionModifySubject = "ModifySubject"
 	ActionDeleteSubject = "DeleteSubject"
+	ActionGetSubjects   = "GetSubjects"
 )
 
 // FindSubjects 获取当前用户的所有科目
@@ -172,6 +173,65 @@ func (f *Subject) ModifySubject(c *gin.Context) {
 	c.JSON(200, httpx.Response{
 		Status:  0,
 		Message: msg.GetMsg("ja-JP", msg.Info, msg.I004, fmt.Sprintf(httpx.Temp, JournalProcessName, ActionModifySubject)),
+		Data:    response,
+	})
+}
+
+// FindSubjects 获取当前用户的所有科目一览
+// @Router get/subjects [get]
+func (f *Subject) GetSubjects(c *gin.Context) {
+	loggerx.InfoLog(c, ActionGetSubjects, loggerx.MsgProcessStarted)
+
+	subjectService := subject.NewSubjectService("journal", client.DefaultClient)
+
+	var req subject.GetSubjectsRequest
+	// 从body中获取参数
+	if err := c.BindJSON(&req); err != nil {
+		httpx.GinHTTPError(c, ActionGetSubjects, err)
+		return
+	}
+	req.AppId = sessionx.GetCurrentApp(c)
+	req.Database = sessionx.GetUserCustomer(c)
+	response, err := subjectService.GetSubjects(context.TODO(), &req)
+	if err != nil {
+		httpx.GinHTTPError(c, ActionGetSubjects, err)
+		return
+	}
+
+	loggerx.InfoLog(c, ActionGetSubjects, loggerx.MsgProcessEnded)
+	c.JSON(200, httpx.Response{
+		Status:  0,
+		Message: msg.GetMsg("ja-JP", msg.Info, msg.I003, fmt.Sprintf(httpx.Temp, SubjectProcessName, ActionGetSubjects)),
+		Data:    response,
+	})
+}
+
+// DeleteSubject 删除科目
+// @Router /delete/subjects [PUT]
+func (f *Subject) DeleteSubject(c *gin.Context) {
+	loggerx.InfoLog(c, ActionDeleteSubject, loggerx.MsgProcessStarted)
+
+	subjectService := subject.NewSubjectService("journal", client.DefaultClient)
+
+	var req subject.DeleteRequest
+	// 从body中获取参数
+	if err := c.BindJSON(&req); err != nil {
+		httpx.GinHTTPError(c, ActionDeleteSubject, err)
+		return
+	}
+	req.Database = sessionx.GetUserCustomer(c)
+	req.AppId = sessionx.GetCurrentApp(c)
+
+	response, err := subjectService.DeleteSubject(context.TODO(), &req)
+	if err != nil {
+		httpx.GinHTTPError(c, ActionDeleteSubject, err)
+		return
+	}
+
+	loggerx.InfoLog(c, ActionDeleteSubject, loggerx.MsgProcessEnded)
+	c.JSON(200, httpx.Response{
+		Status:  0,
+		Message: msg.GetMsg("ja-JP", msg.Info, msg.I003, fmt.Sprintf(httpx.Temp, SubjectProcessName, ActionDeleteSubject)),
 		Data:    response,
 	})
 }

@@ -47,6 +47,7 @@ type SubjectService interface {
 	ImportSubject(ctx context.Context, in *ImportRequest, opts ...client.CallOption) (*ImportResponse, error)
 	ModifySubject(ctx context.Context, in *ModifyRequest, opts ...client.CallOption) (*ModifyResponse, error)
 	DeleteSubject(ctx context.Context, in *DeleteRequest, opts ...client.CallOption) (*DeleteResponse, error)
+	GetSubjects(ctx context.Context, in *GetSubjectsRequest, opts ...client.CallOption) (*GetSubjectsResponse, error)
 }
 
 type subjectService struct {
@@ -111,6 +112,16 @@ func (c *subjectService) DeleteSubject(ctx context.Context, in *DeleteRequest, o
 	return out, nil
 }
 
+func (c *subjectService) GetSubjects(ctx context.Context, in *GetSubjectsRequest, opts ...client.CallOption) (*GetSubjectsResponse, error) {
+	req := c.c.NewRequest(c.name, "SubjectService.GetSubjects", in)
+	out := new(GetSubjectsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for SubjectService service
 
 type SubjectServiceHandler interface {
@@ -119,6 +130,7 @@ type SubjectServiceHandler interface {
 	ImportSubject(context.Context, *ImportRequest, *ImportResponse) error
 	ModifySubject(context.Context, *ModifyRequest, *ModifyResponse) error
 	DeleteSubject(context.Context, *DeleteRequest, *DeleteResponse) error
+	GetSubjects(context.Context, *GetSubjectsRequest, *GetSubjectsResponse) error
 }
 
 func RegisterSubjectServiceHandler(s server.Server, hdlr SubjectServiceHandler, opts ...server.HandlerOption) error {
@@ -128,6 +140,7 @@ func RegisterSubjectServiceHandler(s server.Server, hdlr SubjectServiceHandler, 
 		ImportSubject(ctx context.Context, in *ImportRequest, out *ImportResponse) error
 		ModifySubject(ctx context.Context, in *ModifyRequest, out *ModifyResponse) error
 		DeleteSubject(ctx context.Context, in *DeleteRequest, out *DeleteResponse) error
+		GetSubjects(ctx context.Context, in *GetSubjectsRequest, out *GetSubjectsResponse) error
 	}
 	type SubjectService struct {
 		subjectService
@@ -158,4 +171,8 @@ func (h *subjectServiceHandler) ModifySubject(ctx context.Context, in *ModifyReq
 
 func (h *subjectServiceHandler) DeleteSubject(ctx context.Context, in *DeleteRequest, out *DeleteResponse) error {
 	return h.SubjectServiceHandler.DeleteSubject(ctx, in, out)
+}
+
+func (h *subjectServiceHandler) GetSubjects(ctx context.Context, in *GetSubjectsRequest, out *GetSubjectsResponse) error {
+	return h.SubjectServiceHandler.GetSubjects(ctx, in, out)
 }
