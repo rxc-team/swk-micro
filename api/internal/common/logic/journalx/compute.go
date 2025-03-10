@@ -54,7 +54,7 @@ type InsertParam struct {
 	journalType  string
 	owners       []string
 	dsMap        map[string]string
-	jouData      *journal.Journal
+	jouData      []*journal.Journal
 	asSubMap     map[string]SubData
 	jouDataMap   map[string]*journal.Journal
 }
@@ -135,174 +135,15 @@ func getDatastoreMap(db, appID string) (dsMap map[string]string, err error) {
 	return
 }
 
-// buildLeaseHistory 获取所有履历数据（根据对接区分查询）
-func buildLeaseHistory(p InsertParam) (err error) {
-
-	ct := grpc.NewClient(
-		grpc.MaxSendMsgSize(100*1024*1024), grpc.MaxRecvMsgSize(100*1024*1024),
-	)
-
-	itemService := item.NewItemService("database", ct)
-
-	var opss client.CallOption = func(o *client.CallOptions) {
-		o.RequestTimeout = time.Minute * 10
-		o.DialTimeout = time.Minute * 10
-	}
-	conditions := []*item.Condition{}
-	conditions = append(conditions, &item.Condition{
-		FieldId:     "dockkbn",
-		FieldType:   "options",
-		SearchValue: "undo",
-		Operator:    "=",
-		IsDynamic:   true,
-	})
-
-	accesskeys := sessionx.GetAccessKeys(p.db, p.userID, p.datastoreID, "R")
-
-	// 先获取总的件数
-	cReq := item.CountRequest{
-		AppId:         p.appID,
-		DatastoreId:   p.datastoreID,
-		ConditionList: conditions,
-		ConditionType: "and",
-		Owners:        accesskeys,
-		Database:      p.db,
-	}
-
-	countResponse, err := itemService.FindCount(context.TODO(), &cReq, opss)
-	if err != nil {
-		loggerx.ErrorLog("getLeaseHistory", err.Error())
-		return
-	}
-
-	// 根据总的件数分批下载数据
-	// 每次2000为一组数据
-	total := float64(countResponse.GetTotal())
-	count := math.Ceil(total / 500)
-
-	for index := int64(0); index < int64(count); index++ {
-
-		var req item.ItemsRequest
-		var sorts []*item.SortItem
-		sorts = append(sorts, &item.SortItem{
-			SortKey:   "no",
-			SortValue: "ascend",
-		})
-		sorts = append(sorts, &item.SortItem{
-			SortKey:   "zengokbn",
-			SortValue: "ascend",
-		})
-		req.Sorts = sorts
-		req.ConditionList = conditions
-		req.ConditionType = "and"
-		req.DatastoreId = p.datastoreID
-		req.PageIndex = index + 1
-		req.PageSize = 500
-		req.AppId = p.appID
-		req.Owners = accesskeys
-		req.IsOrigin = true
-		req.Database = p.db
-
-		response, err := itemService.FindItems(context.TODO(), &req, opss)
-		if err != nil {
-			loggerx.ErrorLog("getLeaseHistory", err.Error())
-			return err
-		}
-
-		items := response.GetItems()
-
-		var hsNo string
-
-		var data ItemData
-		itemList := make(map[string]ItemData)
-
-		for index, item := range items {
-			itemMap := item.Items
-			// 获取履历番号
-			no := itemMap["no"].Value
-			// 第一条时
-			if index == 0 {
-				// 前次履历番号设定
-				hsNo = no
-				// 当前数据导入
-				data = append(data, itemMap)
-				// 如果当前数据就是最后一条的场合
-				if len(items) == 1 {
-					itemList[no] = data
-				}
-				// 继续循环
-				continue
-			}
-
-			// 如果是最后一条的场合
-			if index == (len(items) - 1) {
-				// 同一条契约的数据
-				if hsNo == no {
-					// 当前数据导入
-					data = append(data, itemMap)
-					// 数据导入map中
-					itemList[no] = data
-				} else {
-					// 之前的数据导入map中
-					itemList[hsNo] = data
-					// 清除data的数据
-					data = nil
-					// 当前数据导入
-					data = append(data, itemMap)
-					// 数据导入map中
-					itemList[no] = data
-				}
-				continue
-			}
-
-			// 其他条的数据
-			// 如果上一条履历的番号和当前的番号相同的场合，则继续加入数据
-			if hsNo == no {
-				// 前次履历番号设定
-				hsNo = no
-				// 当前数据导入
-				data = append(data, itemMap)
-				// 继续循环
-				continue
-			}
-
-			// 如果上一条履历的番号和当前的番号不相同的场合
-			// 之前的数据导入map中
-			itemList[hsNo] = data
-			// 清除data的数据
-			data = nil
-			// 当前数据导入
-			data = append(data, itemMap)
-			// 前次履历番号设定
-			hsNo = no
-		}
-
-		its, err := genShiwakeData(p, itemList)
-		if err != nil {
-			loggerx.ErrorLog("getLeaseHistory", err.Error())
-			return err
-		}
-
-		result, err := importData(p, its)
-		if err != nil {
-			loggerx.ErrorLog("getLeaseHistory", err.Error())
-			return err
-		}
-
-		loggerx.DebugLog("getLeaseHistory", fmt.Sprintf("result %v", result))
-	}
-
-	return nil
-}
-
 // getJournal 获取分录数据
-func getJournal(db, appID, journalID string) (j *journal.Journal, err error) {
+func getJournal(db, appID, journalID, journalType string) (j []*journal.Journal, err error) {
 	journalService := journal.NewJournalService("journal", client.DefaultClient)
 
 	var req journal.JournalRequest
 	req.JournalId = journalID
 	req.AppId = appID
 	req.Database = db
+	req.JournalType = journalType
 	response, err := journalService.FindJournal(context.TODO(), &req)
 	if err != nil {
 		loggerx.ErrorLog("getJournal", err.Error())
@@ -579,7 +420,9 @@ func GenAddAndSubData(domain, db, appID, userID, lang string, owners []string) (
 		}
 
 		for _, journal := range journalResponse.Journals {
-			jouDataMap[journal.JournalId] = journal
+			if journal.JournalId == "01" {
+				jouDataMap[journal.PatternId] = journal
+			}
 		}
 
 		// 获取所有分类的科目的数据
@@ -846,32 +689,26 @@ func buildObtainData(p InsertParam) (e error) {
 		var items ImportData
 		index := 1
 		for count, obtainItem := range itemResp.GetItems() {
-			var pattern *journal.Pattern
+			var pattern *journal.Journal
 			if obtainItem.Items["setteikubunname"].GetValue() == "固定資産取得" {
 				if p.journalType == "primary" {
-					// pattern = getPattern("01010", p.jouDataMap["01"])
-					p.jouData = p.jouDataMap["01"]
+					pattern = p.jouDataMap["01010"]
 				} else {
-					// pattern = getPattern("01010", p.jouDataMap["01"])
-					p.jouData = p.jouDataMap["01"]
+					pattern = p.jouDataMap["010010"]
 				}
 			}
 			if obtainItem.Items["setteikubunname"].GetValue() == "固定資産移動" {
 				if p.journalType == "primary" {
-					// pattern = getPattern("01011", p.jouDataMap["01"])
-					p.jouData = p.jouDataMap["01"]
+					pattern = p.jouDataMap["01011"]
 				} else {
-					// pattern = getPattern("01011", p.jouDataMap["01"])
-					p.jouData = p.jouDataMap["01"]
+					pattern = p.jouDataMap["010011"]
 				}
 			}
 			if obtainItem.Items["setteikubunname"].GetValue() == "固定資産除却" {
 				if p.journalType == "primary" {
-					// pattern = getPattern("01012", p.jouDataMap["01"])
-					p.jouData = p.jouDataMap["01"]
+					pattern = p.jouDataMap["01012"]
 				} else {
-					// pattern = getPattern("01012", p.jouDataMap["01"])
-					p.jouData = p.jouDataMap["01"]
+					pattern = p.jouDataMap["010012"]
 				}
 			}
 			if obtainItem.Items["setteikubunname"].GetValue() == "固定資産売却" {
@@ -889,19 +726,15 @@ func buildObtainData(p InsertParam) (e error) {
 
 				if baikyakukagakuValue-baikyakuchoubokagakuValue < 0 {
 					if p.journalType == "primary" {
-						// pattern = getPattern("01013", p.jouDataMap["01"])
-						p.jouData = p.jouDataMap["01"]
+						pattern = p.jouDataMap["01013"]
 					} else {
-						// pattern = getPattern("01013", p.jouDataMap["01"])
-						p.jouData = p.jouDataMap["01"]
+						pattern = p.jouDataMap["010013"]
 					}
 				} else {
 					if p.journalType == "primary" {
-						// pattern = getPattern("01014", p.jouDataMap["01"])
-						p.jouData = p.jouDataMap["01"]
+						pattern = p.jouDataMap["01014"]
 					} else {
-						// pattern = getPattern("01014", p.jouDataMap["01"])
-						p.jouData = p.jouDataMap["01"]
+						pattern = p.jouDataMap["010014"]
 					}
 				}
 			}
@@ -1181,949 +1014,6 @@ func buildObtainData(p InsertParam) (e error) {
 	return nil
 }
 
-func genShiwakeData(p InsertParam, hsData map[string]ItemData) (it ImportData, e error) {
-	// 分录数据
-	var items ImportData
-	index := 1
-	count := 1
-	for no, hs := range hsData {
-		// 契约登录的场合
-		if len(hs) == 1 {
-			// pattern := getPattern("01001", p.jouData)
-			itemMap := hs[0]
-			itemMap["historyno"] = &item.Value{
-				DataType: "text",
-				Value:    no,
-			}
-			branchCount := 1
-			for line, sub := range p.jouData.GetSubjects() {
-				expression := formula.NewExpression(sub.AmountField)
-				params := getParam(sub.AmountField)
-				for _, pm := range params {
-					it, ok := itemMap[pm]
-					if !ok {
-						it = &item.Value{
-							DataType: "number",
-							Value:    "0",
-						}
-					}
-					val, err := strconv.ParseFloat(it.GetValue(), 64)
-					if err != nil {
-						loggerx.ErrorLog("insertData", err.Error())
-						return nil, err
-					}
-					expression.AddParameter(pm, val)
-				}
-
-				result, err := expression.Evaluate()
-				if err != nil {
-					loggerx.ErrorLog("insertData", err.Error())
-					return nil, err
-				}
-
-				fv, err := result.Float64()
-				if err != nil {
-					loggerx.ErrorLog("insertData", err.Error())
-					return nil, err
-				}
-
-				if fv == 0.0 {
-					continue
-				}
-
-				keiyakuno := itemMap["keiyakuno"].GetValue()
-				assetsType := itemMap["bunruicd"].GetValue()
-				subMap := p.asSubMap[assetsType]
-
-				// 创建登录数据
-				itemsData := copyMap(itemMap)
-				itemsData["shiwakeno"] = &item.Value{
-					DataType: "text",
-					Value:    p.shiwakeno,
-				}
-				itemsData["shiwakeymd"] = &item.Value{
-					DataType: "date",
-					Value:    time.Now().Format("2006-01-02"),
-				}
-				itemsData["shiwakeym"] = &item.Value{
-					DataType: "text",
-					Value:    p.handleMonth,
-				}
-				itemsData["partten"] = &item.Value{
-					DataType: "text",
-					Value:    p.jouData.PatternId,
-				}
-				itemsData["lineno"] = &item.Value{
-					DataType: "number",
-					Value:    strconv.Itoa(line + 1),
-				}
-				itemsData["taishakukubun"] = &item.Value{
-					DataType: "text",
-					Value:    sub.LendingDivision,
-				}
-				itemsData["kanjokamoku"] = &item.Value{
-					DataType: "text",
-					Value:    subMap[sub.GetSubjectKey()],
-				}
-				itemsData["shiwakekingaku"] = &item.Value{
-					DataType: "number",
-					Value:    result.String(),
-				}
-				itemsData["shiwakeaggno_parent"] = &item.Value{
-					DataType: "text",
-					Value:    strconv.Itoa(count),
-				}
-				itemsData["shiwakeaggno_branch"] = &item.Value{
-					DataType: "text",
-					Value:    strconv.Itoa(branchCount),
-				}
-				itemsData["shiwaketype"] = &item.Value{
-					DataType: "text",
-					Value:    "1",
-				}
-				itemsData["remark"] = &item.Value{
-					DataType: "text",
-					Value:    keiyakuno + "_" + p.jouData.PatternName,
-				}
-				itemsData["index"] = &item.Value{
-					DataType: "number",
-					Value:    strconv.Itoa(index),
-				}
-
-				its := &item.ListItems{
-					Items: itemsData,
-				}
-
-				items = append(items, its)
-
-				index++
-				branchCount++
-			}
-
-			count++
-			continue
-		}
-		// 变更后履历
-		var newItemMap map[string]*item.Value
-		// 变更前履历
-		var oldItemMap map[string]*item.Value
-		for _, h := range hs {
-			zengokbn := h["zengokbn"].GetValue()
-			if zengokbn == "before" {
-				oldItemMap = h
-			} else {
-				newItemMap = h
-			}
-		}
-
-		// 获取操作区分
-		actkbn := newItemMap["actkbn"].GetValue()
-
-		// 如果操作是情报变更的场合
-		if actkbn == "infoalter" {
-			// 获取分类
-			oldBunrui := oldItemMap["bunruicd"].GetValue()
-			newBunrui := newItemMap["bunruicd"].GetValue()
-
-			// 获取部门
-			oldSegment := oldItemMap["segmentcd"].GetValue()
-			newSegment := newItemMap["segmentcd"].GetValue()
-			// 当部门或者分类没有发生变更的情况，不出力分录数据
-			if oldBunrui == newBunrui && oldSegment == newSegment {
-				continue
-			}
-
-			// pattern := getPattern("01002", p.jouData)
-
-			var itemMap map[string]*item.Value
-
-			branchCount := 1
-			for line, sub := range p.jouData.GetSubjects() {
-				// LendingDivision = "1" == 借方
-				// ChangeFlag = "new" == 使用变更后的数据newItemMap
-				// LendingDivision = "2" == 贷方
-				// ChangeFlag = "old" ==  使用变更前的数据oldItemMap
-				if sub.ChangeFlag == "old" {
-					itemMap = copyMap(oldItemMap)
-				} else {
-					// 借方 => 变更后
-					itemMap = copyMap(newItemMap)
-				}
-				itemMap["historyno"] = &item.Value{
-					DataType: "text",
-					Value:    no,
-				}
-
-				expression := formula.NewExpression(sub.AmountField)
-
-				params := getParam(sub.AmountField)
-				for _, pm := range params {
-					it, ok := newItemMap[pm]
-					if !ok {
-						it = &item.Value{
-							DataType: "number",
-							Value:    "0",
-						}
-					}
-					val, err := strconv.ParseFloat(it.GetValue(), 64)
-					if err != nil {
-						loggerx.ErrorLog("insertData", err.Error())
-						return nil, err
-					}
-					expression.AddParameter(pm, val)
-				}
-
-				result, err := expression.Evaluate()
-				if err != nil {
-					loggerx.ErrorLog("insertData", err.Error())
-					return nil, err
-				}
-
-				fv, err := result.Float64()
-				if err != nil {
-					loggerx.ErrorLog("insertData", err.Error())
-					return nil, err
-				}
-
-				if fv == 0.0 {
-					continue
-				}
-
-				keiyakuno := itemMap["keiyakuno"].GetValue()
-				assetsType := itemMap["bunruicd"].GetValue()
-				subMap := p.asSubMap[assetsType]
-
-				// 创建登录数据
-				itemsData := copyMap(itemMap)
-				itemsData["shiwakeno"] = &item.Value{
-					DataType: "text",
-					Value:    p.shiwakeno,
-				}
-				itemsData["shiwakeymd"] = &item.Value{
-					DataType: "date",
-					Value:    time.Now().Format("2006-01-02"),
-				}
-				itemsData["shiwakeym"] = &item.Value{
-					DataType: "text",
-					Value:    p.handleMonth,
-				}
-				itemsData["partten"] = &item.Value{
-					DataType: "text",
-					Value:    p.jouData.PatternId,
-				}
-				itemsData["lineno"] = &item.Value{
-					DataType: "number",
-					Value:    strconv.Itoa(line + 1),
-				}
-				itemsData["taishakukubun"] = &item.Value{
-					DataType: "text",
-					Value:    sub.LendingDivision,
-				}
-				itemsData["kanjokamoku"] = &item.Value{
-					DataType: "text",
-					Value:    subMap[sub.GetSubjectKey()],
-				}
-				itemsData["shiwakekingaku"] = &item.Value{
-					DataType: "number",
-					Value:    result.String(),
-				}
-				itemsData["shiwakeaggno_parent"] = &item.Value{
-					DataType: "text",
-					Value:    strconv.Itoa(count),
-				}
-				itemsData["shiwakeaggno_branch"] = &item.Value{
-					DataType: "text",
-					Value:    strconv.Itoa(branchCount),
-				}
-				itemsData["shiwaketype"] = &item.Value{
-					DataType: "text",
-					Value:    "1",
-				}
-				itemsData["remark"] = &item.Value{
-					DataType: "text",
-					Value:    keiyakuno + "_" + p.jouData.PatternName,
-				}
-				itemsData["index"] = &item.Value{
-					DataType: "number",
-					Value:    strconv.Itoa(index),
-				}
-
-				its := &item.ListItems{
-					Items: itemsData,
-				}
-
-				items = append(items, its)
-
-				index++
-				branchCount++
-			}
-			count++
-			continue
-		}
-		// 如果操作是债务变更的场合
-		if actkbn == "debtchange" {
-			kaiyakuymd := newItemMap["kaiyakuymd"].GetValue()
-			// 未来解约的场合
-			if len(kaiyakuymd) > 0 && kaiyakuymd != "0001-01-01" {
-				cancellationrightoption := newItemMap["cancellationrightoption"].GetValue()
-				// 如果行使权存在的情况下，按比例减少处理。
-				if cancellationrightoption == "true" {
-					// 比例减少的场合
-					// pattern := getPattern("01006", p.jouData)
-
-					var itemMap map[string]*item.Value
-
-					branchCount := 1
-					for line, sub := range p.jouData.GetSubjects() {
-						// LendingDivision = "1" == 借方
-						// ChangeFlag = "new" == 使用变更后的数据newItemMap
-						// LendingDivision = "2" == 贷方
-						// ChangeFlag = "old" ==  使用变更前的数据oldItemMap
-						if sub.ChangeFlag == "old" {
-							itemMap = copyMap(oldItemMap)
-						} else {
-							// 借方 => 变更后
-							itemMap = copyMap(newItemMap)
-						}
-						itemMap["historyno"] = &item.Value{
-							DataType: "text",
-							Value:    no,
-						}
-
-						expression := formula.NewExpression(sub.AmountField)
-
-						params := getParam(sub.AmountField)
-						for _, pm := range params {
-							it, ok := newItemMap[pm]
-							if !ok {
-								it = &item.Value{
-									DataType: "number",
-									Value:    "0",
-								}
-							}
-							val, err := strconv.ParseFloat(it.GetValue(), 64)
-							if err != nil {
-								loggerx.ErrorLog("insertData", err.Error())
-								return nil, err
-							}
-							expression.AddParameter(pm, val)
-						}
-
-						result, err := expression.Evaluate()
-						if err != nil {
-							loggerx.ErrorLog("insertData", err.Error())
-							return nil, err
-						}
-
-						fv, err := result.Float64()
-						if err != nil {
-							loggerx.ErrorLog("insertData", err.Error())
-							return nil, err
-						}
-
-						if fv == 0.0 {
-							continue
-						}
-
-						keiyakuno := itemMap["keiyakuno"].GetValue()
-						assetsType := itemMap["bunruicd"].GetValue()
-						subMap := p.asSubMap[assetsType]
-
-						// 创建登录数据
-						itemsData := copyMap(itemMap)
-						itemsData["shiwakeno"] = &item.Value{
-							DataType: "text",
-							Value:    p.shiwakeno,
-						}
-						itemsData["shiwakeymd"] = &item.Value{
-							DataType: "date",
-							Value:    time.Now().Format("2006-01-02"),
-						}
-						itemsData["shiwakeym"] = &item.Value{
-							DataType: "text",
-							Value:    p.handleMonth,
-						}
-						itemsData["partten"] = &item.Value{
-							DataType: "text",
-							Value:    p.jouData.PatternId,
-						}
-						itemsData["lineno"] = &item.Value{
-							DataType: "number",
-							Value:    strconv.Itoa(line + 1),
-						}
-						itemsData["taishakukubun"] = &item.Value{
-							DataType: "text",
-							Value:    sub.LendingDivision,
-						}
-						itemsData["kanjokamoku"] = &item.Value{
-							DataType: "text",
-							Value:    subMap[sub.GetSubjectKey()],
-						}
-						itemsData["shiwakekingaku"] = &item.Value{
-							DataType: "number",
-							Value:    result.String(),
-						}
-						itemsData["shiwakeaggno_parent"] = &item.Value{
-							DataType: "text",
-							Value:    strconv.Itoa(count),
-						}
-						itemsData["shiwakeaggno_branch"] = &item.Value{
-							DataType: "text",
-							Value:    strconv.Itoa(branchCount),
-						}
-						itemsData["shiwaketype"] = &item.Value{
-							DataType: "text",
-							Value:    "1",
-						}
-						itemsData["remark"] = &item.Value{
-							DataType: "text",
-							Value:    keiyakuno + "_" + p.jouData.PatternName,
-						}
-						itemsData["index"] = &item.Value{
-							DataType: "number",
-							Value:    strconv.Itoa(index),
-						}
-
-						its := &item.ListItems{
-							Items: itemsData,
-						}
-
-						items = append(items, its)
-
-						index++
-						branchCount++
-					}
-					count++
-					continue
-				}
-
-				// 没有行使权的场合，按照普通债务变更处理。
-				// pattern := getPattern("01007", p.jouData)
-
-				var itemMap map[string]*item.Value
-
-				branchCount := 1
-				for line, sub := range p.jouData.GetSubjects() {
-					// LendingDivision = "1" == 借方
-					// ChangeFlag = "new" == 使用变更后的数据newItemMap
-					// LendingDivision = "2" == 贷方
-					// ChangeFlag = "old" ==  使用变更前的数据oldItemMap
-					if sub.ChangeFlag == "old" {
-						itemMap = copyMap(oldItemMap)
-					} else {
-						// 借方 => 变更后
-						itemMap = copyMap(newItemMap)
-					}
-					itemMap["historyno"] = &item.Value{
-						DataType: "text",
-						Value:    no,
-					}
-
-					expression := formula.NewExpression(sub.AmountField)
-
-					params := getParam(sub.AmountField)
-					for _, pm := range params {
-						it, ok := newItemMap[pm]
-						if !ok {
-							it = &item.Value{
-								DataType: "number",
-								Value:    "0",
-							}
-						}
-						val, err := strconv.ParseFloat(it.GetValue(), 64)
-						if err != nil {
-							loggerx.ErrorLog("insertData", err.Error())
-							return nil, err
-						}
-						expression.AddParameter(pm, val)
-					}
-
-					result, err := expression.Evaluate()
-					if err != nil {
-						loggerx.ErrorLog("insertData", err.Error())
-						return nil, err
-					}
-
-					fv, err := result.Float64()
-					if err != nil {
-						loggerx.ErrorLog("insertData", err.Error())
-						return nil, err
-					}
-
-					if fv == 0.0 {
-						continue
-					}
-
-					keiyakuno := itemMap["keiyakuno"].GetValue()
-					assetsType := itemMap["bunruicd"].GetValue()
-					subMap := p.asSubMap[assetsType]
-
-					// 创建登录数据
-					itemsData := copyMap(itemMap)
-					itemsData["shiwakeno"] = &item.Value{
-						DataType: "text",
-						Value:    p.shiwakeno,
-					}
-					itemsData["shiwakeymd"] = &item.Value{
-						DataType: "date",
-						Value:    time.Now().Format("2006-01-02"),
-					}
-					itemsData["shiwakeym"] = &item.Value{
-						DataType: "text",
-						Value:    p.handleMonth,
-					}
-					itemsData["partten"] = &item.Value{
-						DataType: "text",
-						Value:    p.jouData.PatternId,
-					}
-					itemsData["lineno"] = &item.Value{
-						DataType: "number",
-						Value:    strconv.Itoa(line + 1),
-					}
-					itemsData["taishakukubun"] = &item.Value{
-						DataType: "text",
-						Value:    sub.LendingDivision,
-					}
-					itemsData["kanjokamoku"] = &item.Value{
-						DataType: "text",
-						Value:    subMap[sub.GetSubjectKey()],
-					}
-					itemsData["shiwakekingaku"] = &item.Value{
-						DataType: "number",
-						Value:    result.String(),
-					}
-					itemsData["shiwakeaggno_parent"] = &item.Value{
-						DataType: "text",
-						Value:    strconv.Itoa(count),
-					}
-					itemsData["shiwakeaggno_branch"] = &item.Value{
-						DataType: "text",
-						Value:    strconv.Itoa(branchCount),
-					}
-					itemsData["shiwaketype"] = &item.Value{
-						DataType: "text",
-						Value:    "1",
-					}
-					itemsData["remark"] = &item.Value{
-						DataType: "text",
-						Value:    keiyakuno + "_" + p.jouData.PatternName,
-					}
-					itemsData["index"] = &item.Value{
-						DataType: "number",
-						Value:    strconv.Itoa(index),
-					}
-
-					its := &item.ListItems{
-						Items: itemsData,
-					}
-
-					items = append(items, its)
-
-					index++
-					branchCount++
-				}
-				count++
-				continue
-
-			}
-
-			// 获取比率
-			oldPercentage := oldItemMap["percentage"].GetValue()
-			newPercentage := newItemMap["percentage"].GetValue()
-
-			// 比率未发生变更的场合，即普通的债务变更
-			if oldPercentage == newPercentage {
-
-				// pattern := getPattern("01003", p.jouData)
-
-				var itemMap map[string]*item.Value
-
-				branchCount := 1
-				for line, sub := range p.jouData.GetSubjects() {
-					// LendingDivision = "1" == 借方
-					// ChangeFlag = "new" == 使用变更后的数据newItemMap
-					// LendingDivision = "2" == 贷方
-					// ChangeFlag = "old" ==  使用变更前的数据oldItemMap
-					if sub.ChangeFlag == "old" {
-						itemMap = copyMap(oldItemMap)
-					} else {
-						// 借方 => 变更后
-						itemMap = copyMap(newItemMap)
-					}
-					itemMap["historyno"] = &item.Value{
-						DataType: "text",
-						Value:    no,
-					}
-
-					expression := formula.NewExpression(sub.AmountField)
-
-					params := getParam(sub.AmountField)
-					for _, pm := range params {
-						it, ok := newItemMap[pm]
-						if !ok {
-							it = &item.Value{
-								DataType: "number",
-								Value:    "0",
-							}
-						}
-						val, err := strconv.ParseFloat(it.GetValue(), 64)
-						if err != nil {
-							loggerx.ErrorLog("insertData", err.Error())
-							return nil, err
-						}
-						expression.AddParameter(pm, val)
-					}
-
-					result, err := expression.Evaluate()
-					if err != nil {
-						loggerx.ErrorLog("insertData", err.Error())
-						return nil, err
-					}
-
-					fv, err := result.Float64()
-					if err != nil {
-						loggerx.ErrorLog("insertData", err.Error())
-						return nil, err
-					}
-
-					if fv == 0.0 {
-						continue
-					}
-
-					keiyakuno := itemMap["keiyakuno"].GetValue()
-					assetsType := itemMap["bunruicd"].GetValue()
-					subMap := p.asSubMap[assetsType]
-
-					// 创建登录数据
-					itemsData := copyMap(itemMap)
-					itemsData["shiwakeno"] = &item.Value{
-						DataType: "text",
-						Value:    p.shiwakeno,
-					}
-					itemsData["shiwakeymd"] = &item.Value{
-						DataType: "date",
-						Value:    time.Now().Format("2006-01-02"),
-					}
-					itemsData["shiwakeym"] = &item.Value{
-						DataType: "text",
-						Value:    p.handleMonth,
-					}
-					itemsData["partten"] = &item.Value{
-						DataType: "text",
-						Value:    p.jouData.PatternId,
-					}
-					itemsData["lineno"] = &item.Value{
-						DataType: "number",
-						Value:    strconv.Itoa(line + 1),
-					}
-					itemsData["taishakukubun"] = &item.Value{
-						DataType: "text",
-						Value:    sub.LendingDivision,
-					}
-					itemsData["kanjokamoku"] = &item.Value{
-						DataType: "text",
-						Value:    subMap[sub.GetSubjectKey()],
-					}
-					itemsData["shiwakekingaku"] = &item.Value{
-						DataType: "number",
-						Value:    result.String(),
-					}
-					itemsData["shiwakeaggno_parent"] = &item.Value{
-						DataType: "text",
-						Value:    strconv.Itoa(count),
-					}
-					itemsData["shiwakeaggno_branch"] = &item.Value{
-						DataType: "text",
-						Value:    strconv.Itoa(branchCount),
-					}
-					itemsData["shiwaketype"] = &item.Value{
-						DataType: "text",
-						Value:    "1",
-					}
-					itemsData["remark"] = &item.Value{
-						DataType: "text",
-						Value:    keiyakuno + "_" + p.jouData.PatternName,
-					}
-					itemsData["index"] = &item.Value{
-						DataType: "number",
-						Value:    strconv.Itoa(index),
-					}
-
-					its := &item.ListItems{
-						Items: itemsData,
-					}
-
-					items = append(items, its)
-
-					index++
-					branchCount++
-				}
-				count++
-				continue
-			}
-
-			// 比例减少的场合
-			// pattern := getPattern("01005", p.jouData)
-
-			var itemMap map[string]*item.Value
-
-			branchCount := 1
-			for line, sub := range p.jouData.GetSubjects() {
-				// LendingDivision = "1" == 借方
-				// ChangeFlag = "new" == 使用变更后的数据newItemMap
-				// LendingDivision = "2" == 贷方
-				// ChangeFlag = "old" ==  使用变更前的数据oldItemMap
-				if sub.ChangeFlag == "old" {
-					itemMap = copyMap(oldItemMap)
-				} else {
-					// 借方 => 变更后
-					itemMap = copyMap(newItemMap)
-				}
-				itemMap["historyno"] = &item.Value{
-					DataType: "text",
-					Value:    no,
-				}
-
-				expression := formula.NewExpression(sub.AmountField)
-
-				params := getParam(sub.AmountField)
-				for _, pm := range params {
-					it, ok := newItemMap[pm]
-					if !ok {
-						it = &item.Value{
-							DataType: "number",
-							Value:    "0",
-						}
-					}
-					val, err := strconv.ParseFloat(it.GetValue(), 64)
-					if err != nil {
-						loggerx.ErrorLog("insertData", err.Error())
-						return nil, err
-					}
-					expression.AddParameter(pm, val)
-				}
-
-				result, err := expression.Evaluate()
-				if err != nil {
-					loggerx.ErrorLog("insertData", err.Error())
-					return nil, err
-				}
-
-				fv, err := result.Float64()
-				if err != nil {
-					loggerx.ErrorLog("insertData", err.Error())
-					return nil, err
-				}
-
-				if fv == 0.0 {
-					continue
-				}
-
-				keiyakuno := itemMap["keiyakuno"].GetValue()
-				assetsType := itemMap["bunruicd"].GetValue()
-				subMap := p.asSubMap[assetsType]
-
-				// 创建登录数据
-				itemsData := copyMap(itemMap)
-				itemsData["shiwakeno"] = &item.Value{
-					DataType: "text",
-					Value:    p.shiwakeno,
-				}
-				itemsData["shiwakeymd"] = &item.Value{
-					DataType: "date",
-					Value:    time.Now().Format("2006-01-02"),
-				}
-				itemsData["shiwakeym"] = &item.Value{
-					DataType: "text",
-					Value:    p.handleMonth,
-				}
-				itemsData["partten"] = &item.Value{
-					DataType: "text",
-					Value:    p.jouData.PatternId,
-				}
-				itemsData["lineno"] = &item.Value{
-					DataType: "number",
-					Value:    strconv.Itoa(line + 1),
-				}
-				itemsData["taishakukubun"] = &item.Value{
-					DataType: "text",
-					Value:    sub.LendingDivision,
-				}
-				itemsData["kanjokamoku"] = &item.Value{
-					DataType: "text",
-					Value:    subMap[sub.GetSubjectKey()],
-				}
-				itemsData["shiwakekingaku"] = &item.Value{
-					DataType: "number",
-					Value:    result.String(),
-				}
-				itemsData["shiwakeaggno_parent"] = &item.Value{
-					DataType: "text",
-					Value:    strconv.Itoa(count),
-				}
-				itemsData["shiwakeaggno_branch"] = &item.Value{
-					DataType: "text",
-					Value:    strconv.Itoa(branchCount),
-				}
-				itemsData["shiwaketype"] = &item.Value{
-					DataType: "text",
-					Value:    "1",
-				}
-				itemsData["remark"] = &item.Value{
-					DataType: "text",
-					Value:    keiyakuno + "_" + p.jouData.PatternName,
-				}
-				itemsData["index"] = &item.Value{
-					DataType: "number",
-					Value:    strconv.Itoa(index),
-				}
-
-				its := &item.ListItems{
-					Items: itemsData,
-				}
-
-				items = append(items, its)
-
-				index++
-				branchCount++
-			}
-			count++
-			continue
-		}
-		// 如果操作是中途解约的场合
-		if actkbn == "midcancel" {
-			// 比例减少的场合
-			// pattern := getPattern("01008", p.jouData)
-
-			var itemMap map[string]*item.Value
-
-			branchCount := 1
-			for line, sub := range p.jouData.GetSubjects() {
-				// LendingDivision = "1" == 借方
-				// ChangeFlag = "new" == 使用变更后的数据newItemMap
-				// LendingDivision = "2" == 贷方
-				// ChangeFlag = "old" ==  使用变更前的数据oldItemMap
-				if sub.ChangeFlag == "old" {
-					itemMap = copyMap(oldItemMap)
-				} else {
-					// 借方 => 变更后
-					itemMap = copyMap(newItemMap)
-				}
-				itemMap["historyno"] = &item.Value{
-					DataType: "text",
-					Value:    no,
-				}
-
-				expression := formula.NewExpression(sub.AmountField)
-
-				params := getParam(sub.AmountField)
-				for _, pm := range params {
-					it, ok := newItemMap[pm]
-					if !ok {
-						it = &item.Value{
-							DataType: "number",
-							Value:    "0",
-						}
-					}
-					val, err := strconv.ParseFloat(it.GetValue(), 64)
-					if err != nil {
-						loggerx.ErrorLog("insertData", err.Error())
-						return nil, err
-					}
-					expression.AddParameter(pm, val)
-				}
-
-				result, err := expression.Evaluate()
-				if err != nil {
-					loggerx.ErrorLog("insertData", err.Error())
-					return nil, err
-				}
-
-				fv, err := result.Float64()
-				if err != nil {
-					loggerx.ErrorLog("insertData", err.Error())
-					return nil, err
-				}
-
-				if fv == 0.0 {
-					continue
-				}
-
-				keiyakuno := itemMap["keiyakuno"].GetValue()
-				assetsType := itemMap["bunruicd"].GetValue()
-				subMap := p.asSubMap[assetsType]
-
-				// 创建登录数据
-				itemsData := copyMap(itemMap)
-				itemsData["shiwakeno"] = &item.Value{
-					DataType: "text",
-					Value:    p.shiwakeno,
-				}
-				itemsData["shiwakeymd"] = &item.Value{
-					DataType: "date",
-					Value:    time.Now().Format("2006-01-02"),
-				}
-				itemsData["shiwakeym"] = &item.Value{
-					DataType: "text",
-					Value:    p.handleMonth,
-				}
-				itemsData["partten"] = &item.Value{
-					DataType: "text",
-					Value:    p.jouData.PatternId,
-				}
-				itemsData["lineno"] = &item.Value{
-					DataType: "number",
-					Value:    strconv.Itoa(line + 1),
-				}
-				itemsData["taishakukubun"] = &item.Value{
-					DataType: "text",
-					Value:    sub.LendingDivision,
-				}
-				itemsData["kanjokamoku"] = &item.Value{
-					DataType: "text",
-					Value:    subMap[sub.GetSubjectKey()],
-				}
-				itemsData["shiwakekingaku"] = &item.Value{
-					DataType: "number",
-					Value:    result.String(),
-				}
-				itemsData["shiwakeaggno_parent"] = &item.Value{
-					DataType: "text",
-					Value:    strconv.Itoa(count),
-				}
-				itemsData["shiwakeaggno_branch"] = &item.Value{
-					DataType: "text",
-					Value:    strconv.Itoa(branchCount),
-				}
-				itemsData["shiwaketype"] = &item.Value{
-					DataType: "text",
-					Value:    "1",
-				}
-				itemsData["remark"] = &item.Value{
-					DataType: "text",
-					Value:    keiyakuno + "_" + p.jouData.PatternName,
-				}
-				itemsData["index"] = &item.Value{
-					DataType: "number",
-					Value:    strconv.Itoa(index),
-				}
-
-				its := &item.ListItems{
-					Items: itemsData,
-				}
-
-				items = append(items, its)
-
-				index++
-				branchCount++
-			}
-			count++
-			continue
-		}
-	}
-	return items, nil
-}
-
 func getParam(f string) []string {
 	comp := regexp.MustCompile(`\[([^]]+)\]`)
 	//利用自匹配获取正则表达式里括号[]中的匹配内容
@@ -2247,7 +1137,7 @@ func GenPayData(domain, db, appID, userID, lang string, owners []string) (r *ite
 		journalType := appDate.GetApp().GetJournalType()
 
 		// 获取分录数据
-		jouData, err := getJournal(db, appID, "03")
+		jouData, err := getJournal(db, appID, "04", journalType)
 		if err != nil {
 			path := filex.WriteAndSaveFile(domain, appID, []string{err.Error()})
 			// 发送消息 获取数据失败，终止任务
@@ -2387,7 +1277,7 @@ func buildPayData(p InsertParam) (e error) {
 
 	conditions := []*item.Condition{}
 	conditions = append(conditions, &item.Condition{
-		FieldId:     "paymentymd",
+		FieldId:     "keijoudate",
 		FieldType:   "date",
 		SearchValue: p.handleMonth + "-01",
 		Operator:    ">=",
@@ -2395,7 +1285,7 @@ func buildPayData(p InsertParam) (e error) {
 	})
 
 	conditions = append(conditions, &item.Condition{
-		FieldId:     "paymentymd",
+		FieldId:     "keijoudate",
 		FieldType:   "date",
 		SearchValue: p.handleMonth + "-" + lastDay,
 		Operator:    "<=",
@@ -2437,7 +1327,11 @@ func buildPayData(p InsertParam) (e error) {
 		var req item.ItemsRequest
 		var sorts []*item.SortItem
 		sorts = append(sorts, &item.SortItem{
-			SortKey:   "keiyakuno.value",
+			SortKey:   "shisanbangouoya.value",
+			SortValue: "ascend",
+		})
+		sorts = append(sorts, &item.SortItem{
+			SortKey:   "shisanbangoueda.value",
 			SortValue: "ascend",
 		})
 		req.Sorts = sorts
@@ -2457,39 +1351,20 @@ func buildPayData(p InsertParam) (e error) {
 			return err
 		}
 
-		var data ItemData
-
-		for _, item := range itemResp.GetItems() {
-			itemMap := item.Items
-			data = append(data, itemMap)
-		}
-
-		// 分录数据
+		// 分录数据编辑
 		var items ImportData
 		index := 1
-		for count, payItem := range data {
-			var pattern *journal.Pattern
-			// if p.journalType == "primary" {
-			// 	pattern = getPattern("03001", p.jouData)
-			// } else {
-			// 	pattern = getPattern("030001", p.jouData)
-			// }
-			keiyakuno := payItem["keiyakuno"].GetValue()
-			keiyakuAccesskeys := sessionx.GetAccessKeys(p.db, p.userID, p.dsMap["keiyakudaicho"], "R")
-			itemMap, err := getKeiyakuData(p.db, p.appID, p.dsMap["keiyakudaicho"], keiyakuno, keiyakuAccesskeys)
-			if err != nil {
-				loggerx.ErrorLog("getPayData", err.Error())
-				return err
-			}
+		for count, payItem := range itemResp.GetItems() {
+			pattern := p.jouData[0]
 
 			// 创建登录数据
-			var itemsData map[string]*item.Value
+			itemsData := copyMap(payItem.Items)
 			branchCount := 1
 			for line, sub := range pattern.GetSubjects() {
 				expression := formula.NewExpression(sub.AmountField)
 				params := getParam(sub.AmountField)
 				for _, pm := range params {
-					it, ok := payItem[pm]
+					it, ok := payItem.Items[pm]
 					if !ok {
 						it = &item.Value{
 							DataType: "number",
@@ -2520,15 +1395,15 @@ func buildPayData(p InsertParam) (e error) {
 					continue
 				}
 
-				assetsType := itemMap["bunruicd"].GetValue()
+				assetsType := payItem.Items["bunruicd"].GetValue()
 				subMap := p.asSubMap[assetsType]
 
 				if p.journalType == "primary" {
-					itemsData = copyMap(itemMap)
+					itemsData = copyMap(payItem.Items)
 
 					itemsData["keiyakuno"] = &item.Value{
 						DataType: "lookup",
-						Value:    keiyakuno,
+						Value:    payItem.Items["keiyakuno"].GetValue(),
 					}
 
 					itemsData["shiwakeno"] = &item.Value{
@@ -2594,11 +1469,11 @@ func buildPayData(p InsertParam) (e error) {
 					branchCount++
 				} else {
 					if line%2 == 0 {
-						itemsData = copyMap(itemMap)
+						itemsData = copyMap(payItem.Items)
 
 						itemsData["keiyakuno"] = &item.Value{
 							DataType: "lookup",
-							Value:    keiyakuno,
+							Value:    payItem.Items["keiyakuno"].GetValue(),
 						}
 
 						itemsData["shiwakeno"] = &item.Value{
@@ -2905,7 +1780,7 @@ func GenRepayData(domain, db, appID, userID, lang string, owners []string) (r *i
 		journalType := appDate.GetApp().GetJournalType()
 
 		// 获取分录数据
-		jouData, err := getJournal(db, appID, "02")
+		jouData, err := getJournal(db, appID, "02", journalType)
 		if err != nil {
 			path := filex.WriteAndSaveFile(domain, appID, []string{err.Error()})
 			// 发送消息 获取数据失败，终止任务
@@ -3189,12 +2064,7 @@ func buildRepaymentData(p InsertParam) (e error) {
 				return err
 			}
 
-			var pattern *journal.Pattern
-			// if p.journalType == "primary" {
-			// 	pattern = getPattern("02001", p.jouData)
-			// } else {
-			// 	pattern = getPattern("020001", p.jouData)
-			// }
+			pattern := p.jouData[0]
 
 			branchCount := 1
 

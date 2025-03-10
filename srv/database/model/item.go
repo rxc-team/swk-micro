@@ -3516,8 +3516,8 @@ func GeneratePayItem(db, datastoreID, startDate, lastDate string) (err error) {
 
 	query := bson.M{
 		"$and": []bson.M{
-			{"items.paymentymd.value": bson.M{"$gte": startDay}},
-			{"items.paymentymd.value": bson.M{"$lte": lastDay}},
+			{"items.keijoudate.value": bson.M{"$gte": startDay}},
+			{"items.keijoudate.value": bson.M{"$lte": lastDay}},
 			{"items.kakuteidate.value": defaultTime},
 		},
 	}

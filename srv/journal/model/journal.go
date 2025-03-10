@@ -391,27 +391,39 @@ func FindJournals(db, appId string) (items []Journal, err error) {
 }
 
 // FindJournal 获取分录
-func FindJournal(db, appID, journalID string) (items Journal, err error) {
+func FindJournal(db, appID, journalID, journalType string) (items []Journal, err error) {
 	client := database.New()
 	c := client.Database(database.GetDBName(db)).Collection(JournalCollection)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	query := bson.M{
-		"app_id":     appID,
-		"journal_id": journalID,
+		"app_id":       appID,
+		"journal_id":   journalID,
+		"journal_type": journalType,
 	}
 
 	queryJSON, _ := json.Marshal(query)
 	utils.DebugLog("FindJournal", fmt.Sprintf("query: [ %s ]", queryJSON))
 
-	var result Journal
+	var result []Journal
 
-	if err := c.FindOne(ctx, query).Decode(&result); err != nil {
-		utils.ErrorLog("error FindJournal", err.Error())
-		return result, err
+	cur, err := c.Find(ctx, query)
+	if err != nil {
+		utils.ErrorLog("FindJournal", err.Error())
+		return nil, err
 	}
+	defer cur.Close(ctx)
 
+	for cur.Next(ctx) {
+		var jou Journal
+		err := cur.Decode(&jou)
+		if err != nil {
+			utils.ErrorLog("FindJournal", err.Error())
+			return nil, err
+		}
+		result = append(result, jou)
+	}
 	return result, nil
 }
 

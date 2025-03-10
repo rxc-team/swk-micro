@@ -58,13 +58,18 @@ func (f *Journal) FindJournals(ctx context.Context, req *journal.JournalsRequest
 func (f *Journal) FindJournal(ctx context.Context, req *journal.JournalRequest, rsp *journal.JournalResponse) error {
 	utils.InfoLog(ActionFindJournal, utils.MsgProcessStarted)
 
-	res, err := model.FindJournal(req.GetDatabase(), req.GetAppId(), req.GetJournalId())
+	jou, err := model.FindJournal(req.GetDatabase(), req.GetAppId(), req.GetJournalId(), req.GetJournalType())
 	if err != nil {
 		utils.ErrorLog(ActionFindJournal, err.Error())
 		return err
 	}
 
-	rsp.Journal = res.ToProto()
+	res := &journal.JournalResponse{}
+	for _, j := range jou {
+		res.Journal = append(res.Journal, j.ToProto())
+	}
+
+	*rsp = *res
 
 	utils.InfoLog(ActionFindJournal, utils.MsgProcessEnded)
 	return nil

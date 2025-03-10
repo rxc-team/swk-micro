@@ -68,10 +68,11 @@ message JournalRequest{
 	string journal_id =1; // 仕訳ID
 	string app_id =2; // 所属APP
 	string database =3; // 数据库
+	string journal_type =4; // 结构体种类
 }
 
 message JournalResponse{
-	Journal journal = 1;
+	repeated Journal journal = 1;
 }
 
 // 导入数据
